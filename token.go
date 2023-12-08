@@ -49,6 +49,11 @@ const (
 	TT_KW_MultiplyAssign
 	TT_KW_DivideAssign
 	TT_KW_ModuloAssign
+
+	TT_KW_loop
+	TT_KW_while
+	TT_KW_for
+	TT_KW_forEach
 )
 
 var TokenTypeToString = map[TokenType]string {
@@ -95,6 +100,11 @@ var TokenTypeToString = map[TokenType]string {
 	TT_KW_MultiplyAssign: "*=",
 	TT_KW_DivideAssign: "/=",
 	TT_KW_ModuloAssign: "%=",
+
+	TT_KW_loop: "loop",
+	TT_KW_while: "while",
+	TT_KW_for: "for",
+	TT_KW_forEach: "forEach",
 }
 
 func (tt TokenType) String() string {

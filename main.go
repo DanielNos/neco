@@ -17,6 +17,8 @@ func printTokens(tokens []*Token) {
 			color.Set(color.FgHiGreen)
 		} else if token.tokenType == TT_EndOfFile {
 			color.Set(color.FgHiRed)
+		} else if token.tokenType > TT_OP_Add && token.tokenType < TT_OP_GreaterEqual {
+			color.Set(color.FgHiMagenta)
 		} else {
 			color.Set(color.FgHiWhite)
 		}

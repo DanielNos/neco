@@ -9,6 +9,11 @@ var KEYWORDS = map[string]TokenType {
 	"str": TT_KW_str,
 
 	"=": TT_KW_Assign,
+
+	"loop": TT_KW_loop,
+	"while": TT_KW_while,
+	"for": TT_KW_for,
+	"forEach": TT_KW_forEach,
 }
 
 var DELIMITERS = map[rune]TokenType {

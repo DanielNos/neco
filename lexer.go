@@ -246,6 +246,9 @@ func (l *Lexer) lexRune() {
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_DivideAssign, "")
 				l.advance()
+			} else if l.currRune == '/' {
+				l.advance()
+				l.skipComment()
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Divide, "")
 			}
@@ -259,6 +262,10 @@ func (l *Lexer) lexRune() {
 			}
 
 		default:
+			delimiter, isDelimiter := DELIMITERS[l.currRune]
+			if isDelimiter {
+				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
+			}
 			l.advance()
 		}
 
@@ -398,4 +405,10 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	l.token.Reset()
 
 	l.newTokenFrom(startLine, startChar, TT_LT_Int, fmt.Sprintf("%d", value))
+}
+
+func (l *Lexer) skipComment() {
+	for l.currRune != '\n' && l.currRune != 'r' {
+		l.advance()
+	}
 }
