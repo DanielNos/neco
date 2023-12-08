@@ -11,11 +11,12 @@ var KEYWORDS = map[string]TokenType {
 	"=": TT_KW_Assign,
 }
 
-var DELIMITERS = map[rune]bool {
-	'(': true,
-	')': true,
-	'[': true,
-	']': true,
-	'{': true,
-	'}': true,
+var DELIMITERS = map[rune]TokenType {
+	'(': TT_DL_ParenthesisOpen,
+	')': TT_DL_ParenthesisClose,
+	'[': TT_DL_BracketOpen,
+	']': TT_DL_BracketClose,
+	'{': TT_DL_BraceOpen,
+	'}': TT_DL_BraceClose,
+	',': TT_DL_Comma,
 }

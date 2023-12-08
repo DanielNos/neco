@@ -7,6 +7,13 @@ import (
 	color "github.com/fatih/color"
 )
 
+func info(message string) {
+	color.Set(color.FgHiWhite)
+	fmt.Print( "[INFO] ");
+	
+	fmt.Println(message)
+}
+
 func warning(message string) {
 	color.Set(color.FgHiYellow)
 	fmt.Print( "[WARNING] ");
@@ -18,6 +25,15 @@ func warning(message string) {
 func error(message string) {
 	color.Set(color.FgHiRed)
 	fmt.Fprint(os.Stderr, "[ERROR] ");
+	color.Set(color.FgHiWhite)
+
+	fmt.Fprintln(os.Stderr, message)
+}
+
+
+func errorPos(file *string, line, char uint, message string) {
+	color.Set(color.FgHiRed)
+	fmt.Fprintf(os.Stderr, "[ERROR] %s %d:%d ", *file, line, char);
 	color.Set(color.FgHiWhite)
 
 	fmt.Fprintln(os.Stderr, message)

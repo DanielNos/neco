@@ -3,11 +3,33 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/fatih/color"
 )
+
+func printTokens(tokens []*Token) {
+	for _, token := range tokens {
+		if token.tokenType > TT_KW_const {
+			color.Set(color.FgHiCyan)
+		} else if token.tokenType == TT_EndOfCommand {
+			color.Set(color.FgHiYellow)
+		} else if token.tokenType == TT_Identifier {
+			color.Set(color.FgHiGreen)
+		} else if token.tokenType == TT_EndOfFile {
+			color.Set(color.FgHiRed)
+		} else {
+			color.Set(color.FgHiWhite)
+		}
+		fmt.Printf("%v\n", token)
+	}
+}
 
 func compile(path string) {
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
+
+	printTokens(tokens)
+	color.White("\n")
 
 	if lexer.errorCount != 0 {
 		fatal(ERROR_LEXICAL, fmt.Sprintf("Lexical analysis failed with %d errors.", lexer.errorCount))

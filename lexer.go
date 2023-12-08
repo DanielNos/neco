@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -17,12 +18,57 @@ var TOKEN_BREAKERS = map[rune]bool {
 	'*': true,
 	'/': true,
 	'%': true,
-
+	
 	'=': true,
+	'!': true,
+	'<': true,
+	'>': true,
+}
+
+var DIGIT_VALUE = map[rune]int {
+	'0': 0,
+	'1': 1,
+	'2': 2,
+	'3': 3,
+	'4': 4,
+	'5': 5,
+	'6': 6,
+	'7': 7,
+	'8': 8,
+	'9': 9,
+	'a': 10, 'A': 10,
+	'b': 11, 'B': 11,
+	'c': 12, 'C': 12,
+	'd': 13, 'D': 13,
+	'e': 14, 'E': 14,
+	'f': 15, 'F': 15,
+	'g': 16, 'G': 16,
+	'h': 17, 'H': 17,
+	'i': 18, 'I': 18,
+	'j': 19, 'J': 19,
+	'k': 20, 'K': 20,
+	'l': 21, 'L': 21,
+	'm': 22, 'M': 22,
+	'n': 23, 'N': 23,
+	'o': 24, 'O': 24,
+	'p': 25, 'P': 25,
+	'q': 26, 'Q': 26,
+	'r': 27, 'R': 27,
+	's': 28, 'S': 28,
+	't': 29, 'T': 29,
+	'u': 30, 'U': 30,
+	'v': 31, 'V': 31,
+	'w': 32, 'W': 32,
+	'x': 33, 'X': 33,
+	'y': 34, 'Y': 34,
+	'z': 35, 'Z': 35,
 }
 
 func isTokenBreaker(char rune) bool {
-	return TOKEN_BREAKERS[char] || unicode.IsSpace(char)
+	_, breaker := TOKEN_BREAKERS[char]
+	_, delimiter := DELIMITERS[char]
+
+	return unicode.IsSpace(char) || breaker || delimiter
 }
 
 type Lexer struct {
@@ -54,6 +100,8 @@ func (l *Lexer) Lex() []*Token {
 	if err != nil {
 		fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s: %s.", l.filePath, strings.Split(err.Error(), ": ")[1]))
 	}
+
+	l.newTokenFrom(0, 0, TT_EndOfCommand, "")
 	
 	// Read first 2 chars
 	l.reader = bufio.NewReader(file)
@@ -70,9 +118,9 @@ func (l *Lexer) Lex() []*Token {
 	}
 }
 
-func (l *Lexer) newError(message string) {
+func (l *Lexer) newError(line, char uint, message string) {
 	l.errorCount++
-	error(message)
+	errorPos(&l.filePath, line, char, message)
 }
 
 func (l *Lexer) advance() {
@@ -95,7 +143,6 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
 	l.tokens = append(l.tokens, &Token{&CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex}, tokenType, value})
-	fmt.Printf("%v\n", l.tokens[len(l.tokens)-1])
 }
 
 func (l *Lexer) newEOCToken() {
@@ -129,13 +176,92 @@ func (l *Lexer) lexRune() {
 
 		// Invalid Windows line ending
 		if l.currRune != '\n' {
-			l.newError("Invalid Windows line ending.")
+			l.newError(l.lineIndex, l.charIndex - 1, "Invalid Windows line ending.")
 		} else {
 			l.advance()
 		}
-
+		
 	} else {
-		l.advance()
+		switch l.currRune {
+		// Boolean operators
+		case '=':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Equal, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_Assign, "")
+			}
+		case '!':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_NotEqual, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Not, "")
+			}
+		case '<':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_LowerEqual, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
+			}
+		case '>':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_GreaterEqual, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
+			}
+		// Operators
+		case '+':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
+			}
+		case '-':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_SubtractAssign, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Subtract, "")
+			}
+		case '*':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_MultiplyAssign, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Multiply, "")
+			}
+		case '/':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_DivideAssign, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Divide, "")
+			}
+		case '%':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_ModuloAssign, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Modulo, "")
+			}
+
+		default:
+			l.advance()
+		}
+
 	}
 }
 
@@ -143,6 +269,7 @@ func (l *Lexer) lexLetter() {
 	startLine := l.lineIndex
 	startChar := l.charIndex
 
+	// Collect identifier/keyword
 	l.token.WriteRune(l.currRune)
 	l.advance()
 
@@ -151,6 +278,7 @@ func (l *Lexer) lexLetter() {
 		l.advance()
 	}
 
+	// Check if token is a keyword
 	value := l.token.String()
 	keyword, exists := KEYWORDS[value]
 	
@@ -167,6 +295,7 @@ func (l *Lexer) lexString() {
 	startChar := l.charIndex
 	l.advance()
 
+	// Collect string
 	for l.currRune != '"' {
 		l.token.WriteRune(l.currRune)
 		l.advance()
@@ -179,21 +308,94 @@ func (l *Lexer) lexString() {
 func (l *Lexer) lexNumber() {
 	startLine := l.lineIndex
 	startChar := l.charIndex
+	
+	// Collect number/base
+	var base string
 
-	l.token.WriteRune(l.currRune)
-	l.advance()
-
-	for unicode.IsDigit(l.currRune) || l.currRune == '_' {
+	for i := 0; i < 2; i++{
 		l.token.WriteRune(l.currRune)
+		l.advance()
+
+		if l.currRune == 'x' {
+			base = l.token.String()
+			l.token.Reset()
+			l.advance()
+			break
+		}
+
+		if isTokenBreaker(l.currRune) {
+			l.newToken(startLine, startChar, TT_LT_Int)
+			return
+		}
+	}
+
+	if base != "" {
+		l.lexBaseInt(startLine, startChar, base)
+		return
+	}
+
+	// Collect number
+	for unicode.IsDigit(l.currRune) || l.currRune == '_' {
+		if l.currRune != '_' {
+			l.token.WriteRune(l.currRune)
+		}
 		l.advance()
 	}
 	
-	if unicode.IsSpace(l.currRune) {
+	// Create token
+	if isTokenBreaker(l.currRune) {
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
+	// Invalid characters in number
 	} else {
 		l.collectRestOfToken()
-		l.newError(fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.token.Reset()
 	}
 
+}
+
+func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
+	// Check base
+	base, _ := strconv.Atoi(baseString)
+	if base < 2 || base > 36 {
+		l.collectRestOfToken()
+		l.newError(startLine, startChar, fmt.Sprintf("Invalid integer base %d. Only bases in range <2, 36> are supported.", base))
+		l.token.Reset()
+	}
+
+	// Collect number
+	digitValue, valid := DIGIT_VALUE[l.currRune]
+	invalidDigits := false
+	for valid || l.currRune == '_' {
+		if l.currRune != '_' {
+			if digitValue >= base {
+				invalidDigits = true
+			}
+			l.token.WriteRune(unicode.ToLower(l.currRune))
+		}
+		l.advance()
+		digitValue, valid = DIGIT_VALUE[l.currRune]
+	}
+
+	// Digits exceed base
+	if invalidDigits {
+		l.newError(startLine, startChar, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
+		l.token.Reset()
+		return
+	}
+
+	// Invalid characters in number
+	if !isTokenBreaker(l.currRune) {
+		l.collectRestOfToken()
+		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.token.Reset()
+		return
+	}
+
+	// Convert and create token
+	value, _ := strconv.ParseInt(l.token.String(), base, 64)
+	l.token.Reset()
+
+	l.newTokenFrom(startLine, startChar, TT_LT_Int, fmt.Sprintf("%d", value))
 }
