@@ -26,42 +26,21 @@ var TOKEN_BREAKERS = map[rune]bool {
 }
 
 var DIGIT_VALUE = map[rune]int {
-	'0': 0,
-	'1': 1,
-	'2': 2,
-	'3': 3,
-	'4': 4,
-	'5': 5,
-	'6': 6,
-	'7': 7,
-	'8': 8,
-	'9': 9,
-	'a': 10, 'A': 10,
-	'b': 11, 'B': 11,
-	'c': 12, 'C': 12,
-	'd': 13, 'D': 13,
-	'e': 14, 'E': 14,
-	'f': 15, 'F': 15,
-	'g': 16, 'G': 16,
-	'h': 17, 'H': 17,
-	'i': 18, 'I': 18,
-	'j': 19, 'J': 19,
-	'k': 20, 'K': 20,
-	'l': 21, 'L': 21,
-	'm': 22, 'M': 22,
-	'n': 23, 'N': 23,
-	'o': 24, 'O': 24,
-	'p': 25, 'P': 25,
-	'q': 26, 'Q': 26,
-	'r': 27, 'R': 27,
-	's': 28, 'S': 28,
-	't': 29, 'T': 29,
-	'u': 30, 'U': 30,
-	'v': 31, 'V': 31,
-	'w': 32, 'W': 32,
-	'x': 33, 'X': 33,
-	'y': 34, 'Y': 34,
-	'z': 35, 'Z': 35,
+	'0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
+	'5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+	'a': 10, 'A': 10, 'b': 11, 'B': 11,
+	'c': 12, 'C': 12, 'd': 13, 'D': 13,
+	'e': 14, 'E': 14, 'f': 15, 'F': 15,
+	'g': 16, 'G': 16, 'h': 17, 'H': 17,
+	'i': 18, 'I': 18, 'j': 19, 'J': 19,
+	'k': 20, 'K': 20, 'l': 21, 'L': 21,
+	'm': 22, 'M': 22, 'n': 23, 'N': 23,
+	'o': 24, 'O': 24, 'p': 25, 'P': 25,
+	'q': 26, 'Q': 26, 'r': 27, 'R': 27,
+	's': 28, 'S': 28, 't': 29, 'T': 29,
+	'u': 30, 'U': 30, 'v': 31, 'V': 31,
+	'w': 32, 'W': 32, 'x': 33, 'X': 33,
+	'y': 34, 'Y': 34, 'z': 35, 'Z': 35,
 }
 
 func isTokenBreaker(char rune) bool {
@@ -145,12 +124,6 @@ func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, val
 	l.tokens = append(l.tokens, &Token{&CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex}, tokenType, value})
 }
 
-func (l *Lexer) newEOCToken() {
-	if l.tokens[len(l.tokens)-1].tokenType != TT_EndOfCommand {
-		l.newToken(l.lineIndex, l.charIndex, TT_EndOfCommand)
-	}
-}
-
 func (l *Lexer) collectRestOfToken() {
 	for !unicode.IsSpace(l.currRune) && !isTokenBreaker(l.currRune) {
 		l.token.WriteRune(l.currRune)
@@ -166,7 +139,7 @@ func (l *Lexer) lexRune() {
 	} else if unicode.IsDigit(l.currRune) { // Int/Float
 		l.lexNumber()
 	} else if l.currRune == '\n' { // New Line
-		l.newEOCToken()
+		l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 		l.advance()
 
 		l.charIndex = 1
@@ -263,6 +236,11 @@ func (l *Lexer) lexRune() {
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Modulo, "")
 			}
+		
+		// EOC
+		case ';':
+			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
+			l.advance()
 
 		default:
 			// Delimiters
@@ -291,10 +269,23 @@ func (l *Lexer) lexLetter() {
 
 	// Check if token is a keyword
 	value := l.token.String()
-	keyword, exists := KEYWORDS[value]
-	
-	if !exists {
-		l.newToken(startLine, startChar, TT_Identifier)
+	keyword, isKeyword := KEYWORDS[value]
+
+	// Identifier/Literal
+	if !isKeyword {
+		if value == "true" { // Literal true
+			l.newTokenFrom(startLine, startChar, TT_LT_Bool, "1")
+			l.token.Reset()
+		} else if value == "false" { // Literal false
+			l.newTokenFrom(startLine, startChar, TT_LT_Bool, "0")
+			l.token.Reset()
+		} else if value == "none" { // Literal none
+			l.newTokenFrom(startLine, startChar, TT_LT_None, "")
+			l.token.Reset()
+		} else { // Identifier
+			l.newToken(startLine, startChar, TT_Identifier)
+		}
+	// Keyword
 	} else {
 		l.newTokenFrom(startLine, startChar, keyword, "")
 		l.token.Reset()

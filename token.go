@@ -36,6 +36,7 @@ const (
 	TT_LT_Int
 	TT_LT_Float
 	TT_LT_String
+	TT_LT_None
 
 	TT_KW_const
 	TT_KW_var
@@ -98,6 +99,7 @@ var TokenTypeToString = map[TokenType]string {
 	TT_LT_Int: "Int",
 	TT_LT_Float: "Float",
 	TT_LT_String: "String",
+	TT_LT_None: "None",
 
 	TT_KW_const: "const",
 	TT_KW_var: "var",
@@ -131,6 +133,14 @@ var TokenTypeToString = map[TokenType]string {
 
 func (tt TokenType) String() string {
 	return TokenTypeToString[tt]
+}
+
+func (tt TokenType) IsVariableType() bool {
+	return tt >= TT_KW_var && tt <= TT_KW_str
+}
+
+func (tt TokenType) IsLiteral() bool {
+	return tt >= TT_LT_Bool && tt <= TT_LT_String
 }
 
 type Token struct {
