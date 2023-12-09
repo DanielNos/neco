@@ -89,7 +89,7 @@ type Lexer struct {
 }
 
 func NewLexer(filePath string) Lexer {
-	return Lexer{filePath, nil, nil, ' ', ' ', 1, 1,  bytes.Buffer{}, make([]*Token, 0, 100), 0}
+	return Lexer{filePath, nil, nil, ' ', ' ', 1, 1, bytes.Buffer{}, make([]*Token, 0, 100), 0}
 }
 
 func (l *Lexer) Lex() []*Token {
@@ -101,7 +101,7 @@ func (l *Lexer) Lex() []*Token {
 		fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s: %s.", l.filePath, strings.Split(err.Error(), ": ")[1]))
 	}
 
-	l.newTokenFrom(0, 0, TT_EndOfCommand, "")
+	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
 	
 	// Read first 2 chars
 	l.reader = bufio.NewReader(file)

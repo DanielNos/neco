@@ -8,12 +8,20 @@ var KEYWORDS = map[string]TokenType {
 	"flt": TT_KW_flt,
 	"str": TT_KW_str,
 
-	"=": TT_KW_Assign,
-
 	"loop": TT_KW_loop,
 	"while": TT_KW_while,
 	"for": TT_KW_for,
 	"forEach": TT_KW_forEach,
+	"continue": TT_KW_continue,
+	"break": TT_KW_break,
+
+	"pub": TT_KW_pub,
+	"fun": TT_KW_fun,
+	"return": TT_KW_return,
+
+	"struct": TT_KW_struct,
+	"enum": TT_KW_enum,
+	"class": TT_KW_class,
 }
 
 var DELIMITERS = map[rune]TokenType {

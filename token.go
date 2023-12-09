@@ -6,6 +6,7 @@ type TokenType int8
 
 const (
 	TT_EndOfCommand TokenType = iota
+	TT_StartOfFile
 	TT_EndOfFile
 
 	TT_Identifier
@@ -54,10 +55,21 @@ const (
 	TT_KW_while
 	TT_KW_for
 	TT_KW_forEach
+	TT_KW_continue
+	TT_KW_break
+
+	TT_KW_pub
+	TT_KW_fun
+	TT_KW_return
+
+	TT_KW_struct
+	TT_KW_enum
+	TT_KW_class
 )
 
 var TokenTypeToString = map[TokenType]string {
 	TT_EndOfCommand: "EndOfCommand",
+	TT_StartOfFile: "StartOfFile",
 	TT_EndOfFile: "EndOfFile",
 	
 	TT_Identifier: "Identifier",
@@ -105,6 +117,16 @@ var TokenTypeToString = map[TokenType]string {
 	TT_KW_while: "while",
 	TT_KW_for: "for",
 	TT_KW_forEach: "forEach",
+	TT_KW_continue: "continue",
+	TT_KW_break: "break",
+
+	TT_KW_pub: "pub",
+	TT_KW_fun: "fun",
+	TT_KW_return: "return",
+
+	TT_KW_struct: "struct",
+	TT_KW_enum: "enum",
+	TT_KW_class: "class",
 }
 
 func (tt TokenType) String() string {
