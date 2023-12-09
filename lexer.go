@@ -353,6 +353,10 @@ func (l *Lexer) lexNumber() {
 	if isTokenBreaker(l.currRune) {
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
+	// Float
+	} else if l.currRune == '.' {
+		l.lexFloat(startLine, startChar)
+		return
 	// Invalid characters in number
 	} else {
 		l.collectRestOfToken()
@@ -405,6 +409,28 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	l.token.Reset()
 
 	l.newTokenFrom(startLine, startChar, TT_LT_Int, fmt.Sprintf("%d", value))
+}
+
+func (l *Lexer) lexFloat(startLine, startChar uint) {
+	l.token.WriteRune(l.currRune)
+	l.advance()
+
+	// Collect rest of float
+	for unicode.IsDigit(l.currRune) || l.currRune == '_' {
+		if l.currRune != '_' {
+			l.token.WriteRune(l.currRune)
+		}
+		l.advance()
+	}
+
+	// Invalid characters
+	if !isTokenBreaker(l.currRune) {
+		l.collectRestOfToken()
+		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.token.Reset()
+	}
+
+	l.newToken(startLine, startChar, TT_LT_Float)
 }
 
 func (l *Lexer) skipComment() {
