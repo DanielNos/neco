@@ -33,10 +33,24 @@ func error(message string) {
 
 func errorPos(file *string, line, char uint, message string) {
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR] %s %d:%d ", *file, line, char);
-	color.Set(color.FgHiWhite)
+	fmt.Fprintf(os.Stderr, "[ERROR] ")
+	
+	color.Set(color.FgHiCyan)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, char)
 
-	fmt.Fprintln(os.Stderr, message)
+	color.Set(color.FgHiWhite)
+	fmt.Fprintf(os.Stderr, "%s\n", message)
+}
+
+func errorCodePos(codePos *CodePos, message string) {
+	color.Set(color.FgHiRed)
+	fmt.Fprintf(os.Stderr, "[ERROR] ")
+
+	color.Set(color.FgHiCyan)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos.file, codePos.startLine, codePos.startChar)
+	
+	color.Set(color.FgHiWhite)
+	fmt.Fprintf(os.Stderr, "%s\n", message)
 }
 
 func fatal(error_code int, message string) {
