@@ -134,28 +134,32 @@ func (l *Lexer) collectRestOfToken() {
 func (l *Lexer) lexRune() {
 	if unicode.IsLetter(l.currRune) { // Identifier/Keyword
 		l.lexLetter()
-	} else if l.currRune == '"' { // String
-		l.lexString()
 	} else if unicode.IsDigit(l.currRune) { // Int/Float
 		l.lexNumber()
-	} else if l.currRune == '\n' { // New Line
-		l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
-		l.advance()
-
-		l.charIndex = 1
-		l.lineIndex++
-	} else if l.currRune == '\r' { // Windows New Line
-		l.advance()
-
-		// Invalid Windows line ending
-		if l.currRune != '\n' {
-			l.newError(l.lineIndex, l.charIndex - 1, "Invalid Windows line ending.")
-		} else {
-			l.advance()
-		}
-		
 	} else {
 		switch l.currRune {
+		
+		case '"': // String
+			l.lexString()
+
+		case '\n': // New Line
+			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
+			l.advance()
+
+			l.charIndex = 1
+			l.lineIndex++
+
+		case '\r': // Windows New Line
+			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
+			l.advance()
+
+			// Invalid Windows line ending
+			if l.currRune != '\n' {
+				l.newError(l.lineIndex, l.charIndex - 1, "Invalid Windows line ending.")
+			} else {
+				l.advance()
+			}
+		
 		// Boolean operators
 		case '=':
 			l.advance()
