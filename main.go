@@ -24,7 +24,7 @@ func printTokens(tokens []*Token) {
 		} else {
 			color.Set(color.FgHiWhite)
 		}
-		fmt.Printf("%v\n", token)
+		fmt.Printf("%v\n", token.TableString())
 	}
 }
 
@@ -32,14 +32,19 @@ func compile(path string) {
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
 
-	printTokens(tokens)
+	//printTokens(tokens)
 	color.White("\n")
 
-	if lexer.errorCount != 0 {
-		fatal(ERROR_LEXICAL, fmt.Sprintf("Lexical analysis failed with %d errors.", lexer.errorCount))
+	info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
+
+	syntaxAnalyzer := NewSyntaxAnalyzer(tokens)
+	syntaxAnalyzer.Analyze()
+
+	if syntaxAnalyzer.errorCount != 0 {
+		fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount + lexer.errorCount))
 	}
 
-	fmt.Printf("Lexed %d tokens.\n", len(tokens))
+	info("Passed syntax analysis.")
 }
 
 func main() {

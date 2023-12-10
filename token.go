@@ -143,6 +143,10 @@ func (tt TokenType) IsLiteral() bool {
 	return tt >= TT_LT_Bool && tt <= TT_LT_String
 }
 
+func (tt TokenType) IsOperator() bool {
+	return tt >= TT_OP_Add && tt <= TT_OP_Modulo
+}
+
 type Token struct {
 	position *CodePos
 	tokenType TokenType
@@ -150,6 +154,24 @@ type Token struct {
 }
 
 func (t *Token) String() string {
+	switch (t.tokenType) {
+	case TT_EndOfCommand:
+		return "EOC"
+	case TT_StartOfFile:
+		return "SOF"
+	case TT_EndOfFile:
+		return "EOF"
+	case TT_Identifier:
+		return t.value
+	default:
+		if t.tokenType.IsLiteral() {
+			return t.value
+		}
+		return TokenTypeToString[t.tokenType]
+	}
+}
+
+func (t *Token) TableString() string {
 	label := fmt.Sprintf("%v", t.tokenType)
 
 	for len(label) < 14 {
