@@ -247,6 +247,11 @@ func (l *Lexer) lexRune() {
 			delimiter, isDelimiter := DELIMITERS[l.currRune]
 			if isDelimiter {
 				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
+			} else {
+				// Invalid character
+				if !unicode.IsSpace(l.currRune) {
+					l.newError(l.lineIndex, l.charIndex, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
+				}
 			}
 			l.advance()
 		}
