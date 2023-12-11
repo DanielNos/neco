@@ -32,7 +32,7 @@ func compile(path string) {
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
 
-	//printTokens(tokens)
+	printTokens(tokens)
 	color.White("\n")
 
 	info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))

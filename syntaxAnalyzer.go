@@ -78,6 +78,10 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		default:
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 		}
+
+		for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {
+			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after statement.", sn.consume()))
+		}
 	}
 
 	if isScope {
@@ -247,21 +251,42 @@ func (sn *SyntaxAnalyzer) analyzeScope() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeExpression() {
-	if sn.peek().tokenType.IsLiteral() {
-		sn.consume()
-
-		if sn.peek().tokenType.IsOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-		}
-		return
-	}
-
+	// Operator
 	if sn.peek().tokenType.IsOperator() {
 		sn.consume()
 		sn.analyzeExpression()
 		return
 	}
+	// Literal or identifier
+	if sn.peek().tokenType.IsLiteral() || sn.peek().tokenType == TT_Identifier {
+		sn.consume()
+
+		if sn.peek().tokenType.IsBinaryOperator() {
+			sn.analyzeExpression()
+		}
+		return
+	}
+	// Sub-Expression
+	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
+		sn.analyzeSubExpression()
+
+		if sn.peek().tokenType.IsBinaryOperator() {
+			sn.analyzeExpression()
+		}
+		return
+	}
 
 	sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in expression.", sn.consume()))
+}
+
+func (sn *SyntaxAnalyzer) analyzeSubExpression() {
+	opening := sn.consume()
+	sn.analyzeExpression()
+
+	if sn.peek().tokenType == TT_DL_ParenthesisClose {
+		sn.consume()
+		return
+	}
+
+	sn.newError(opening, "Missing closing parenthesis of a sub-expression.")
 }

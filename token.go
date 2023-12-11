@@ -25,12 +25,12 @@ const (
 	TT_OP_Divide
 	TT_OP_Modulo
 	TT_OP_Equal
-	TT_OP_Not
 	TT_OP_NotEqual
 	TT_OP_Lower
 	TT_OP_LowerEqual
 	TT_OP_Greater
 	TT_OP_GreaterEqual
+	TT_OP_Not
 
 	TT_LT_Bool
 	TT_LT_Int
@@ -140,11 +140,19 @@ func (tt TokenType) IsVariableType() bool {
 }
 
 func (tt TokenType) IsLiteral() bool {
-	return tt >= TT_LT_Bool && tt <= TT_LT_String
+	return tt >= TT_LT_Bool && tt <= TT_LT_None
 }
 
 func (tt TokenType) IsOperator() bool {
-	return tt >= TT_OP_Add && tt <= TT_OP_Modulo
+	return tt >= TT_OP_Add && tt <= TT_OP_Not
+}
+
+func (tt TokenType) IsBinaryOperator() bool {
+	return tt >= TT_OP_Add && tt <= TT_OP_GreaterEqual
+}
+
+func (tt TokenType) IsUnaryOperator() bool {
+	return tt >= TT_OP_Not && tt <= TT_OP_Not
 }
 
 type Token struct {
