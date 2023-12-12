@@ -77,7 +77,8 @@ func (l *Lexer) Lex() []*Token {
 	l.file = file
 	
 	if err != nil {
-		fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s: %s.", l.filePath, strings.Split(err.Error(), ": ")[1]))
+		reason := strings.Split(err.Error(), ": ")[1]
+		fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
 	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
