@@ -19,7 +19,6 @@ func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
 	errorCodePos(token.position, message)
 }
 
-
 func (sn *SyntaxAnalyzer) peek() *Token {
 	return sn.tokens[sn.tokenIndex]
 }
@@ -73,7 +72,7 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 			
 		case TT_EndOfCommand:
 			
-		case TT_DL_BraceClose:
+		case TT_DL_BraceClose: // Leave scope
 			if isScope {
 				return
 			}
@@ -101,6 +100,27 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
 	if sn.peek().tokenType != TT_Identifier {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after %s keyword.", sn.peekPrevious()))
 	} else {
+		sn.consume()
+	}
+
+	// Multiple identifiers
+	for sn.peek().tokenType == TT_DL_Comma {
+		sn.consume()
+
+		// Missing identifier
+		if sn.peek().tokenType != TT_Identifier {
+			sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after \",\" keyword, found \"%s\" instead.", sn.peek()))
+
+			// Not the end of identifiers
+			if sn.peek().tokenType != TT_KW_Assign {
+				sn.consume()
+				// More identifiers
+				if sn.peek().tokenType == TT_DL_Comma {
+					continue
+				}
+			}
+			break
+		}
 		sn.consume()
 	}
 
@@ -198,9 +218,18 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	sn.consume()
 
+	// Function call
 	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
 		sn.analyzeFunctionCall()
+	} else if sn.peek().tokenType == TT_KW_Assign {
+		sn.analyzeAssignment()
 	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeAssignment() {
+	sn.consume()
+
+	sn.analyzeExpression()
 }
 
 func (sn *SyntaxAnalyzer) analyzeFunctionCall() {

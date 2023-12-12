@@ -82,6 +82,7 @@ var TokenTypeToString = map[TokenType]string {
 	TT_DL_BracketClose: "]",
 	TT_DL_BraceOpen: "{",
 	TT_DL_BraceClose: "}",
+	TT_DL_Comma: ",",
 
 	TT_OP_Add: "+",
 	TT_OP_Subtract: "-",
