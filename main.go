@@ -28,15 +28,58 @@ func printTokens(tokens []*Token) {
 	}
 }
 
-func compile(path string) {
+func processArguments() (string, bool, bool, string) {
+	args := os.Args[1:]
+
+	// No args
+	if len(args) == 0 {
+		fatal(ERROR_INVALID_USE, "No action specified.")
+	}
+
+	// Collect action
+	if args[0] != "build" {
+		fatal(ERROR_INVALID_USE, fmt.Sprintf("Invalid action %s.", args[0]))
+	}
+	action := args[0]
+
+	// No target
+	if len(args) < 2 { 
+		fatal(ERROR_INVALID_USE, "No target specified.")
+	}
+
+	// Collect flags
+	tokens, tree := false, false
+	
+	for _, arg := range os.Args[2:len(args)] {
+		if arg[0] == '-' && arg[1] == '-' {
+			switch arg {
+			case "--tokens":
+				tokens = true
+			case "--tree":
+				tree = true
+			default:
+				fatal(ERROR_INVALID_USE, fmt.Sprintf("Invalid option %s.", arg))
+			}
+		}
+	}
+	
+	return action, tokens, tree, args[len(args)-1]
+}
+
+func compile(path string, showTokens, showTree bool) {
+	// Tokenize
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
 
-	printTokens(tokens)
-	color.White("\n")
+	// Print tokens
+	if showTokens {
+		printTokens(tokens)
+		println()
+	}
 
 	info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
 
+	// Analyze syntax
 	syntaxAnalyzer := NewSyntaxAnalyzer(tokens)
 	syntaxAnalyzer.Analyze()
 
@@ -44,19 +87,13 @@ func compile(path string) {
 		fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount + lexer.errorCount))
 	}
 
-	info("Passed syntax analysis.")
+	success("Passed syntax analysis.")
 }
 
 func main() {
-	args := os.Args[1:]
+	action, showTokens, showTree, target := processArguments()
 
-	if len(args) == 0 {
-		fatal(ERROR_INVALID_USE, "No action or target specified.")
+	if action == "build" {
+		compile(target, showTokens, showTree)
 	}
-
-	if len(args) == 1 {
-		compile(args[0])
-	} else {
-		fatal(ERROR_INVALID_USE, "Invalid flags.")
-	}	
 }
