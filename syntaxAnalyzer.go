@@ -62,13 +62,17 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	for sn.peek().tokenType != TT_EndOfFile {
 		switch sn.peek().tokenType {
 
-		case TT_KW_fun:
+		case TT_KW_fun: // Function declaration
 			sn.analyzeFunctionDeclaration()
-		case TT_Identifier:
-			sn.analyzeIdentifier()
-		case TT_EndOfCommand:
-			sn.consume()
 
+		case TT_Identifier: // Identifiers
+			sn.analyzeIdentifier()
+		
+		case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
+			sn.analyzeVariableDeclaration()
+			
+		case TT_EndOfCommand:
+			
 		case TT_DL_BraceClose:
 			if isScope {
 				return
@@ -78,14 +82,55 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		default:
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 		}
-
+		
 		for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after statement.", sn.consume()))
 		}
+		sn.consume()
 	}
 
 	if isScope {
 		sn.newError(start, "Code block is missing closing brace.")
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
+	sn.consume()
+
+	// Check identifier
+	if sn.peek().tokenType != TT_Identifier {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after %s keyword.", sn.peekPrevious()))
+	} else {
+		sn.consume()
+	}
+
+	// No assign
+	if sn.peek().tokenType != TT_KW_Assign {
+		if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+			return
+		}
+
+		// Collect invalid tokens
+		for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {
+			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
+		}
+		return
+	}
+
+	// Assign
+	sn.consume()
+
+	// Missing expression
+	if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+		sn.newError(sn.peek(), "Assign statement is missing assigned expression.")
+		return
+	}
+
+	sn.analyzeExpression()
+
+	// Collect invalid tokens
+	for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {
+		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
 	}
 }
 
@@ -252,7 +297,7 @@ func (sn *SyntaxAnalyzer) analyzeScope() {
 
 func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// Operator
-	if sn.peek().tokenType.IsOperator() {
+	if sn.peek().tokenType.IsUnaryOperator() {
 		sn.consume()
 		sn.analyzeExpression()
 		return
@@ -262,6 +307,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		sn.consume()
 
 		if sn.peek().tokenType.IsBinaryOperator() {
+			sn.consume()
 			sn.analyzeExpression()
 		}
 		return
@@ -276,7 +322,34 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
-	sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in expression.", sn.consume()))
+	// Operator missing right side expression
+	if sn.peekPrevious().tokenType.IsOperator() {
+		sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
+	// Operator missing left side expression
+	} else if sn.peek().tokenType.IsBinaryOperator() {
+		// Allow only for minus
+		if sn.peek().tokenType == TT_OP_Subtract {
+			sn.consume()
+			sn.analyzeExpression()
+		} else {
+			sn.newError(sn.peek(), fmt.Sprintf("Operator %s is missing left side expression.", sn.consume()))
+			
+			// Analyze right side expression
+			if sn.peek().tokenType.IsLiteral() || sn.peek().tokenType == TT_Identifier || sn.peek().tokenType == TT_DL_ParenthesisOpen {
+				sn.analyzeExpression()
+			// Right side expression is missing
+			} else {
+				sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
+			}
+		}
+	// Invalid token
+	} else {
+		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in expression.", sn.peek()))
+
+		if sn.peek().tokenType != TT_DL_ParenthesisClose {
+			sn.consume()
+		}
+	}
 }
 
 func (sn *SyntaxAnalyzer) analyzeSubExpression() {

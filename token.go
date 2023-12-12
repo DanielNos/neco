@@ -187,8 +187,14 @@ func (t *Token) TableString() string {
 	for len(label) < 14 {
 		label = fmt.Sprintf("%s ", label)
 	}
+	
+	position := fmt.Sprintf("%s %d:%d", *t.position.file, t.position.startLine, t.position.startChar)
 
-	message := fmt.Sprintf("%s %d:%d\t  %s %s", *t.position.file, t.position.startLine, t.position.startChar, label, t.value)
+	for len(position) < 17 {
+		position = fmt.Sprintf("%s ", position)
+	}
+
+	message := fmt.Sprintf("%s %s %s", position, label, t.value)
 
 	return message
 }
