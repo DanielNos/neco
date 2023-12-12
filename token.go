@@ -38,6 +38,7 @@ const (
 	TT_LT_String
 	TT_LT_None
 
+	TT_KW_global
 	TT_KW_const
 	TT_KW_var
 	TT_KW_bool
@@ -100,7 +101,8 @@ var TokenTypeToString = map[TokenType]string {
 	TT_LT_Float: "Float",
 	TT_LT_String: "String",
 	TT_LT_None: "None",
-
+	
+	TT_KW_global: "global",
 	TT_KW_const: "const",
 	TT_KW_var: "var",
 	TT_KW_bool: "bool",

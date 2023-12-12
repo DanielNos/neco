@@ -1,6 +1,7 @@
 package main
 
 var KEYWORDS = map[string]TokenType {
+	"global": TT_KW_global,
 	"const": TT_KW_const,
 	"var": TT_KW_var,
 	"bool": TT_KW_bool,
