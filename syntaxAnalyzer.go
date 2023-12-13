@@ -6,12 +6,13 @@ type SyntaxAnalyzer struct {
 	tokens []*Token
 
 	tokenIndex int
+	enums map[string]bool
 
 	errorCount uint
 }
 
 func NewSyntaxAnalyzer(tokens []*Token) SyntaxAnalyzer {
-	return SyntaxAnalyzer{tokens, 0, 0}
+	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, 0}
 }
 
 func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
@@ -44,6 +45,11 @@ func (sn *SyntaxAnalyzer) consume() *Token {
 	return sn.tokens[sn.tokenIndex - 1]
 }
 
+func (sn *SyntaxAnalyzer) resetTokenPointer() {
+	sn.tokenIndex = 0
+	sn.consume()
+}
+
 func (sn *SyntaxAnalyzer) collectExpression() string {
 	i := sn.tokenIndex
 	expression := ""
@@ -68,7 +74,25 @@ func (sn *SyntaxAnalyzer) Analyze() {
 		sn.consume()
 	}
 
+	sn.registerEnums()
+
+	sn.resetTokenPointer()
+
 	sn.analyzeStatementList(false)
+}
+
+func (sn *SyntaxAnalyzer) registerEnums() {
+	for sn.peek().tokenType != TT_EndOfFile {
+		if sn.peek().tokenType == TT_KW_enum {
+			sn.consume()
+
+			if sn.peek().tokenType == TT_Identifier {
+				sn.enums[sn.consume().value] = true
+			}
+		} else {
+			sn.consume()
+		}
+	}
 }
 
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
@@ -328,11 +352,18 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
+	// Enum variable declaration
+	if sn.enums[sn.peek().value] {
+		sn.analyzeVariableDeclaration()
+		return
+	}
+
 	sn.consume()
 
 	// Function call
 	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
 		sn.analyzeFunctionCall()
+	// Assignment
 	} else if sn.peek().tokenType == TT_KW_Assign {
 		sn.analyzeAssignment()
 	}
