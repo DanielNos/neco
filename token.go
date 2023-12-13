@@ -30,6 +30,9 @@ const (
 	TT_OP_LowerEqual
 	TT_OP_Greater
 	TT_OP_GreaterEqual
+	
+	TT_OP_And
+	TT_OP_Or
 	TT_OP_Not
 
 	TT_LT_Bool
@@ -90,12 +93,15 @@ var TokenTypeToString = map[TokenType]string {
 	TT_OP_Divide: "/",
 	TT_OP_Modulo: "%",
 	TT_OP_Equal: "==",
-	TT_OP_Not: "!",
 	TT_OP_NotEqual: "!=",
 	TT_OP_Lower: "<",
 	TT_OP_LowerEqual: "<=",
 	TT_OP_Greater: ">",
 	TT_OP_GreaterEqual: ">=",
+
+	TT_OP_And: "&",
+	TT_OP_Or: "|",
+	TT_OP_Not: "!",
 
 	TT_LT_Bool: "Bool",
 	TT_LT_Int: "Int",
@@ -151,7 +157,7 @@ func (tt TokenType) IsOperator() bool {
 }
 
 func (tt TokenType) IsBinaryOperator() bool {
-	return tt >= TT_OP_Add && tt <= TT_OP_GreaterEqual
+	return tt >= TT_OP_Add && tt <= TT_OP_Or
 }
 
 func (tt TokenType) IsUnaryOperator() bool {
@@ -174,6 +180,11 @@ func (t *Token) String() string {
 		return "EOF"
 	case TT_Identifier:
 		return t.value
+	case TT_LT_Bool:
+		if t.value == "0" {
+			return "false"
+		}
+		return "true"
 	default:
 		if t.tokenType.IsLiteral() {
 			return t.value

@@ -170,39 +170,31 @@ func (l *Lexer) lexRune() {
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_Assign, "")
 			}
-		case '!':
-			l.advance()
-			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_NotEqual, "")
-				l.advance()
-			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Not, "")
-			}
 		case '<':
 			l.advance()
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_LowerEqual, "")
 				l.advance()
-			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
-			}
-		case '>':
+				} else {
+					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
+				}
+			case '>':
 			l.advance()
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_GreaterEqual, "")
 				l.advance()
-			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
-			}
-		// Operators
-		case '+':
-			l.advance()
-			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
+				} else {
+					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
+				}
+				// Operators
+			case '+':
 				l.advance()
-			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
-			}
+				if l.currRune == '=' {
+					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
+					l.advance()
+					} else {
+						l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
+					}
 		case '-':
 			l.advance()
 			if l.currRune == '=' {
@@ -241,33 +233,46 @@ func (l *Lexer) lexRune() {
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Modulo, "")
 			}
-		
+		case '!':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_NotEqual, "")
+				l.advance()
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Not, "")
+			}
+		case '&':
+			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_And, "")
+		case '|':
+			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Or, "")
+									
 		// EOC
 		case ';':
 			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 			l.advance()
-
+									
 		default:
 			// Delimiters
 			delimiter, isDelimiter := DELIMITERS[l.currRune]
 			if isDelimiter {
 				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
 			} else {
-				// Invalid character
+			// Invalid character
 				if !unicode.IsSpace(l.currRune) {
 					l.newError(l.lineIndex, l.charIndex, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
 				}
 			}
 			l.advance()
-		}
-
+		}					
 	}
 }
-
+							
 func (l *Lexer) lexLetter() {
 	startLine := l.lineIndex
 	startChar := l.charIndex
-
+	
 	// Collect identifier/keyword
 	l.token.WriteRune(l.currRune)
 	l.advance()

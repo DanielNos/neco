@@ -70,14 +70,17 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
 			sn.analyzeVariableDeclaration()
 			
-		case TT_EndOfCommand:
-			
-		case TT_DL_BraceClose: // Leave scope
+			case TT_DL_BraceClose: // Leave scope
 			if isScope {
 				return
 			}
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 		
+		case TT_DL_BraceOpen: // Scope
+			sn.analyzeScope()
+			
+		case TT_EndOfCommand: // Ignore EOCs
+			
 		default:
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 		}
