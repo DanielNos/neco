@@ -20,9 +20,14 @@ var TOKEN_BREAKERS = map[rune]bool {
 	'%': true,
 	
 	'=': true,
-	'!': true,
 	'<': true,
 	'>': true,
+	
+	'!': true,
+	'&': true,
+	'|': true,
+	
+	';': true,
 }
 
 var DIGIT_VALUE = map[rune]int {
