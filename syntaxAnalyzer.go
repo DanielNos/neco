@@ -44,6 +44,22 @@ func (sn *SyntaxAnalyzer) consume() *Token {
 	return sn.tokens[sn.tokenIndex - 1]
 }
 
+func (sn *SyntaxAnalyzer) collectExpression() string {
+	i := sn.tokenIndex
+	expression := ""
+	
+	for i < len(sn.tokens) {
+		if sn.tokens[i].tokenType == TT_EndOfCommand || sn.tokens[i].tokenType == TT_EndOfFile {
+			return expression
+		}
+
+		expression = fmt.Sprintf("%s %s", expression, sn.tokens[i])
+		i++
+	}
+
+	return expression
+}
+
 func (sn *SyntaxAnalyzer) Analyze() {
 	// Check StartOfFile
 	if sn.peek().tokenType != TT_StartOfFile {
@@ -70,14 +86,17 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
 			sn.analyzeVariableDeclaration()
 			
-			case TT_DL_BraceClose: // Leave scope
+		case TT_DL_BraceClose: // Leave scope
 			if isScope {
 				return
 			}
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 		
-		case TT_DL_BraceOpen: // Scope
+		case TT_DL_BraceOpen: // Enter scope
 			sn.analyzeScope()
+
+		case TT_KW_enum: // Enum
+			sn.analyzeEnumDefinition()
 			
 		case TT_EndOfCommand: // Ignore EOCs
 			
@@ -93,6 +112,96 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 
 	if isScope {
 		sn.newError(start, "Code block is missing closing brace.")
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
+	sn.consume()
+
+	// Check identifier
+	if sn.peek().tokenType != TT_Identifier {
+		sn.newError(sn.peek(), "Expected identifier after keyword enum.")
+
+		if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.consume()
+		}
+	} else {
+		sn.consume()
+	}
+
+	// Check opening brace
+	if sn.peek().tokenType != TT_DL_BraceOpen {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for opening brace after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found opening brace
+			if sn.peek().tokenType == TT_DL_BraceOpen {
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after enum identifier. Only 0 or 1 EOCs are allowed.")
+			} else {
+				sn.newError(sn.consume(), "Expected opening brace after enum identifier.")
+				return
+			}
+		} else if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.newError(sn.consume(), "Expected opening brace after enum identifier.")
+			return
+		}
+		
+	}
+	sn.consume()
+
+	// Check enums
+	for sn.peek().tokenType != TT_EndOfFile {
+
+		// Enum name
+		if sn.peek().tokenType == TT_Identifier {
+			identifier := sn.consume()
+
+			// Set custom value
+			if sn.peek().tokenType == TT_KW_Assign {
+				sn.consume()
+				sn.analyzeExpression()
+			}
+
+			// Allow only EOCs and } after enum name
+			if sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			} else if sn.peek().tokenType == TT_DL_BraceClose {
+				sn.consume()
+				break
+			// Invalid token
+			} else {
+				// Missing =
+				if sn.peek().tokenType.IsLiteral() {
+					expression := sn.collectExpression()
+
+					sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name. Did you want %s =%s?", sn.peek(), identifier, expression))
+					sn.analyzeExpression()
+				// Generic error
+				} else {
+					for sn.peek().tokenType != TT_EndOfFile && sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_DL_BraceClose {
+						sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name.", sn.consume()))
+					}
+				}
+			}
+		// End of names
+		} else if sn.peek().tokenType == TT_DL_BraceClose {
+			sn.consume()
+			break
+		// EOCs
+		} else if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		// Invalid token
+		} else {
+			sn.newError(sn.peek(), "Expected enum name.")
+		}
 	}
 }
 
@@ -328,6 +437,12 @@ func (sn *SyntaxAnalyzer) analyzeScope() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeExpression() {
+	// No expression
+	if sn.peek().tokenType == TT_EndOfCommand {
+		sn.newError(sn.peek(), "Expected expression, found EOC instead.")
+		return
+	}
+
 	// Operator
 	if sn.peek().tokenType.IsUnaryOperator() {
 		sn.consume()
