@@ -180,26 +180,26 @@ func (l *Lexer) lexRune() {
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_LowerEqual, "")
 				l.advance()
-				} else {
-					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
-				}
-			case '>':
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
+			}
+		case '>':
 			l.advance()
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_GreaterEqual, "")
 				l.advance()
-				} else {
-					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
-				}
-				// Operators
-			case '+':
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
+			}
+		// Operators
+		case '+':
+			l.advance()
+			if l.currRune == '=' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
 				l.advance()
-				if l.currRune == '=' {
-					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
-					l.advance()
-					} else {
-						l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
-					}
+			} else {
+					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
+			}
 		case '-':
 			l.advance()
 			if l.currRune == '=' {
