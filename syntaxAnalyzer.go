@@ -6,7 +6,7 @@ type SyntaxAnalyzer struct {
 	tokens []*Token
 
 	tokenIndex int
-	enums map[string]bool
+	customTypes map[string]bool
 
 	errorCount uint
 }
@@ -74,20 +74,21 @@ func (sn *SyntaxAnalyzer) Analyze() {
 		sn.consume()
 	}
 
-	sn.registerEnums()
+	sn.registerEnumsAndStructs()
 
 	sn.resetTokenPointer()
 
 	sn.analyzeStatementList(false)
 }
 
-func (sn *SyntaxAnalyzer) registerEnums() {
+func (sn *SyntaxAnalyzer) registerEnumsAndStructs() {
 	for sn.peek().tokenType != TT_EndOfFile {
-		if sn.peek().tokenType == TT_KW_enum {
+		// Register enum
+		if sn.peek().tokenType == TT_KW_enum || sn.peek().tokenType == TT_KW_struct {
 			sn.consume()
 
 			if sn.peek().tokenType == TT_Identifier {
-				sn.enums[sn.consume().value] = true
+				sn.customTypes[sn.consume().value] = true
 			}
 		} else {
 			sn.consume()
@@ -118,6 +119,9 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		
 		case TT_DL_BraceOpen: // Enter scope
 			sn.analyzeScope()
+
+		case TT_KW_struct: // Struct
+			sn.analyzeStructDefinition()
 
 		case TT_KW_enum: // Enum
 			sn.analyzeEnumDefinition()
@@ -225,6 +229,85 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 		// Invalid token
 		} else {
 			sn.newError(sn.peek(), "Expected enum name.")
+		}
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
+	sn.consume()
+
+	// Check identifier
+	if sn.peek().tokenType != TT_Identifier {
+		sn.newError(sn.peek(), "Expected identifier after keyword struct.")
+
+		if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.consume()
+		}
+	} else {
+		sn.consume()
+	}
+
+	// Check opening brace
+	if sn.peek().tokenType != TT_DL_BraceOpen {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for opening brace after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found opening brace
+			if sn.peek().tokenType == TT_DL_BraceOpen {
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after struct identifier. Only 0 or 1 EOCs are allowed.")
+			} else {
+				sn.newError(sn.consume(), "Expected opening brace after struct identifier.")
+				return
+			}
+		} else if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.newError(sn.consume(), "Expected opening brace after struct identifier.")
+			return
+		}
+		
+	}
+	sn.consume()
+
+	// Check properties
+	for sn.peek().tokenType != TT_EndOfFile {
+		// Property
+		if sn.peek().tokenType.IsVariableType() || sn.peek().tokenType == TT_Identifier && sn.customTypes[sn.peek().value] {
+			sn.consume()
+
+			// Valid identifier
+			if sn.peek().tokenType == TT_Identifier {
+				sn.consume()
+			// Missing identifier
+			} else if sn.peek().tokenType == TT_EndOfCommand {
+				sn.newError(sn.consume(), "Expected struct property identifier, found \"EOC\" instead.")
+				continue
+			// Invalid identifier
+			} else {
+				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
+			}
+
+			// Tokens after identifier
+			for sn.peek().tokenType != TT_EndOfCommand {
+				sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after struct property.", sn.consume()))
+			}
+			sn.consume()
+		// End of properties
+		} else if sn.peek().tokenType == TT_DL_BraceClose {
+			sn.consume()
+			return
+		// Empty line
+		} else if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		// Invalid token
+		} else {
+			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in struct properties.", sn.consume()))
 		}
 	}
 }
@@ -353,7 +436,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	// Enum variable declaration
-	if sn.enums[sn.peek().value] {
+	if sn.customTypes[sn.peek().value] {
 		sn.analyzeVariableDeclaration()
 		return
 	}
