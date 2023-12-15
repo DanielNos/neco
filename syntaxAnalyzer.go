@@ -125,6 +125,13 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 
 		case TT_KW_enum: // Enum
 			sn.analyzeEnumDefinition()
+		
+		case TT_KW_if: // If 
+			sn.analyzeIfStatement()
+
+		case TT_KW_else: // Else
+			sn.newError(sn.peek(), "Else statement is missing an if statement.")
+			sn.analyzeElseStatement()
 			
 		case TT_EndOfCommand: // Ignore EOCs
 			
@@ -141,6 +148,119 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	if isScope {
 		sn.newError(start, "Code block is missing closing brace.")
 	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeIfStatement() {
+	sn.consume()
+
+	// Check opening parenthesis
+	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword if, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+	
+	// Collect expression
+	if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.analyzeExpression()
+	}
+
+	// Check closing parenthesis
+	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+	
+	// Check opening brace
+	if sn.peek().tokenType != TT_DL_BraceOpen {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for opening brace after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found opening brace
+			if sn.peek().tokenType == TT_DL_BraceOpen {
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after if statement. Only 0 or 1 EOCs are allowed.")
+			} else {
+				sn.newError(sn.consume(), "Expected opening brace after if statement.")
+				return
+			}
+		} else if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.newError(sn.consume(), "Expected opening brace after if statement.")
+			return
+		}
+	}
+
+	// Check body
+	sn.analyzeScope()
+
+	// Check else statement
+	if sn.peek().tokenType != TT_KW_else {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for else after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found else
+			if sn.peek().tokenType == TT_KW_else {
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after if statement. Only 0 or 1 EOCs are allowed.")
+			} else {
+				return
+			}
+		} else if sn.peek().tokenType != TT_KW_else {
+			return
+		}
+	}
+
+	// Check else statement
+	sn.analyzeElseStatement()
+}
+
+func (sn *SyntaxAnalyzer) analyzeElseStatement() {
+	sn.consume()
+
+	// Check opening brace
+	if sn.peek().tokenType != TT_DL_BraceOpen {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for opening brace after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found opening brace
+			if sn.peek().tokenType == TT_DL_BraceOpen {
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after else statement. Only 0 or 1 EOCs are allowed.")
+			} else {
+				sn.newError(sn.consume(), "Expected opening brace after else statement.")
+				return
+			}
+		} else if sn.peek().tokenType != TT_DL_BraceOpen {
+			sn.newError(sn.consume(), "Expected opening brace after else statement.")
+			return
+		}
+	}
+
+	sn.analyzeScope()
 }
 
 func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {

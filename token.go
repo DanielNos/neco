@@ -70,6 +70,9 @@ const (
 	TT_KW_struct
 	TT_KW_enum
 	TT_KW_class
+
+	TT_KW_if
+	TT_KW_else
 )
 
 var TokenTypeToString = map[TokenType]string {
@@ -138,6 +141,9 @@ var TokenTypeToString = map[TokenType]string {
 	TT_KW_struct: "struct",
 	TT_KW_enum: "enum",
 	TT_KW_class: "class",
+	
+	TT_KW_if: "if",
+	TT_KW_else: "else",
 }
 
 func (tt TokenType) String() string {

@@ -23,6 +23,9 @@ var KEYWORDS = map[string]TokenType {
 	"struct": TT_KW_struct,
 	"enum": TT_KW_enum,
 	"class": TT_KW_class,
+
+	"if": TT_KW_if,
+	"else": TT_KW_else,
 }
 
 var DELIMITERS = map[rune]TokenType {
