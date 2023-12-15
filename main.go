@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"os"
 
 	"github.com/fatih/color"
 )
@@ -29,41 +29,24 @@ func printTokens(tokens []*Token) {
 }
 
 func processArguments() (string, bool, bool, string) {
-	args := os.Args[1:]
+	// Define and collect flags
+	tokens := flag.Bool("tokens", false, "Prints tokens when compiling.")
+	tree := flag.Bool("tree", false, "Displays AST when compiling.")
+	build := flag.String("build", "", "Builds specified source file.")
 
-	// No args
-	if len(args) == 0 {
+	flag.Parse()
+	
+	// Select action and target
+	action := ""
+	target := ""
+	if *build != "" {
+		action = "build"
+		target = *build
+	// No action
+	} else {
 		fatal(ERROR_INVALID_USE, "No action specified.")
 	}
-
-	// Collect action
-	if args[0] != "build" {
-		fatal(ERROR_INVALID_USE, fmt.Sprintf("Invalid action %s.", args[0]))
-	}
-	action := args[0]
-
-	// No target
-	if len(args) < 2 { 
-		fatal(ERROR_INVALID_USE, "No target specified.")
-	}
-
-	// Collect flags
-	tokens, tree := false, false
-	
-	for _, arg := range os.Args[2:len(args)] {
-		if arg[0] == '-' && arg[1] == '-' {
-			switch arg {
-			case "--tokens":
-				tokens = true
-			case "--tree":
-				tree = true
-			default:
-				fatal(ERROR_INVALID_USE, fmt.Sprintf("Invalid option %s.", arg))
-			}
-		}
-	}
-	
-	return action, tokens, tree, args[len(args)-1]
+	return action, *tokens, *tree, target
 }
 
 func compile(path string, showTokens, showTree bool) {
