@@ -204,6 +204,9 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 			} else if sn.peek().tokenType == TT_DL_BraceClose {
 				sn.consume()
 				break
+			// , instead of ;
+			} else if sn.peek().tokenType == TT_DL_Comma {
+				sn.newError(sn.consume(), "Unexpected token \",\" after enum name. Did you want \";\"?")
 			// Invalid token
 			} else {
 				// Missing =
@@ -291,6 +294,12 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 			// Invalid identifier
 			} else {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
+			}
+
+			// , instead of ;
+			if sn.peek().tokenType == TT_DL_Comma {
+				sn.newError(sn.consume(), "Unexpected token \",\" after enum name. Did you want \";\"?")
+				continue
 			}
 
 			// Tokens after identifier
