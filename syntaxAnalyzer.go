@@ -66,6 +66,20 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 	return expression
 }
 
+func (sn *SyntaxAnalyzer) collectLine() string {
+	statement := ""
+
+	for sn.peek().tokenType != TT_EndOfFile {
+		if sn.peek().tokenType == TT_EndOfCommand && sn.peek().value == "" {
+			return statement[1:]
+		}
+		statement = fmt.Sprintf("%s %s", statement, sn.consume())
+	}
+
+	return statement[1:]
+}
+
+
 func (sn *SyntaxAnalyzer) Analyze() {
 	// Check StartOfFile
 	if sn.peek().tokenType != TT_StartOfFile {
@@ -171,7 +185,9 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 		case TT_EndOfCommand: // Ignore EOCs
 			
 		default:
-			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
+			// Collect line and print error
+			statement := sn.collectLine()
+			sn.newError(sn.peek(), fmt.Sprintf("Invalid statement \"%s\".", statement))
 		}
 		
 		for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {

@@ -255,7 +255,7 @@ func (l *Lexer) lexRune() {
 									
 		// EOC
 		case ';':
-			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
+			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, ";")
 			l.advance()
 									
 		default:
