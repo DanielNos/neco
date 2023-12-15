@@ -96,6 +96,37 @@ func (sn *SyntaxAnalyzer) registerEnumsAndStructs() {
 	}
 }
 
+func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, optional bool) bool {
+	if sn.peek().tokenType != tokenType {
+		// Skip 1 EOC
+		if sn.peek().tokenType == TT_EndOfCommand {
+			sn.consume()
+		}
+
+		// Check for opening brace after EOCs
+		if sn.peek().tokenType == TT_EndOfCommand {
+			for sn.peek().tokenType == TT_EndOfCommand {
+				sn.consume()
+			}
+
+			// Found token
+			if sn.peek().tokenType == tokenType {
+				sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s. Only 0 or 1 EOCs are allowed.", afterWhat))
+			} else {
+				sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				return false
+			}
+		} else if sn.peek().tokenType != tokenType {
+			if !optional {
+				sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	start := sn.peekPrevious()
 
@@ -175,35 +206,13 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement() {
 	}
 	
 	// Check opening brace
-	if sn.peek().tokenType != TT_DL_BraceOpen {
-		// Skip 1 EOC
-		if sn.peek().tokenType == TT_EndOfCommand {
-			sn.consume()
-		}
-
-		// Check for opening brace after EOCs
-		if sn.peek().tokenType == TT_EndOfCommand {
-			for sn.peek().tokenType == TT_EndOfCommand {
-				sn.consume()
-			}
-
-			// Found opening brace
-			if sn.peek().tokenType == TT_DL_BraceOpen {
-				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after if statement. Only 0 or 1 EOCs are allowed.")
-			} else {
-				sn.newError(sn.consume(), "Expected opening brace after if statement.")
-				return
-			}
-		} else if sn.peek().tokenType != TT_DL_BraceOpen {
-			sn.newError(sn.consume(), "Expected opening brace after if statement.")
-			return
-		}
-	}
+	sn.lookFor(TT_DL_BraceOpen, "if statement", "opening brace", false)
 
 	// Check body
 	sn.analyzeScope()
 
 	// Check else statement
+	sn.lookFor(TT_KW_else, "if statement block", "else", true)
 	if sn.peek().tokenType != TT_KW_else {
 		// Skip 1 EOC
 		if sn.peek().tokenType == TT_EndOfCommand {
@@ -235,30 +244,7 @@ func (sn *SyntaxAnalyzer) analyzeElseStatement() {
 	sn.consume()
 
 	// Check opening brace
-	if sn.peek().tokenType != TT_DL_BraceOpen {
-		// Skip 1 EOC
-		if sn.peek().tokenType == TT_EndOfCommand {
-			sn.consume()
-		}
-
-		// Check for opening brace after EOCs
-		if sn.peek().tokenType == TT_EndOfCommand {
-			for sn.peek().tokenType == TT_EndOfCommand {
-				sn.consume()
-			}
-
-			// Found opening brace
-			if sn.peek().tokenType == TT_DL_BraceOpen {
-				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after else statement. Only 0 or 1 EOCs are allowed.")
-			} else {
-				sn.newError(sn.consume(), "Expected opening brace after else statement.")
-				return
-			}
-		} else if sn.peek().tokenType != TT_DL_BraceOpen {
-			sn.newError(sn.consume(), "Expected opening brace after else statement.")
-			return
-		}
-	}
+	sn.lookFor(TT_DL_BraceOpen, "else statement", "opening brace", false)
 
 	sn.analyzeScope()
 }
@@ -278,31 +264,7 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 	}
 
 	// Check opening brace
-	if sn.peek().tokenType != TT_DL_BraceOpen {
-		// Skip 1 EOC
-		if sn.peek().tokenType == TT_EndOfCommand {
-			sn.consume()
-		}
-
-		// Check for opening brace after EOCs
-		if sn.peek().tokenType == TT_EndOfCommand {
-			for sn.peek().tokenType == TT_EndOfCommand {
-				sn.consume()
-			}
-
-			// Found opening brace
-			if sn.peek().tokenType == TT_DL_BraceOpen {
-				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after enum identifier. Only 0 or 1 EOCs are allowed.")
-			} else {
-				sn.newError(sn.consume(), "Expected opening brace after enum identifier.")
-				return
-			}
-		} else if sn.peek().tokenType != TT_DL_BraceOpen {
-			sn.newError(sn.consume(), "Expected opening brace after enum identifier.")
-			return
-		}
-		
-	}
+	sn.lookFor(TT_DL_BraceOpen, "enum identifier", "opening brace", false)
 	sn.consume()
 
 	// Check enums
@@ -371,31 +333,7 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 	}
 
 	// Check opening brace
-	if sn.peek().tokenType != TT_DL_BraceOpen {
-		// Skip 1 EOC
-		if sn.peek().tokenType == TT_EndOfCommand {
-			sn.consume()
-		}
-
-		// Check for opening brace after EOCs
-		if sn.peek().tokenType == TT_EndOfCommand {
-			for sn.peek().tokenType == TT_EndOfCommand {
-				sn.consume()
-			}
-
-			// Found opening brace
-			if sn.peek().tokenType == TT_DL_BraceOpen {
-				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after struct identifier. Only 0 or 1 EOCs are allowed.")
-			} else {
-				sn.newError(sn.consume(), "Expected opening brace after struct identifier.")
-				return
-			}
-		} else if sn.peek().tokenType != TT_DL_BraceOpen {
-			sn.newError(sn.consume(), "Expected opening brace after struct identifier.")
-			return
-		}
-		
-	}
+	sn.lookFor(TT_DL_BraceOpen, "struct identifier", "opening brace", false)
 	sn.consume()
 
 	// Check properties
