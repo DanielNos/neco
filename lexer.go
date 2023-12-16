@@ -205,6 +205,9 @@ func (l *Lexer) lexRune() {
 			if l.currRune == '=' {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_SubtractAssign, "")
 				l.advance()
+			} else if l.currRune == '>' {
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_returns, "")
+				l.advance()
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Subtract, "")
 			}

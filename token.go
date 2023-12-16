@@ -65,6 +65,7 @@ const (
 
 	TT_KW_pub
 	TT_KW_fun
+	TT_KW_returns
 	TT_KW_return
 
 	TT_KW_struct
@@ -136,6 +137,7 @@ var TokenTypeToString = map[TokenType]string {
 
 	TT_KW_pub: "pub",
 	TT_KW_fun: "fun",
+	TT_KW_returns: "->",
 	TT_KW_return: "return",
 
 	TT_KW_struct: "struct",

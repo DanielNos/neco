@@ -70,7 +70,7 @@ func (sn *SyntaxAnalyzer) collectLine() string {
 	statement := ""
 
 	for sn.peek().tokenType != TT_EndOfFile {
-		if sn.peek().tokenType == TT_EndOfCommand && sn.peek().value == "" {
+		if sn.peek().tokenType == TT_EndOfCommand && sn.peek().value == "" || sn.peek().tokenType == TT_DL_BraceOpen {
 			return statement[1:]
 		}
 		statement = fmt.Sprintf("%s %s", statement, sn.consume())
@@ -594,6 +594,22 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected closing parenthesis after function identifier, found \"%s\" instead.", sn.peek()))
 	} else {
 		closingParent = sn.consume()
+	}
+
+	// Check return type
+	if sn.peek().tokenType == TT_KW_returns {
+		sn.consume()
+
+		// Missing return type
+		if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_DL_BraceOpen {
+			sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
+		} else {
+			// Check if type is valid
+			if !sn.peek().tokenType.IsVariableType() && !(sn.peek().tokenType == TT_Identifier && sn.customTypes[sn.peek().value]) {
+				sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
+			}
+			sn.consume()
+		}
 	}
 
 	// Check for start of scope
