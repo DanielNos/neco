@@ -39,6 +39,7 @@ func processArguments() (string, bool, bool, string) {
 	// Select action and target
 	action := ""
 	target := ""
+	// Build
 	if *build != "" {
 		action = "build"
 		target = *build

@@ -170,6 +170,10 @@ func (tt TokenType) IsUnaryOperator() bool {
 	return tt >= TT_OP_Not && tt <= TT_OP_Not
 }
 
+func (tt TokenType) IsAssignKeyword() bool {
+	return tt >= TT_KW_Assign && tt <= TT_KW_ModuloAssign
+}
+
 type Token struct {
 	position *CodePos
 	tokenType TokenType
@@ -179,7 +183,7 @@ type Token struct {
 func (t *Token) String() string {
 	switch (t.tokenType) {
 	case TT_EndOfCommand:
-		if t.value[0] == ';' { return ";"}
+		if t.value[0] == ';' { return ";" }
 		return "\\n"
 	case TT_StartOfFile:
 		return "SOF"
