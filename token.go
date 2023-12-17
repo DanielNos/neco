@@ -62,6 +62,7 @@ const (
 	TT_KW_forEach
 	TT_KW_continue
 	TT_KW_break
+	TT_KW_in
 
 	TT_KW_pub
 	TT_KW_fun
@@ -134,6 +135,7 @@ var TokenTypeToString = map[TokenType]string {
 	TT_KW_forEach: "forEach",
 	TT_KW_continue: "continue",
 	TT_KW_break: "break",
+	TT_KW_in: "in",
 
 	TT_KW_pub: "pub",
 	TT_KW_fun: "fun",

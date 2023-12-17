@@ -15,6 +15,7 @@ var KEYWORDS = map[string]TokenType {
 	"forEach": TT_KW_forEach,
 	"continue": TT_KW_continue,
 	"break": TT_KW_break,
+	"in": TT_KW_in,
 
 	"pub": TT_KW_pub,
 	"fun": TT_KW_fun,

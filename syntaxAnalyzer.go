@@ -198,6 +198,9 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case TT_KW_for: // For loop
 		sn.analyzeForLoop()
 
+	case TT_KW_forEach: // ForEach loop
+		sn.analyzeForEachLoop()
+
 	case TT_KW_break: // Break
 		sn.consume()
 
@@ -221,6 +224,57 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	sn.consume()
 
 	return false
+}
+
+func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
+	sn.consume()
+
+	// Check opening parenthesis
+	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword forEach, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check type
+	if !sn.peek().tokenType.IsVariableType() {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected variable type, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check variable identifier
+	if sn.peek().tokenType != TT_Identifier {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check keyword in
+	if sn.peek().tokenType != TT_KW_in {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected keyword in after variable identifier, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check list identifier
+	if sn.peek().tokenType != TT_Identifier {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check closing parenthesis
+	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis, found \"%s\" instead.", sn.peek()))
+	} else {
+		sn.consume()
+	}
+
+	// Check code block
+	if sn.lookFor(TT_DL_BraceOpen, "forEach statement", "opening brace", false) {
+		sn.analyzeScope()
+	}
 }
 
 func (sn *SyntaxAnalyzer) analyzeForLoop() {
