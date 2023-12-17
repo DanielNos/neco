@@ -130,7 +130,9 @@ func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, o
 			if sn.peek().tokenType == tokenType {
 				sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s. Only 0 or 1 EOCs are allowed.", afterWhat))
 			} else {
-				sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				if !optional {
+					sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				}
 				return false
 			}
 		} else if sn.peek().tokenType != tokenType {
@@ -141,7 +143,7 @@ func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, o
 		}
 	}
 
-	return true
+	return sn.peek().tokenType == tokenType
 }
 
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
@@ -189,7 +191,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeEnumDefinition()
 
 	case TT_KW_if: // If
-		sn.analyzeIfStatement()
+		sn.analyzeIfStatement(false)
 
 	case TT_KW_else: // Else
 		sn.newError(sn.peek(), "Else statement is missing an if statement.")
@@ -392,8 +394,14 @@ func (sn *SyntaxAnalyzer) analyzeLoop() {
 	}
 }
 
-func (sn *SyntaxAnalyzer) analyzeIfStatement() {
+func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	sn.consume()
+
+	statementName := "if"
+
+	if isElseIf {
+		statementName = "elif"
+	}
 
 	// Check opening parenthesis
 	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
@@ -425,8 +433,48 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement() {
 	sn.analyzeScope()
 
 	// Check else statement
-	if sn.lookFor(TT_KW_else, "if statement block", "else", true) {
+	if sn.peek().tokenType == TT_KW_else {
 		sn.analyzeElseStatement()
+		return
+	// Check elif statement
+	} else if sn.peek().tokenType == TT_KW_elif {
+		sn.analyzeIfStatement(true)
+		return
+	// Skip 1 EOC
+	} else {
+		// Check else statement
+		if sn.peekNext().tokenType == TT_KW_else {
+			sn.consume()
+			sn.analyzeElseStatement()
+			return
+		// Check elif statement
+		} else if sn.peekNext().tokenType == TT_KW_elif {
+			sn.consume()
+			sn.analyzeIfStatement(true)
+			return
+		}
+	}
+
+	// Look for else or elif after many EOCs
+	for sn.peek().tokenType == TT_EndOfCommand {
+		sn.consume()
+
+		// Found else
+		if sn.peekNext().tokenType == TT_KW_else {
+			sn.consume()
+			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
+			sn.analyzeElseStatement()
+			return
+		// Found elif
+		} else if sn.peekNext().tokenType == TT_KW_elif {
+			sn.consume()
+			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
+			sn.analyzeIfStatement(true)
+			return
+		// Other tokens
+		} else if sn.peekNext().tokenType != TT_EndOfCommand {
+			return
+		}
 	}
 }
 

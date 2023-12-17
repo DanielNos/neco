@@ -27,6 +27,7 @@ var KEYWORDS = map[string]TokenType {
 
 	"if": TT_KW_if,
 	"else": TT_KW_else,
+	"elif": TT_KW_elif,
 	"drop": TT_KW_drop,
 }
 

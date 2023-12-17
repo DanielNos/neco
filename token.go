@@ -77,6 +77,7 @@ const (
 
 	TT_KW_if
 	TT_KW_else
+	TT_KW_elif
 	TT_KW_drop
 )
 
@@ -153,6 +154,7 @@ var TokenTypeToString = map[TokenType]string {
 	
 	TT_KW_if: "if",
 	TT_KW_else: "else",
+	TT_KW_elif: "elif",
 	TT_KW_drop: "drop",
 }
 
