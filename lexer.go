@@ -83,7 +83,7 @@ func (l *Lexer) Lex() []*Token {
 	
 	if err != nil {
 		reason := strings.Split(err.Error(), ": ")[1]
-		fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
+		Fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
 	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
@@ -105,7 +105,7 @@ func (l *Lexer) Lex() []*Token {
 
 func (l *Lexer) newError(line, char uint, message string) {
 	l.errorCount++
-	errorPos(&l.filePath, line, char, message)
+	ErrorPos(&l.filePath, line, line, char, char, message)
 }
 
 func (l *Lexer) advance() {

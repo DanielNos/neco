@@ -45,7 +45,7 @@ func processArguments() (string, bool, bool, string) {
 		target = *build
 	// No action
 	} else {
-		fatal(ERROR_INVALID_USE, "No action specified.")
+		Fatal(ERROR_INVALID_USE, "No action specified.")
 	}
 	return action, *tokens, *tree, target
 }
@@ -61,17 +61,17 @@ func compile(path string, showTokens, showTree bool) {
 		println()
 	}
 
-	info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
+	Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
 
 	// Analyze syntax
 	syntaxAnalyzer := NewSyntaxAnalyzer(tokens)
 	syntaxAnalyzer.Analyze()
 
 	if syntaxAnalyzer.errorCount != 0 {
-		fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount + lexer.errorCount))
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount + lexer.errorCount))
 	}
 
-	success("Passed syntax analysis.")
+	Success("Passed syntax analysis.")
 }
 
 func main() {

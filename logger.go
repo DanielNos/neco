@@ -1,13 +1,38 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
 	color "github.com/fatih/color"
 )
 
-func success(message string) {
+func readLine(filePath string, lineIndex uint) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening file: %s", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var currentLine uint = 0
+
+	for scanner.Scan() {
+		currentLine++
+		if currentLine == lineIndex {
+			return scanner.Text(), nil
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading file: %s", err)
+	}
+
+	return "", fmt.Errorf("line number out of range")
+}
+
+func Success(message string) {
 	color.Set(color.FgHiGreen)
 	fmt.Print( "[SUCCESS] ");
 	color.Set(color.FgHiWhite)
@@ -15,14 +40,14 @@ func success(message string) {
 	fmt.Println(message)
 }
 
-func info(message string) {
+func Info(message string) {
 	color.Set(color.FgHiWhite)
 	fmt.Print( "[INFO] ");
 	
 	fmt.Println(message)
 }
 
-func warning(message string) {
+func Warning(message string) {
 	color.Set(color.FgHiYellow)
 	fmt.Print( "[WARNING] ");
 	color.Set(color.FgHiWhite)
@@ -30,7 +55,7 @@ func warning(message string) {
 	fmt.Println(message)
 }
 
-func error(message string) {
+func Error(message string) {
 	color.Set(color.FgHiRed)
 	fmt.Fprint(os.Stderr, "[ERROR] ");
 	color.Set(color.FgHiWhite)
@@ -38,29 +63,39 @@ func error(message string) {
 	fmt.Fprintln(os.Stderr, message)
 }
 
-func errorPos(file *string, line, char uint, message string) {
-	color.Set(color.FgHiRed)
+func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message string) {
+	// Print error line
+	lineString, err := readLine(*file, startLine)
+
+	if err == nil {
+		fmt.Fprintf(os.Stderr, "%s\n", lineString)
+
+		var i uint
+		for i = 0; i < startChar - 1; i++ {
+			fmt.Fprintf(os.Stderr, " ");
+		}
+		color.Set(color.FgHiRed)
+		for i = startChar; i < endChar; i++ {
+			fmt.Fprintf(os.Stderr, "^");
+		}
+		fmt.Fprintf(os.Stderr, "\n");
+	}
+
+	// Print message
 	fmt.Fprintf(os.Stderr, "[ERROR] ")
 	
 	color.Set(color.FgHiCyan)
-	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, char)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, startLine, startChar)
 
 	color.Set(color.FgHiWhite)
-	fmt.Fprintf(os.Stderr, "%s\n", message)
+	fmt.Fprintf(os.Stderr, "%s\n\n", message)
 }
 
-func errorCodePos(codePos *CodePos, message string) {
-	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR] ")
-
-	color.Set(color.FgHiCyan)
-	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos.file, codePos.startLine, codePos.startChar)
-	
-	color.Set(color.FgHiWhite)
-	fmt.Fprintf(os.Stderr, "%s\n", message)
+func ErrorCodePos(codePos *CodePos, message string) {
+	ErrorPos(codePos.file, codePos.startLine, codePos.endLine, codePos.startChar, codePos.endChar, message)
 }
 
-func fatal(error_code int, message string) {
-	error(message)
+func Fatal(error_code int, message string) {
+	Error(message)
 	os.Exit(error_code)
 }

@@ -17,7 +17,7 @@ func NewSyntaxAnalyzer(tokens []*Token) SyntaxAnalyzer {
 
 func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
 	sn.errorCount++
-	errorCodePos(token.position, message)
+	ErrorCodePos(token.position, message)
 }
 
 func (sn *SyntaxAnalyzer) peek() *Token {
@@ -71,12 +71,18 @@ func (sn *SyntaxAnalyzer) collectLine() string {
 
 	for sn.peek().tokenType != TT_EndOfFile {
 		if sn.peek().tokenType == TT_EndOfCommand && sn.peek().value == "" || sn.peek().tokenType == TT_DL_BraceOpen {
-			return statement[1:]
+			if len(statement) != 0 {
+				return statement[1:]
+			}
+			return ""
 		}
 		statement = fmt.Sprintf("%s %s", statement, sn.consume())
 	}
 
-	return statement[1:]
+	if len(statement) != 0 {
+		return statement[1:]
+	}
+	return ""
 }
 
 func (sn *SyntaxAnalyzer) Analyze() {
@@ -265,10 +271,17 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 	}
 
 	// Check closing parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis, found \"%s\" instead.", sn.peek()))
-	} else {
+	if sn.peek().tokenType == TT_DL_ParenthesisClose {
 		sn.consume()
+	} else {
+		for sn.peek().tokenType != TT_DL_ParenthesisClose && sn.peek().tokenType != TT_DL_BraceOpen && sn.peek().tokenType != TT_EndOfCommand {
+			sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis, found \"%s\" instead.", sn.consume()))
+		}
+
+		// Parenthesis found
+		if sn.peek().tokenType == TT_DL_ParenthesisClose {
+			sn.consume()
+		}
 	}
 
 	// Check code block
