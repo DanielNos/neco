@@ -68,7 +68,7 @@ func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message
 	lineString, err := readLine(*file, startLine)
 
 	if err == nil {
-		fmt.Fprintf(os.Stderr, "%s\n", lineString)
+		fmt.Fprintf(os.Stderr, "		|%s\n		", lineString)
 
 		var i uint
 		for i = 0; i < startChar - 1; i++ {

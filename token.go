@@ -23,6 +23,7 @@ const (
 	TT_OP_Subtract
 	TT_OP_Multiply
 	TT_OP_Divide
+	TT_OP_Power
 	TT_OP_Modulo
 	TT_OP_Equal
 	TT_OP_NotEqual
@@ -54,6 +55,7 @@ const (
 	TT_KW_SubtractAssign
 	TT_KW_MultiplyAssign
 	TT_KW_DivideAssign
+	TT_KW_PowerAssign
 	TT_KW_ModuloAssign
 
 	TT_KW_loop
@@ -75,6 +77,7 @@ const (
 
 	TT_KW_if
 	TT_KW_else
+	TT_KW_drop
 )
 
 var TokenTypeToString = map[TokenType]string {
@@ -96,6 +99,7 @@ var TokenTypeToString = map[TokenType]string {
 	TT_OP_Subtract: "-",
 	TT_OP_Multiply: "*",
 	TT_OP_Divide: "/",
+	TT_OP_Power: "^",
 	TT_OP_Modulo: "%",
 	TT_OP_Equal: "==",
 	TT_OP_NotEqual: "!=",
@@ -127,6 +131,7 @@ var TokenTypeToString = map[TokenType]string {
 	TT_KW_SubtractAssign: "-=",
 	TT_KW_MultiplyAssign: "*=",
 	TT_KW_DivideAssign: "/=",
+	TT_KW_PowerAssign: "^=",
 	TT_KW_ModuloAssign: "%=",
 
 	TT_KW_loop: "loop",
@@ -148,6 +153,7 @@ var TokenTypeToString = map[TokenType]string {
 	
 	TT_KW_if: "if",
 	TT_KW_else: "else",
+	TT_KW_drop: "drop",
 }
 
 func (tt TokenType) String() string {

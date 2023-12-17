@@ -207,7 +207,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case TT_KW_forEach: // ForEach loop
 		sn.analyzeForEachLoop()
 
-	case TT_KW_break: // Break
+	case TT_KW_break, TT_KW_drop: // Break, Drop
 		sn.consume()
 
 	case TT_EndOfCommand: // Ignore EOCs

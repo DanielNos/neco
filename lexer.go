@@ -233,6 +233,14 @@ func (l *Lexer) lexRune() {
 			} else { // /
 				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Divide, "")
 			}
+		case '^':
+			l.advance()
+			if l.currRune == '=' { // ^=
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_PowerAssign, "")
+				l.advance()
+			} else { // ^
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Power, "")
+			}
 		case '%':
 			l.advance()
 			if l.currRune == '=' {
