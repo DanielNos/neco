@@ -59,6 +59,7 @@ type Lexer struct {
 	filePath string
 	file *os.File
 	reader *bufio.Reader
+	fileOpen bool
 
 	currRune rune
 	nextRune rune
@@ -73,13 +74,14 @@ type Lexer struct {
 }
 
 func NewLexer(filePath string) Lexer {
-	return Lexer{filePath, nil, nil, ' ', ' ', 1, 1, bytes.Buffer{}, make([]*Token, 0, 100), 0}
+	return Lexer{filePath, nil, nil, false, ' ', ' ', 1, 1, bytes.Buffer{}, make([]*Token, 0, 100), 0}
 }
 
 func (l *Lexer) Lex() []*Token {
 	// Create reader
 	file, err := os.Open(l.filePath)
 	l.file = file
+	l.fileOpen = true
 	
 	if err != nil {
 		reason := strings.Split(err.Error(), ": ")[1]
@@ -109,16 +111,30 @@ func (l *Lexer) newError(line, char uint, message string) {
 }
 
 func (l *Lexer) advance() {
+	// Don't advance when file is closed
+	if !l.fileOpen {
+		// Move EOF to current rune if it's not there yet
+		if l.currRune != EOF {
+			l.currRune = EOF
+			l.charIndex++
+		}
+		return
+	}
+
+	// Move next to current
 	l.currRune = l.nextRune
 	
 	r, _, err := l.reader.ReadRune()
+	// Failed to read rune
 	if err != nil {
 		l.nextRune = EOF
 		l.file.Close()
+		l.fileOpen = false
+	// Read rune
 	} else {
 		l.nextRune = r
-		l.charIndex++
 	}
+	l.charIndex++
 }
 
 func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {

@@ -68,16 +68,25 @@ func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message
 	lineString, err := readLine(*file, startLine)
 
 	if err == nil {
-		fmt.Fprintf(os.Stderr, "		|%s\n		", lineString)
+		color.Set(color.FgWhite)
+		
+		// Print line of code with error
+		fmt.Fprint(os.Stderr, "\t\t ")
+		fmt.Fprintf(os.Stderr, "%s", lineString)
+		fmt.Fprint(os.Stderr, "\n\t\t")
 
+		// Move to error token
 		var i uint
 		for i = 0; i < startChar; i++ {
 			fmt.Fprintf(os.Stderr, " ");
 		}
+
+		// Draw arrows under the error token
 		color.Set(color.FgHiRed)
 		for i = startChar; i < endChar; i++ {
 			fmt.Fprintf(os.Stderr, "^");
 		}
+
 		fmt.Fprintf(os.Stderr, "\n");
 	}
 
