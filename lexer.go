@@ -293,15 +293,16 @@ func (l *Lexer) lexRune() {
 		default:
 			// Delimiters
 			delimiter, isDelimiter := DELIMITERS[l.currRune]
+			l.advance()
+
 			if isDelimiter {
-				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex - 1, delimiter, "")
 			} else {
 			// Invalid character
 				if !unicode.IsSpace(l.currRune) {
-					l.newError(l.lineIndex, l.charIndex, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
+					l.newError(l.lineIndex, l.charIndex - 1, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
 				}
 			}
-			l.advance()
 		}					
 	}
 }
@@ -447,7 +448,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 
 	// Digits exceed base
 	if invalidDigits {
-		l.newError(startLine, startChar, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
+		l.newError(startLine, startChar + uint(len(baseString)) + 1, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}

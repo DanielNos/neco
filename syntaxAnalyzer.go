@@ -25,6 +25,16 @@ func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
 	}
 }
 
+func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message string) {
+	sn.errorCount++
+	ErrorPos(sn.peek().position.file, line, line, startChar, endChar, message)
+
+	// Too many errors
+	if sn.errorCount > MAX_ERROR_COUNT {
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.errorCount))
+	}
+}
+
 func (sn *SyntaxAnalyzer) peek() *Token {
 	return sn.tokens[sn.tokenIndex]
 }
@@ -67,14 +77,24 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 
 	for i < len(sn.tokens) {
 		if sn.tokens[i].tokenType == TT_EndOfCommand || sn.tokens[i].tokenType == TT_EndOfFile {
-			return expression
+			// Return expression string
+			if len(expression) > 0 {
+				return expression[1:]
+			} else {
+				return ""
+			}
 		}
 
 		expression = fmt.Sprintf("%s %s", expression, sn.tokens[i])
 		i++
 	}
 
-	return expression
+	// Return expression string
+	if len(expression) > 0 {
+		return expression[1:]
+	} else {
+		return ""
+	}
 }
 
 func (sn *SyntaxAnalyzer) collectLine() string {
@@ -178,7 +198,21 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeFunctionDeclaration()
 
 	case TT_Identifier: // Identifiers
-		sn.analyzeIdentifier()
+		// Function call
+		if sn.peekNext().tokenType == TT_DL_ParenthesisOpen {
+			sn.analyzeIdentifier()
+		// Variable
+		} else {
+			startChar := sn.peek().position.startChar
+			sn.analyzeExpression()
+			sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+		}
+	
+	case TT_LT_None, TT_LT_Bool, TT_LT_Int, TT_LT_Float, TT_LT_String: // Literals
+			startChar := sn.peek().position.startChar
+			sn.analyzeExpression()
+			sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+
 
 	case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
 		sn.analyzeVariableDeclaration()
@@ -234,8 +268,9 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		
 	default:
 		// Collect line and print error
+		startChar := sn.peek().position.startChar
 		statement := sn.collectLine()
-		sn.newError(sn.peek(), fmt.Sprintf("Invalid statement \"%s\".", statement))
+		sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.endChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
 	}
 
 	// Collect tokens after statement
@@ -244,8 +279,9 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			return true
 		}
 
+		startChar := sn.peek().position.startChar
 		statement := sn.collectLine()
-		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
+		sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.endChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
 	}
 	sn.consume()
 
@@ -553,7 +589,7 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 				if sn.peek().tokenType.IsLiteral() {
 					expression := sn.collectExpression()
 
-					sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name. Did you want %s =%s?", sn.peek(), identifier, expression))
+					sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name. Did you want %s = %s?", sn.peek(), identifier, expression))
 					sn.analyzeExpression()
 					// Generic error
 				} else {
