@@ -108,6 +108,11 @@ func (l *Lexer) Lex() []*Token {
 func (l *Lexer) newError(line, char uint, message string) {
 	l.errorCount++
 	ErrorPos(&l.filePath, line, line, char, char, message)
+
+	// Too many errors
+	if l.errorCount > MAX_ERROR_COUNT {
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Lexical analysis has aborted due to too many errors. It has failed with %d errors.", l.errorCount))
+	}
 }
 
 func (l *Lexer) advance() {

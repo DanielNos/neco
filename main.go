@@ -7,6 +7,8 @@ import (
 	"github.com/fatih/color"
 )
 
+const MAX_ERROR_COUNT = 15
+
 func printTokens(tokens []*Token) {
 	for _, token := range tokens {
 		if token.tokenType > TT_KW_const {
@@ -64,11 +66,11 @@ func compile(path string, showTokens, showTree bool) {
 	Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
 
 	// Analyze syntax
-	syntaxAnalyzer := NewSyntaxAnalyzer(tokens)
+	syntaxAnalyzer := NewSyntaxAnalyzer(tokens, lexer.errorCount)
 	syntaxAnalyzer.Analyze()
 
 	if syntaxAnalyzer.errorCount != 0 {
-		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount + lexer.errorCount))
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.errorCount))
 	}
 
 	Success("Passed syntax analysis.")

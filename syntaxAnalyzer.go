@@ -11,13 +11,18 @@ type SyntaxAnalyzer struct {
 	errorCount uint
 }
 
-func NewSyntaxAnalyzer(tokens []*Token) SyntaxAnalyzer {
-	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, 0}
+func NewSyntaxAnalyzer(tokens []*Token, previousErrors uint) SyntaxAnalyzer {
+	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, previousErrors}
 }
 
 func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
 	sn.errorCount++
 	ErrorCodePos(token.position, message)
+
+	// Too many errors
+	if sn.errorCount > MAX_ERROR_COUNT {
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.errorCount))
+	}
 }
 
 func (sn *SyntaxAnalyzer) peek() *Token {
