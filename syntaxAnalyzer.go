@@ -45,6 +45,12 @@ func (sn *SyntaxAnalyzer) consume() *Token {
 	return sn.tokens[sn.tokenIndex-1]
 }
 
+func (sn *SyntaxAnalyzer) rewind() {
+	if sn.tokenIndex > 0 {
+		sn.tokenIndex--
+	}
+}
+
 func (sn *SyntaxAnalyzer) resetTokenPointer() {
 	sn.tokenIndex = 0
 	sn.consume()
@@ -130,20 +136,20 @@ func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, o
 			if sn.peek().tokenType == tokenType {
 				sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s. Only 0 or 1 EOCs are allowed.", afterWhat))
 			} else {
-				if !optional {
-					sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
-				}
+				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				sn.rewind()
 				return false
 			}
 		} else if sn.peek().tokenType != tokenType {
 			if !optional {
-				sn.newError(sn.consume(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				sn.rewind()
 				return false
 			}
 		}
 	}
 
-	return sn.peek().tokenType == tokenType
+	return true
 }
 
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
