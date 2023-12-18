@@ -901,21 +901,45 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		sn.analyzeExpression()
 		return
 	}
-	// Literal or identifier
-	if sn.peek().tokenType.IsLiteral() || sn.peek().tokenType == TT_Identifier {
+	// Literal
+	if sn.peek().tokenType.IsLiteral() {
 		sn.consume()
 
+		// Not end of expression
 		if sn.peek().tokenType.IsBinaryOperator() {
 			sn.consume()
 			sn.analyzeExpression()
 		}
 		return
 	}
+	// Variable or function call
+	if sn.peek().tokenType == TT_Identifier {
+		sn.consume()
+
+		// Variable
+		if sn.peek().tokenType.IsBinaryOperator() {
+			sn.consume()
+			sn.analyzeExpression()
+		// Function call
+		} else if sn.peek().tokenType == TT_DL_ParenthesisOpen {
+			sn.analyzeFunctionCall()
+
+			// Not end of expression
+			if sn.peek().tokenType.IsBinaryOperator() {
+				sn.consume()
+				sn.analyzeExpression()
+			}
+		}
+
+		return
+	}
 	// Sub-Expression
 	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
 		sn.analyzeSubExpression()
 
+		// Not end of expression
 		if sn.peek().tokenType.IsBinaryOperator() {
+			sn.consume()
 			sn.analyzeExpression()
 		}
 		return
