@@ -420,12 +420,15 @@ func (l *Lexer) lexNumber() {
 }
 
 func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
-	// Check base
+	// Convert base to int
 	base, _ := strconv.Atoi(baseString)
+
+	// Invalid base
 	if base < 2 || base > 36 {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, fmt.Sprintf("Invalid integer base %d. Only bases in range <2, 36> are supported.", base))
 		l.newToken(startLine, startChar, TT_LT_Int)
+		return
 	}
 
 	// Collect number

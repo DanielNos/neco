@@ -53,6 +53,8 @@ func processArguments() (string, bool, bool, string) {
 }
 
 func compile(path string, showTokens, showTree bool) {
+	Info(fmt.Sprintf("Compiling %s.\n", path))
+
 	// Tokenize
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
