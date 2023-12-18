@@ -218,6 +218,13 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case TT_KW_break, TT_KW_drop: // Break, Drop
 		sn.consume()
 
+	case TT_KW_return: // Return
+		sn.consume()
+
+		if sn.peek().tokenType != TT_EndOfCommand {
+			sn.analyzeExpression()
+		}
+
 	case TT_EndOfCommand: // Ignore EOCs
 		
 	default:
