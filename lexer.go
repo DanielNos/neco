@@ -107,7 +107,7 @@ func (l *Lexer) Lex() []*Token {
 
 func (l *Lexer) newError(line, char uint, message string) {
 	l.errorCount++
-	ErrorPos(&l.filePath, line, line, char, char, message)
+	ErrorPos(&l.filePath, line, line, char, char + uint(l.token.Len()), message)
 
 	// Too many errors
 	if l.errorCount > MAX_ERROR_COUNT {
@@ -367,6 +367,13 @@ func (l *Lexer) lexNumber() {
 	var base string
 
 	for i := 0; i < 2; i++{
+		if !unicode.IsDigit(l.currRune) && l.currRune != '_' && l.currRune != 'x' {
+			l.collectRestOfToken()
+			l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+			l.newToken(startLine, startChar, TT_LT_Int)
+			return
+		}
+
 		l.token.WriteRune(l.currRune)
 		l.advance()
 
@@ -408,9 +415,8 @@ func (l *Lexer) lexNumber() {
 	} else {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
-		l.token.Reset()
+		l.newToken(startLine, startChar, TT_LT_Int)
 	}
-
 }
 
 func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
@@ -419,7 +425,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	if base < 2 || base > 36 {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, fmt.Sprintf("Invalid integer base %d. Only bases in range <2, 36> are supported.", base))
-		l.token.Reset()
+		l.newToken(startLine, startChar, TT_LT_Int)
 	}
 
 	// Collect number
@@ -439,7 +445,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	// Digits exceed base
 	if invalidDigits {
 		l.newError(startLine, startChar, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
-		l.token.Reset()
+		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
 
@@ -447,7 +453,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
-		l.token.Reset()
+		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
 
@@ -474,7 +480,8 @@ func (l *Lexer) lexFloat(startLine, startChar uint) {
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
-		l.token.Reset()
+		l.newToken(startLine, startChar, TT_LT_Int)
+		return
 	}
 
 	l.newToken(startLine, startChar, TT_LT_Float)
