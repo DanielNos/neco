@@ -71,7 +71,7 @@ func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message
 		fmt.Fprintf(os.Stderr, "		|%s\n		", lineString)
 
 		var i uint
-		for i = 0; i < startChar - 1; i++ {
+		for i = 0; i < startChar; i++ {
 			fmt.Fprintf(os.Stderr, " ");
 		}
 		color.Set(color.FgHiRed)
