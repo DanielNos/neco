@@ -195,8 +195,8 @@ type Token struct {
 func (t *Token) String() string {
 	switch (t.tokenType) {
 	case TT_EndOfCommand:
-		if t.value[0] == ';' { return ";" }
-		return "\\n"
+		if len(t.value) == 0 { return "\\n" }
+		return ";"
 	case TT_StartOfFile:
 		return "SOF"
 	case TT_EndOfFile:

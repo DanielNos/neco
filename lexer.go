@@ -17,6 +17,7 @@ var TOKEN_BREAKERS = map[rune]bool {
 	'-': true,
 	'*': true,
 	'/': true,
+	'^': true,
 	'%': true,
 	
 	'=': true,
