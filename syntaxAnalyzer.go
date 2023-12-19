@@ -254,10 +254,10 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case TT_KW_forEach: // ForEach loop
 		sn.analyzeForEachLoop()
 
-	case TT_KW_break, TT_KW_drop: // Break, Drop
+	case TT_KW_break: // Break
 		sn.consume()
 
-	case TT_KW_return: // Return
+	case TT_KW_return, TT_KW_drop: // Return, Drop
 		sn.consume()
 
 		if sn.peek().tokenType != TT_EndOfCommand {
