@@ -27,7 +27,7 @@ func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
 
 func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message string) {
 	sn.errorCount++
-	ErrorPos(sn.peek().position.file, line, line, startChar, endChar, message)
+	ErrorPos(sn.peek().position.file, line, startChar, endChar, message)
 
 	// Too many errors
 	if sn.errorCount > MAX_ERROR_COUNT {
@@ -40,7 +40,7 @@ func (sn *SyntaxAnalyzer) peek() *Token {
 }
 
 func (sn *SyntaxAnalyzer) peekNext() *Token {
-	if sn.tokenIndex+1 < len(sn.tokens) {
+	if sn.tokenIndex + 1 < len(sn.tokens) {
 		return sn.tokens[sn.tokenIndex+1]
 	}
 	return sn.tokens[sn.tokenIndex]
@@ -231,13 +231,13 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			// Expression
 			startChar := sn.peek().position.startChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
 		}
 	
 	case TT_LT_None, TT_LT_Bool, TT_LT_Int, TT_LT_Float, TT_LT_String: // Literals
 			startChar := sn.peek().position.startChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
 
 
 	case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
@@ -296,7 +296,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		// Collect line and print error
 		startChar := sn.peek().position.startChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.endChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
+		sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.endChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
 	}
 
 	// Collect tokens after statement
@@ -307,7 +307,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 		startChar := sn.peek().position.startChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.endChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
+		sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.endChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
 	}
 	sn.consume()
 

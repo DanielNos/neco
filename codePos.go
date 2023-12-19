@@ -2,8 +2,7 @@ package main
 
 type CodePos struct {
 	file *string
-	startLine uint
-	endLine uint
+	line uint
 	startChar uint
 	endChar uint
 }

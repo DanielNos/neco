@@ -63,9 +63,9 @@ func Error(message string) {
 	fmt.Fprintln(os.Stderr, message)
 }
 
-func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message string) {
+func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	// Print error line
-	lineString, err := readLine(*file, startLine)
+	lineString, err := readLine(*file, line)
 
 	if err == nil {
 		color.Set(color.FgWhite)
@@ -83,7 +83,7 @@ func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message
 
 		// Draw arrows under the error token
 		color.Set(color.FgHiRed)
-		for i = startChar; i < endChar; i++ {
+		for i = startChar; i < endChar+1; i++ {
 			fmt.Fprintf(os.Stderr, "^");
 		}
 
@@ -94,14 +94,14 @@ func ErrorPos(file *string, startLine, endLine, startChar, endChar uint, message
 	fmt.Fprintf(os.Stderr, "[ERROR] ")
 	
 	color.Set(color.FgHiCyan)
-	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, startLine, startChar)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
 
 	color.Set(color.FgHiWhite)
 	fmt.Fprintf(os.Stderr, "%s\n\n", message)
 }
 
 func ErrorCodePos(codePos *CodePos, message string) {
-	ErrorPos(codePos.file, codePos.startLine, codePos.endLine, codePos.startChar, codePos.endChar, message)
+	ErrorPos(codePos.file, codePos.line, codePos.startChar, codePos.endChar, message)
 }
 
 func Fatal(error_code int, message string) {

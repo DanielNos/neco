@@ -108,7 +108,7 @@ func (l *Lexer) Lex() []*Token {
 
 func (l *Lexer) newError(line, char uint, message string) {
 	l.errorCount++
-	ErrorPos(&l.filePath, line, line, char, char + uint(l.token.Len()), message)
+	ErrorPos(&l.filePath, line, char, char + uint(l.token.Len()), message)
 
 	// Too many errors
 	if l.errorCount > MAX_ERROR_COUNT {
@@ -149,7 +149,7 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 }
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
-	l.tokens = append(l.tokens, &Token{&CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex}, tokenType, value})
+	l.tokens = append(l.tokens, &Token{&CodePos{&l.filePath, startLine, startChar, l.charIndex}, tokenType, value})
 }
 
 func (l *Lexer) collectRestOfToken() {
