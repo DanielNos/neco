@@ -203,6 +203,32 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			sn.analyzeIdentifier()
 		// Variable
 		} else {
+			// Assignment
+			if sn.peekNext().tokenType.IsAssignKeyword() {
+				sn.consume()
+				sn.analyzeAssignment()
+				break
+			}
+
+			// Declare custom variable
+			if sn.customTypes[sn.peek().value] {
+				sn.consume()
+				
+				// Check identifier
+				if sn.peek().tokenType != TT_Identifier {
+					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().value, sn.peek()))
+				} else {
+					sn.consume()
+				}
+
+				// Assign to it
+				if sn.peek().tokenType == TT_KW_Assign {
+					sn.analyzeAssignment()
+				}
+				break
+			}
+
+			// Expression
 			startChar := sn.peek().position.startChar
 			sn.analyzeExpression()
 			sn.newErrorFromTo(sn.peek().position.startLine, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
