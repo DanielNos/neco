@@ -59,13 +59,13 @@ func compile(path string, showTokens, showTree bool) {
 	lexer := NewLexer(path)
 	tokens := lexer.Lex()
 
+	Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
+	
 	// Print tokens
 	if showTokens {
 		printTokens(tokens)
 		println()
 	}
-
-	Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
 
 	// Analyze syntax
 	syntaxAnalyzer := NewSyntaxAnalyzer(tokens, lexer.errorCount)
@@ -76,6 +76,23 @@ func compile(path string, showTokens, showTree bool) {
 	}
 
 	Success("Passed syntax analysis.")
+
+	// Construct AST
+	parser := NewParser(tokens, syntaxAnalyzer.errorCount)
+	tree := parser.Parse()
+
+	if parser.errorCount != 0 {
+		Fatal(ERROR_SEMANTIC, fmt.Sprintf("Semantic analysis failed with %d errors.", parser.errorCount))
+	}
+
+	// Visualize tree
+	if showTree {
+		println()
+		Visualize(tree)
+		println()
+	}
+
+	Success("Passed semantic analysis.")
 }
 
 func main() {

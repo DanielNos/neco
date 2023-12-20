@@ -41,23 +41,23 @@ func (sn *SyntaxAnalyzer) peek() *Token {
 
 func (sn *SyntaxAnalyzer) peekNext() *Token {
 	if sn.tokenIndex + 1 < len(sn.tokens) {
-		return sn.tokens[sn.tokenIndex+1]
+		return sn.tokens[sn.tokenIndex + 1]
 	}
 	return sn.tokens[sn.tokenIndex]
 }
 
 func (sn *SyntaxAnalyzer) peekPrevious() *Token {
 	if sn.tokenIndex > 0 {
-		return sn.tokens[sn.tokenIndex-1]
+		return sn.tokens[sn.tokenIndex - 1]
 	}
 	return sn.tokens[0]
 }
 
 func (sn *SyntaxAnalyzer) consume() *Token {
-	if sn.tokenIndex+1 < len(sn.tokens) {
+	if sn.tokenIndex + 1 < len(sn.tokens) {
 		sn.tokenIndex++
 	}
-	return sn.tokens[sn.tokenIndex-1]
+	return sn.tokens[sn.tokenIndex - 1]
 }
 
 func (sn *SyntaxAnalyzer) rewind() {
