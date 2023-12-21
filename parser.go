@@ -1,22 +1,18 @@
 package main
 
-import (
-	"github.com/golang-collections/collections/stack"
-)
-
 type Parser struct {
 	tokens []*Token
 
 	tokenIndex int
 
 	scopeCounter int
-	scopeNodeStack *stack.Stack
+	scopeNodeStack *Stack
 
 	errorCount uint
 }
 
 func NewParser(tokens []*Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, stack.New(), previousErrors}
+	return Parser{tokens, 0, 0, NewStack(), previousErrors}
 }
 
 func (p *Parser) peek() *Token {
@@ -30,8 +26,8 @@ func (p *Parser) consume() *Token {
 	return p.tokens[p.tokenIndex - 1]
 }
 
-func (p *Parser) currentScope() *ScopeNode {
-	return p.scopeNodeStack.Peek().(*ScopeNode)
+func (p *Parser) appendScope(node *Node) {
+	p.scopeNodeStack.top.value.(*ScopeNode).statements = append(p.scopeNodeStack.top.value.(*ScopeNode).statements, node)
 }
 
 func (p *Parser) Parse() *Node {
@@ -82,5 +78,21 @@ func (p *Parser) parseVariableDeclare() *Node {
 		identifiers = append(identifiers, p.consume().value)
 	}
 
-	return &Node{dataType.position, NT_VariableDeclare, VariableDeclareNode{TokenTypeToDataType[dataType.tokenType], identifiers}}
+	declareNode := &Node{dataType.position, NT_VariableDeclare, &VariableDeclareNode{TokenTypeToDataType[dataType.tokenType], identifiers}}
+
+	if p.peek().tokenType == TT_EndOfCommand {
+		p.consume()
+	} else if p.peek().tokenType == TT_KW_Assign {
+		p.appendScope(declareNode)
+		return p.parseAssign(identifiers)
+	}
+
+	return declareNode
+}
+
+func (p *Parser) parseAssign(identifiers []string) *Node {
+	assign := p.consume()
+	expression := p.parseExpression()
+
+	return &Node{assign.position, NT_Assign, &AssignNode{identifiers, expression}}
 }

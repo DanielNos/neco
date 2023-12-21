@@ -37,7 +37,7 @@ func processArguments() (string, bool, bool, string) {
 	build := flag.String("build", "", "Builds specified source file.")
 
 	flag.Parse()
-	
+
 	// Select action and target
 	action := ""
 	target := ""
@@ -45,7 +45,7 @@ func processArguments() (string, bool, bool, string) {
 	if *build != "" {
 		action = "build"
 		target = *build
-	// No action
+		// No action
 	} else {
 		Fatal(ERROR_INVALID_USE, "No action specified.")
 	}
@@ -60,7 +60,7 @@ func compile(path string, showTokens, showTree bool) {
 	tokens := lexer.Lex()
 
 	Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
-	
+
 	// Print tokens
 	if showTokens {
 		printTokens(tokens)

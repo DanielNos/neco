@@ -15,7 +15,16 @@ const (
 	NT_Scope
 	NT_StatementList
 	NT_VariableDeclare
+	NT_Assign
+	NT_Literal
 )
+
+var NodeTypeToString = map[NodeType]string {
+	NT_Module: "Module",
+	NT_Scope: "Scope",
+	NT_StatementList: "StatementList",
+	NT_VariableDeclare: "VariableDeclare",
+}
 
 type ModuleNode struct {
 	name string
@@ -30,4 +39,14 @@ type ScopeNode struct {
 type VariableDeclareNode struct {
 	dataType DataType
 	identifiers []string
+}
+
+type AssignNode struct {
+	identifiers []string
+	expression *Node
+}
+
+type LiteralNode struct {
+	dataType DataType
+	value string
 }

@@ -10,6 +10,23 @@ const (
 	DT_String
 )
 
+func (d DataType) String() string {
+	switch d {
+	case DT_None:
+		return "None"
+	case DT_Bool:
+		return "Bool"
+	case DT_Int:
+		return "Int"
+	case DT_Float:
+		return "Float"
+	case DT_String:
+		return "String"
+	}
+
+	return "[INVALID DATA TYPE]"
+}
+
 var TokenTypeToDataType = map[TokenType]DataType {
 	TT_LT_None: DT_None,
 
