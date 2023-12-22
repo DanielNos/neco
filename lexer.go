@@ -75,7 +75,7 @@ type Lexer struct {
 }
 
 func NewLexer(filePath string) Lexer {
-	return Lexer{filePath, nil, nil, false, ' ', ' ', 1, 1, bytes.Buffer{}, make([]*Token, 0, 100), 0}
+	return Lexer{filePath, nil, nil, false, ' ', ' ', 0, 0, bytes.Buffer{}, make([]*Token, 0, 100), 0}
 }
 
 func (l *Lexer) Lex() []*Token {
@@ -95,6 +95,9 @@ func (l *Lexer) Lex() []*Token {
 	l.reader = bufio.NewReader(file)
 	l.advance()
 	l.advance()
+
+	l.charIndex = 1
+	l.lineIndex = 1
 	
 	for {
 		l.lexRune()

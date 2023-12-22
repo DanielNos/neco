@@ -14,8 +14,6 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	} else if p.peek().tokenType == TT_DL_ParenthesisOpen {
 		p.consume()
 		left = p.parseExpression(MINIMAL_PRECEDENCE)
-	// End of sub-expression
-	} else if p.peek().tokenType == TT_DL_ParenthesisClose {
 		p.consume()
 	// Invalid token
 	} else {
