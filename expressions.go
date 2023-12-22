@@ -1,24 +1,39 @@
 package main
 
-func (p *Parser) parseExpression() *Node {
+import "fmt"
+
+const MINIMAL_PRECEDENCE = -100
+
+func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	var left *Node
 
+	// Literal
 	if p.peek().tokenType.IsLiteral() {
 		left = &Node{p.peek().position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.peek().tokenType], p.consume().value}}
 	}
-	
+
+	// Operators
+	for p.peek().tokenType.IsBinaryOperator() && operatorPrecedence(p.peek().tokenType) >= currentPrecedence {
+		operator := p.consume()
+		right := p.parseExpression(operatorPrecedence(operator.tokenType))
+
+		left = &Node{operator.position, TokenTypeToNodeType[operator.tokenType], &BinaryNode{left, right}}
+	}
+
 	return left
 }
 
 func operatorPrecedence(operator TokenType) int {
 	switch operator {
-	case TT_OP_Add, TT_OP_Subtract:
+	case TT_OP_Equal, TT_OP_NotEqual, TT_OP_Lower, TT_OP_Greater, TT_OP_LowerEqual, TT_OP_GreaterEqual:
 		return 0
-	case TT_OP_Multiply, TT_OP_Divide:
+	case TT_OP_Add, TT_OP_Subtract:
 		return 1
-	case TT_OP_Power, TT_OP_Modulo:
+	case TT_OP_Multiply, TT_OP_Divide:
 		return 2
+	case TT_OP_Power, TT_OP_Modulo:
+		return 3
+	default:
+		panic(fmt.Sprintf("Can't get operator precedence from token type %s.", operator))
 	}
-
-	return -1000
 }

@@ -92,7 +92,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 
 func (p *Parser) parseAssign(identifiers []string) *Node {
 	assign := p.consume()
-	expression := p.parseExpression()
+	expression := p.parseExpression(MINIMAL_PRECEDENCE)
 
 	return &Node{assign.position, NT_Assign, &AssignNode{identifiers, expression}}
 }

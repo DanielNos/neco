@@ -17,6 +17,18 @@ const (
 	NT_VariableDeclare
 	NT_Assign
 	NT_Literal
+	NT_Add
+	NT_Subtract
+	NT_Multiply
+	NT_Divide
+	NT_Power
+	NT_Modulo
+	NT_Equal
+	NT_NotEqual
+	NT_Lower
+	NT_Greater
+	NT_LowerEqual
+	NT_GreaterEqual
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -24,6 +36,20 @@ var NodeTypeToString = map[NodeType]string {
 	NT_Scope: "Scope",
 	NT_StatementList: "StatementList",
 	NT_VariableDeclare: "VariableDeclare",
+	NT_Assign: "Assign",
+	NT_Literal: "Literal",
+	NT_Add: "+",
+	NT_Subtract: "-",
+	NT_Multiply: "*",
+	NT_Divide: "/",
+	NT_Power: "^",
+	NT_Modulo: "%",
+	NT_Equal: "==",
+	NT_NotEqual: "!=",
+	NT_Lower: "<",
+	NT_Greater: ">",
+	NT_LowerEqual: "<=",
+	NT_GreaterEqual: ">=",
 }
 
 type ModuleNode struct {
@@ -49,4 +75,9 @@ type AssignNode struct {
 type LiteralNode struct {
 	dataType DataType
 	value string
+}
+
+type BinaryNode struct {
+	left *Node
+	right *Node
 }

@@ -233,3 +233,18 @@ func (t *Token) TableString() string {
 
 	return message
 }
+
+var TokenTypeToNodeType = map[TokenType]NodeType {
+	TT_OP_Add: NT_Add,
+	TT_OP_Subtract: NT_Subtract,
+	TT_OP_Multiply: NT_Multiply,
+	TT_OP_Divide: NT_Divide,
+	TT_OP_Power: NT_Power,
+	TT_OP_Modulo: NT_Modulo,
+	TT_OP_Equal: NT_Equal,
+	TT_OP_NotEqual: NT_NotEqual,
+	TT_OP_Lower: NT_Lower,
+	TT_OP_Greater: NT_Greater,
+	TT_OP_LowerEqual: NT_LowerEqual,
+	TT_OP_GreaterEqual: NT_GreaterEqual,
+}
