@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type Parser struct {
 	tokens []*Token
 
@@ -35,11 +37,20 @@ func (p *Parser) Parse() *Node {
 }
 
 func (p *Parser) parseModule() *Node {
-	moduleName := p.consume().value
+	// Collect module path and name
+	modulePath := p.consume().value
+	pathParts := strings.Split(modulePath, "/")
+	moduleName := pathParts[len(pathParts)-1]
 
+	if strings.Contains(moduleName, ".") { 
+		moduleName = strings.Split(moduleName, ".")[0]
+	}
+
+	// Parse module
 	scope := p.parseScope()
 
-	var moduleNode NodeValue = &ModuleNode{moduleName, scope}
+	// Create node
+	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scope}
 	module := &Node{p.peek().position, NT_Module, moduleNode}
 
 	return module

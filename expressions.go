@@ -10,6 +10,16 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	// Literal
 	if p.peek().tokenType.IsLiteral() {
 		left = &Node{p.peek().position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.peek().tokenType], p.consume().value}}
+	// Sub-Expression
+	} else if p.peek().tokenType == TT_DL_ParenthesisOpen {
+		p.consume()
+		left = p.parseExpression(MINIMAL_PRECEDENCE)
+	// End of sub-expression
+	} else if p.peek().tokenType == TT_DL_ParenthesisClose {
+		p.consume()
+	// Invalid token
+	} else {
+		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
 	}
 
 	// Operators
@@ -34,6 +44,6 @@ func operatorPrecedence(operator TokenType) int {
 	case TT_OP_Power, TT_OP_Modulo:
 		return 3
 	default:
-		panic(fmt.Sprintf("Can't get operator precedence from token type %s.", operator))
+		panic(fmt.Sprintf("Can't get operator precedence of token type %s.", operator))
 	}
 }

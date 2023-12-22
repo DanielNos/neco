@@ -53,6 +53,7 @@ var NodeTypeToString = map[NodeType]string {
 }
 
 type ModuleNode struct {
+	filePath string
 	name string
 	statements *ScopeNode
 }
