@@ -83,7 +83,7 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 
 		// Draw arrows under the error token
 		color.Set(color.FgHiRed)
-		for i = startChar; i < endChar+1; i++ {
+		for i = startChar; i < endChar; i++ {
 			fmt.Fprintf(os.Stderr, "^");
 		}
 

@@ -15,6 +15,15 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		p.consume()
 		left = p.parseExpression(MINIMAL_PRECEDENCE)
 		p.consume()
+	// Identifiers
+	} else if p.peek().tokenType == TT_Identifier {
+		_, exists := p.globalSymbolTable[p.peek().value]
+
+		if !exists {
+			p.newError(p.peek(), fmt.Sprintf("Variable %s is not declared in this scope.", p.peek()))
+		}
+
+		left = &Node{p.peek().position, NT_Variable, &VariableNode{p.consume().value}}
 	// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))

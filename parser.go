@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Parser struct {
 	tokens []*Token
@@ -9,12 +12,14 @@ type Parser struct {
 
 	scopeCounter int
 	scopeNodeStack *Stack
+	
+	globalSymbolTable map[string]*Symbol
 
 	errorCount uint
 }
 
 func NewParser(tokens []*Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, NewStack(), previousErrors}
+	return Parser{tokens, 0, 0, NewStack(), map[string]*Symbol{}, previousErrors}
 }
 
 func (p *Parser) peek() *Token {
@@ -32,21 +37,53 @@ func (p *Parser) appendScope(node *Node) {
 	p.scopeNodeStack.top.value.(*ScopeNode).statements = append(p.scopeNodeStack.top.value.(*ScopeNode).statements, node)
 }
 
+func (p *Parser) newError(token *Token, message string) {
+	p.errorCount++
+	ErrorCodePos(token.position, message)
+
+	// Too many errors
+	if p.errorCount > MAX_ERROR_COUNT {
+		Fatal(ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.errorCount))
+	}
+}
+
+func (p *Parser) insertSymbol(key string, symbol *Symbol) {
+	if p.scopeNodeStack.size == 0 {
+		p.globalSymbolTable[key] = symbol
+	}
+}
+
 func (p *Parser) Parse() *Node {
 	return p.parseModule()
+}
+
+func (p *Parser) collectGlobalSymbols() {
+	for p.peek().tokenType != TT_EndOfFile {
+		// Collect variable
+		if p.peek().tokenType.IsVariableType() {
+			p.consume()
+		} else {
+			p.consume()
+		}
+	}
 }
 
 func (p *Parser) parseModule() *Node {
 	// Collect module path and name
 	modulePath := p.consume().value
 	pathParts := strings.Split(modulePath, "/")
-	moduleName := pathParts[len(pathParts)-1]
+	moduleName := pathParts[len(pathParts) - 1]
 
 	if strings.Contains(moduleName, ".") { 
 		moduleName = strings.Split(moduleName, ".")[0]
 	}
 
+	// Collect global symbols
+	p.collectGlobalSymbols()
+	p.tokenIndex = 0
+
 	// Parse module
+	p.consume()
 	scope := p.parseScope()
 
 	// Create node
@@ -69,19 +106,21 @@ func (p *Parser) parseScope() *ScopeNode {
 
 		case TT_EndOfCommand:
 			p.consume()
-		}
 
-		p.consume()
+		default:
+			panic(fmt.Sprintf("Unexpected token \"%s\".", p.consume()))
+		}
 	}
 
 	return scope
 }
 
 func (p *Parser) parseVariableDeclare() *Node {
-	dataType := p.consume()
-	identifiers := []string{}
+	startPosition := p.peek().position
+	dataType := TokenTypeToDataType[p.consume().tokenType]
 
 	// Collect identifiers
+	identifiers := []string{}
 	identifiers = append(identifiers, p.consume().value)
 
 	for p.peek().tokenType == TT_DL_Comma {
@@ -89,13 +128,22 @@ func (p *Parser) parseVariableDeclare() *Node {
 		identifiers = append(identifiers, p.consume().value)
 	}
 
-	declareNode := &Node{dataType.position, NT_VariableDeclare, &VariableDeclareNode{TokenTypeToDataType[dataType.tokenType], identifiers}}
+	// Create node
+	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{dataType, false, identifiers}}
+	assigned := false
 
+	// End
 	if p.peek().tokenType == TT_EndOfCommand {
 		p.consume()
+	// Assign
 	} else if p.peek().tokenType == TT_KW_Assign {
 		p.appendScope(declareNode)
-		return p.parseAssign(identifiers)
+		declareNode = p.parseAssign(identifiers)
+	}
+
+	// Insert symbols
+	for _, id := range identifiers {
+		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{dataType, false, assigned}})
 	}
 
 	return declareNode

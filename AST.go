@@ -28,7 +28,13 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_VariableDeclare:
 		declare := node.value.(*VariableDeclareNode)
 		
-		fmt.Printf("Declare %s:", declare.dataType)
+		fmt.Printf("Declare %s", declare.dataType)
+
+		if declare.canBeNone {
+			print("?:")
+		} else {
+			print(":")
+		}
 
 		for _, id := range declare.identifiers {
 			fmt.Printf(" %s", id)
@@ -59,6 +65,9 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		visualize(binary.left, indent, false)
 		visualize(binary.right, indent, true)
+
+	case NT_Variable:
+		println(node.value.(*VariableNode).identifier)
 		
 	default:
 		println("???")
