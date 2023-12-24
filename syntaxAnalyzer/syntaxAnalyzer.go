@@ -1,59 +1,65 @@
-package main
+package syntaxAnalyzer
 
-import "fmt"
+import (
+	"fmt"
+
+	"neko/errors"
+	"neko/lexer"
+	"neko/logger"
+)
 
 type SyntaxAnalyzer struct {
-	tokens []*Token
+	tokens []*lexer.Token
 
 	tokenIndex  int
 	customTypes map[string]bool
 
-	errorCount uint
+	ErrorCount uint
 }
 
-func NewSyntaxAnalyzer(tokens []*Token, previousErrors uint) SyntaxAnalyzer {
+func NewSyntaxAnalyzer(tokens []*lexer.Token, previousErrors uint) SyntaxAnalyzer {
 	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, previousErrors}
 }
 
-func (sn *SyntaxAnalyzer) newError(token *Token, message string) {
-	sn.errorCount++
-	ErrorCodePos(token.position, message)
+func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
+	sn.ErrorCount++
+	logger.ErrorCodePos(token.Position, message)
 
 	// Too many errors
-	if sn.errorCount > MAX_ERROR_COUNT {
-		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.errorCount))
+	if sn.ErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
 
 func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message string) {
-	sn.errorCount++
-	ErrorPos(sn.peek().position.file, line, startChar, endChar, message)
+	sn.ErrorCount++
+	logger.ErrorPos(sn.peek().Position.File, line, startChar, endChar, message)
 
 	// Too many errors
-	if sn.errorCount > MAX_ERROR_COUNT {
-		Fatal(ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.errorCount))
+	if sn.ErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
 
-func (sn *SyntaxAnalyzer) peek() *Token {
+func (sn *SyntaxAnalyzer) peek() *lexer.Token {
 	return sn.tokens[sn.tokenIndex]
 }
 
-func (sn *SyntaxAnalyzer) peekNext() *Token {
+func (sn *SyntaxAnalyzer) peekNext() *lexer.Token {
 	if sn.tokenIndex + 1 < len(sn.tokens) {
 		return sn.tokens[sn.tokenIndex + 1]
 	}
 	return sn.tokens[sn.tokenIndex]
 }
 
-func (sn *SyntaxAnalyzer) peekPrevious() *Token {
+func (sn *SyntaxAnalyzer) peekPrevious() *lexer.Token {
 	if sn.tokenIndex > 0 {
 		return sn.tokens[sn.tokenIndex - 1]
 	}
 	return sn.tokens[0]
 }
 
-func (sn *SyntaxAnalyzer) consume() *Token {
+func (sn *SyntaxAnalyzer) consume() *lexer.Token {
 	if sn.tokenIndex + 1 < len(sn.tokens) {
 		sn.tokenIndex++
 	}
@@ -76,7 +82,7 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 	expression := ""
 
 	for i < len(sn.tokens) {
-		if sn.tokens[i].tokenType == TT_EndOfCommand || sn.tokens[i].tokenType == TT_EndOfFile {
+		if sn.tokens[i].TokenType == lexer.TT_EndOfCommand || sn.tokens[i].TokenType == lexer.TT_EndOfFile {
 			// Return expression string
 			if len(expression) > 0 {
 				return expression[1:]
@@ -100,8 +106,8 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 func (sn *SyntaxAnalyzer) collectLine() string {
 	statement := ""
 
-	for sn.peek().tokenType != TT_EndOfFile {
-		if sn.peek().tokenType == TT_EndOfCommand && sn.peek().value == "" || sn.peek().tokenType == TT_DL_BraceOpen {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand && sn.peek().Value == "" || sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 			if len(statement) != 0 {
 				return statement[1:]
 			}
@@ -118,7 +124,7 @@ func (sn *SyntaxAnalyzer) collectLine() string {
 
 func (sn *SyntaxAnalyzer) Analyze() {
 	// Check StartOfFile
-	if sn.peek().tokenType != TT_StartOfFile {
+	if sn.peek().TokenType != lexer.TT_StartOfFile {
 		sn.newError(sn.peek(), "Missing StarOfFile token. This is probably a lexer error.")
 	} else {
 		sn.consume()
@@ -130,13 +136,13 @@ func (sn *SyntaxAnalyzer) Analyze() {
 }
 
 func (sn *SyntaxAnalyzer) registerEnumsAndStructs() {
-	for sn.peek().tokenType != TT_EndOfFile {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
 		// Register enum
-		if sn.peek().tokenType == TT_KW_enum || sn.peek().tokenType == TT_KW_struct {
+		if sn.peek().TokenType == lexer.TT_KW_enum || sn.peek().TokenType == lexer.TT_KW_struct {
 			sn.consume()
 
-			if sn.peek().tokenType == TT_Identifier {
-				sn.customTypes[sn.consume().value] = true
+			if sn.peek().TokenType == lexer.TT_Identifier {
+				sn.customTypes[sn.consume().Value] = true
 			}
 		} else {
 			sn.consume()
@@ -144,28 +150,28 @@ func (sn *SyntaxAnalyzer) registerEnumsAndStructs() {
 	}
 }
 
-func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, optional bool) bool {
-	if sn.peek().tokenType != tokenType {
+func (sn *SyntaxAnalyzer) lookFor(tokenType lexer.TokenType, afterWhat, name string, optional bool) bool {
+	if sn.peek().TokenType != tokenType {
 		// Skip 1 EOC
-		if sn.peek().tokenType == TT_EndOfCommand {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
 			sn.consume()
 		}
 
 		// Check for opening brace after EOCs
-		if sn.peek().tokenType == TT_EndOfCommand {
-			for sn.peek().tokenType == TT_EndOfCommand {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			for sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.consume()
 			}
 
 			// Found token
-			if sn.peek().tokenType == tokenType {
+			if sn.peek().TokenType == tokenType {
 				sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s. Only 0 or 1 EOCs are allowed.", afterWhat))
 			} else {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
 				sn.rewind()
 				return false
 			}
-		} else if sn.peek().tokenType != tokenType {
+		} else if sn.peek().TokenType != tokenType {
 			if !optional {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
 				sn.rewind()
@@ -180,7 +186,7 @@ func (sn *SyntaxAnalyzer) lookFor(tokenType TokenType, afterWhat, name string, o
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	start := sn.peekPrevious()
 
-	for sn.peek().tokenType != TT_EndOfFile {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
 		if sn.analyzeStatement(isScope) {
 			return
 		}
@@ -192,122 +198,122 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 }
 
 func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
-	switch sn.peek().tokenType {
+	switch sn.peek().TokenType {
 
-	case TT_KW_fun: // Function declaration
+	case lexer.TT_KW_fun: // Function declaration
 		sn.analyzeFunctionDeclaration()
 
-	case TT_Identifier: // Identifiers
+	case lexer.TT_Identifier: // Identifiers
 		// Function call
-		if sn.peekNext().tokenType == TT_DL_ParenthesisOpen {
+		if sn.peekNext().TokenType == lexer.TT_DL_ParenthesisOpen {
 			sn.analyzeIdentifier()
 		// Variable
 		} else {
 			// Assignment
-			if sn.peekNext().tokenType.IsAssignKeyword() {
+			if sn.peekNext().TokenType.IsAssignKeyword() {
 				sn.consume()
 				sn.analyzeAssignment()
 				break
 			}
 
 			// Declare custom variable
-			if sn.customTypes[sn.peek().value] {
+			if sn.customTypes[sn.peek().Value] {
 				sn.consume()
 				
 				// Check identifier
-				if sn.peek().tokenType != TT_Identifier {
-					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().value, sn.peek()))
+				if sn.peek().TokenType != lexer.TT_Identifier {
+					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().Value, sn.peek()))
 				} else {
 					sn.consume()
 				}
 
 				// Assign to it
-				if sn.peek().tokenType == TT_KW_Assign {
+				if sn.peek().TokenType == lexer.TT_KW_Assign {
 					sn.analyzeAssignment()
 				}
 				break
 			}
 
 			// Expression
-			startChar := sn.peek().position.startChar
+			startChar := sn.peek().Position.StartChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 		}
 	
-	case TT_LT_None, TT_LT_Bool, TT_LT_Int, TT_LT_Float, TT_LT_String: // Literals
-			startChar := sn.peek().position.startChar
+	case lexer.TT_LT_None, lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
+			startChar := sn.peek().Position.StartChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.startChar,"Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar,"Expression can't be a statement.")
 
 
-	case TT_KW_var, TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str: // Variable declarations
+	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str: // Variable declarations
 		sn.analyzeVariableDeclaration()
 
-	case TT_DL_BraceClose: // Leave scope
+	case lexer.TT_DL_BraceClose: // Leave scope
 		if isScope {
 			return true
 		}
 		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
 	
-	case TT_DL_ParenthesisClose:
+	case lexer.TT_DL_ParenthesisClose:
 		return true
 	
-	case TT_DL_BraceOpen: // Enter scope
+	case lexer.TT_DL_BraceOpen: // Enter scope
 		sn.analyzeScope()
 
-	case TT_KW_struct: // Struct
+	case lexer.TT_KW_struct: // Struct
 		sn.analyzeStructDefinition()
 
-	case TT_KW_enum: // Enum
+	case lexer.TT_KW_enum: // Enum
 		sn.analyzeEnumDefinition()
 
-	case TT_KW_if: // If
+	case lexer.TT_KW_if: // If
 		sn.analyzeIfStatement(false)
 
-	case TT_KW_else: // Else
+	case lexer.TT_KW_else: // Else
 		sn.newError(sn.peek(), "Else statement is missing an if statement.")
 		sn.analyzeElseStatement()
 
-	case TT_KW_loop: // Loop
+	case lexer.TT_KW_loop: // Loop
 		sn.analyzeLoop()
 
-	case TT_KW_while: // While loop
+	case lexer.TT_KW_while: // While loop
 		sn.analyzeWhileLoop()
 
-	case TT_KW_for: // For loop
+	case lexer.TT_KW_for: // For loop
 		sn.analyzeForLoop()
 
-	case TT_KW_forEach: // ForEach loop
+	case lexer.TT_KW_forEach: // ForEach loop
 		sn.analyzeForEachLoop()
 
-	case TT_KW_break: // Break
+	case lexer.TT_KW_break: // Break
 		sn.consume()
 
-	case TT_KW_return, TT_KW_drop: // Return, Drop
+	case lexer.TT_KW_return, lexer.TT_KW_drop: // Return, Drop
 		sn.consume()
 
-		if sn.peek().tokenType != TT_EndOfCommand {
+		if sn.peek().TokenType != lexer.TT_EndOfCommand {
 			sn.analyzeExpression()
 		}
 
-	case TT_EndOfCommand: // Ignore EOCs
+	case lexer.TT_EndOfCommand: // Ignore EOCs
 		
 	default:
 		// Collect line and print error
-		startChar := sn.peek().position.startChar
+		startChar := sn.peek().Position.StartChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.endChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
+		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
 	}
 
 	// Collect tokens after statement
-	if sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile {
-		if sn.peek().tokenType == TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return true
 		}
 
-		startChar := sn.peek().position.startChar
+		startChar := sn.peek().Position.StartChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().position.line, startChar, sn.peek().position.endChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
+		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
 	}
 	sn.consume()
 
@@ -318,56 +324,56 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 	sn.consume()
 
 	// Check opening parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword forEach, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check type
-	if !sn.peek().tokenType.IsVariableType() {
+	if !sn.peek().TokenType.IsVariableType() {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable type, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check variable identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check keyword in
-	if sn.peek().tokenType != TT_KW_in {
+	if sn.peek().TokenType != lexer.TT_KW_in {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected keyword in after variable identifier, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check list identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check closing parenthesis
-	if sn.peek().tokenType == TT_DL_ParenthesisClose {
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		sn.consume()
 	} else {
-		for sn.peek().tokenType != TT_DL_ParenthesisClose && sn.peek().tokenType != TT_DL_BraceOpen && sn.peek().tokenType != TT_EndOfCommand {
+		for sn.peek().TokenType != lexer.TT_DL_ParenthesisClose && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_EndOfCommand {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis, found \"%s\" instead.", sn.consume()))
 		}
 
 		// Parenthesis found
-		if sn.peek().tokenType == TT_DL_ParenthesisClose {
+		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			sn.consume()
 		}
 	}
 
 	// Check code block
-	if sn.lookFor(TT_DL_BraceOpen, "forEach statement", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "forEach statement", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }
@@ -376,16 +382,16 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 	sn.consume()
 
 	// Check opening parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword for, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check condition
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		// Missing condition
-		if sn.peek().value == "" {
+		if sn.peek().Value == "" {
 			sn.newError(sn.peek(), "Expected for loop initialization statement, found \"\\n\" instead.")
 			return
 		// No condition
@@ -398,16 +404,16 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 	}
 
 	// Check condition
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		// Missing condition
-		if sn.peek().value == "" {
+		if sn.peek().Value == "" {
 			sn.newError(sn.peek(), "For loop missing condition and step statement.")
 			return
 		} else {
 			sn.newError(sn.peek(), "For loop missing condition.")
 		}
 	// No condition
-	} else if sn.peek().tokenType == TT_DL_ParenthesisClose {
+	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.consume(), "For loop missing condition and step statement.")
 		return
 	// Check condition expression
@@ -416,23 +422,23 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 	}
 
 	// Check step
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 	// No step
-	} else if sn.peek().tokenType == TT_DL_ParenthesisClose {
+	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		return
 	}
 
 	sn.analyzeStatement(false)
 
 	// Check closing parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
-	if sn.lookFor(TT_DL_BraceOpen, "for loop condition", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "for loop condition", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }
@@ -441,27 +447,27 @@ func (sn *SyntaxAnalyzer) analyzeWhileLoop() {
 	sn.consume()
 
 	// Check opening parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword while, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check condition
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
 		return
 	}
 	sn.analyzeExpression()
 
 	// Check closing parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
-	if sn.lookFor(TT_DL_BraceOpen, "while loop condition", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "while loop condition", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }
@@ -469,7 +475,7 @@ func (sn *SyntaxAnalyzer) analyzeWhileLoop() {
 func (sn *SyntaxAnalyzer) analyzeLoop() {
 	sn.consume()
 
-	if sn.lookFor(TT_DL_BraceOpen, "keyword loop", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "keyword loop", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }
@@ -484,28 +490,28 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	}
 
 	// Check opening parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword if, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Collect expression
-	if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.analyzeExpression()
 	}
 
 	// Check closing parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check opening brace
-	if !sn.lookFor(TT_DL_BraceOpen, "if statement", "opening brace", false) {
+	if !sn.lookFor(lexer.TT_DL_BraceOpen, "if statement", "opening brace", false) {
 		return
 	}
 
@@ -513,22 +519,22 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	sn.analyzeScope()
 
 	// Check else statement
-	if sn.peek().tokenType == TT_KW_else {
+	if sn.peek().TokenType == lexer.TT_KW_else {
 		sn.analyzeElseStatement()
 		return
 	// Check elif statement
-	} else if sn.peek().tokenType == TT_KW_elif {
+	} else if sn.peek().TokenType == lexer.TT_KW_elif {
 		sn.analyzeIfStatement(true)
 		return
 	// Skip 1 EOC
 	} else {
 		// Check else statement
-		if sn.peekNext().tokenType == TT_KW_else {
+		if sn.peekNext().TokenType == lexer.TT_KW_else {
 			sn.consume()
 			sn.analyzeElseStatement()
 			return
 		// Check elif statement
-		} else if sn.peekNext().tokenType == TT_KW_elif {
+		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
 			sn.consume()
 			sn.analyzeIfStatement(true)
 			return
@@ -536,23 +542,23 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	}
 
 	// Look for else or elif after many EOCs
-	for sn.peek().tokenType == TT_EndOfCommand {
+	for sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 
 		// Found else
-		if sn.peekNext().tokenType == TT_KW_else {
+		if sn.peekNext().TokenType == lexer.TT_KW_else {
 			sn.consume()
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeElseStatement()
 			return
 		// Found elif
-		} else if sn.peekNext().tokenType == TT_KW_elif {
+		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
 			sn.consume()
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeIfStatement(true)
 			return
 		// Other tokens
-		} else if sn.peekNext().tokenType != TT_EndOfCommand {
+		} else if sn.peekNext().TokenType != lexer.TT_EndOfCommand {
 			return
 		}
 	}
@@ -562,7 +568,7 @@ func (sn *SyntaxAnalyzer) analyzeElseStatement() {
 	sn.consume()
 
 	// Check opening brace
-	if sn.lookFor(TT_DL_BraceOpen, "else statement", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "else statement", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }
@@ -571,10 +577,10 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 	sn.consume()
 
 	// Check identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peek(), "Expected identifier after keyword enum.")
 
-		if sn.peek().tokenType != TT_DL_BraceOpen {
+		if sn.peek().TokenType != lexer.TT_DL_BraceOpen {
 			sn.consume()
 		}
 	} else {
@@ -582,54 +588,54 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 	}
 
 	// Check opening brace
-	if !sn.lookFor(TT_DL_BraceOpen, "enum identifier", "opening brace", false) {
+	if !sn.lookFor(lexer.TT_DL_BraceOpen, "enum identifier", "opening brace", false) {
 		return
 	}
 	sn.consume()
 
 	// Check enums
-	for sn.peek().tokenType != TT_EndOfFile {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
 
 		// Enum name
-		if sn.peek().tokenType == TT_Identifier {
+		if sn.peek().TokenType == lexer.TT_Identifier {
 			identifier := sn.consume()
 
 			// Set custom value
-			if sn.peek().tokenType == TT_KW_Assign {
+			if sn.peek().TokenType == lexer.TT_KW_Assign {
 				sn.consume()
 				sn.analyzeExpression()
 			}
 
 			// Allow only EOCs and } after enum name
-			if sn.peek().tokenType == TT_EndOfCommand {
+			if sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.consume()
-			} else if sn.peek().tokenType == TT_DL_BraceClose {
+			} else if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 				sn.consume()
 				break
 				// , instead of ;
-			} else if sn.peek().tokenType == TT_DL_Comma {
+			} else if sn.peek().TokenType == lexer.TT_DL_Comma {
 				sn.newError(sn.consume(), "Unexpected token \",\" after enum name. Did you want \";\"?")
 				// Invalid token
 			} else {
 				// Missing =
-				if sn.peek().tokenType.IsLiteral() {
+				if sn.peek().TokenType.IsLiteral() {
 					expression := sn.collectExpression()
 
 					sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name. Did you want %s = %s?", sn.peek(), identifier, expression))
 					sn.analyzeExpression()
 					// Generic error
 				} else {
-					for sn.peek().tokenType != TT_EndOfFile && sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_DL_BraceClose {
+					for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceClose {
 						sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name.", sn.consume()))
 					}
 				}
 			}
 			// End of names
-		} else if sn.peek().tokenType == TT_DL_BraceClose {
+		} else if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 			sn.consume()
 			break
 			// EOCs
-		} else if sn.peek().tokenType == TT_EndOfCommand {
+		} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
 			sn.consume()
 			// Invalid token
 		} else {
@@ -642,10 +648,10 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 	sn.consume()
 
 	// Check identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peek(), "Expected identifier after keyword struct.")
 
-		if sn.peek().tokenType != TT_DL_BraceOpen {
+		if sn.peek().TokenType != lexer.TT_DL_BraceOpen {
 			sn.consume()
 		}
 	} else {
@@ -653,22 +659,22 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 	}
 
 	// Check opening brace
-	if !sn.lookFor(TT_DL_BraceOpen, "struct identifier", "opening brace", false) {
+	if !sn.lookFor(lexer.TT_DL_BraceOpen, "struct identifier", "opening brace", false) {
 		return
 	}
 	sn.consume()
 
 	// Check properties
-	for sn.peek().tokenType != TT_EndOfFile {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
 		// Property
-		if sn.peek().tokenType.IsVariableType() || sn.peek().tokenType == TT_Identifier && sn.customTypes[sn.peek().value] {
+		if sn.peek().TokenType.IsVariableType() || sn.peek().TokenType == lexer.TT_Identifier && sn.customTypes[sn.peek().Value] {
 			sn.consume()
 
 			// Valid identifier
-			if sn.peek().tokenType == TT_Identifier {
+			if sn.peek().TokenType == lexer.TT_Identifier {
 				sn.consume()
 				// Missing identifier
-			} else if sn.peek().tokenType == TT_EndOfCommand {
+			} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
 				continue
 				// Invalid identifier
@@ -677,22 +683,22 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 			}
 
 			// , instead of ;
-			if sn.peek().tokenType == TT_DL_Comma {
+			if sn.peek().TokenType == lexer.TT_DL_Comma {
 				sn.newError(sn.consume(), "Unexpected token \",\" after enum name. Did you want \";\"?")
 				continue
 			}
 
 			// Tokens after identifier
-			for sn.peek().tokenType != TT_EndOfCommand {
+			for sn.peek().TokenType != lexer.TT_EndOfCommand {
 				sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after struct property.", sn.consume()))
 			}
 			sn.consume()
 			// End of properties
-		} else if sn.peek().tokenType == TT_DL_BraceClose {
+		} else if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 			sn.consume()
 			return
 			// Empty line
-		} else if sn.peek().tokenType == TT_EndOfCommand {
+		} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
 			sn.consume()
 			// Invalid token
 		} else {
@@ -705,25 +711,25 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
 	sn.consume()
 
 	// Check identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after %s keyword.", sn.peekPrevious()))
 	} else {
 		sn.consume()
 	}
 
 	// Multiple identifiers
-	for sn.peek().tokenType == TT_DL_Comma {
+	for sn.peek().TokenType == lexer.TT_DL_Comma {
 		sn.consume()
 
 		// Missing identifier
-		if sn.peek().tokenType != TT_Identifier {
+		if sn.peek().TokenType != lexer.TT_Identifier {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after \",\" keyword, found \"%s\" instead.", sn.peek()))
 
 			// Not the end of identifiers
-			if sn.peek().tokenType != TT_KW_Assign {
+			if sn.peek().TokenType != lexer.TT_KW_Assign {
 				sn.consume()
 				// More identifiers
-				if sn.peek().tokenType == TT_DL_Comma {
+				if sn.peek().TokenType == lexer.TT_DL_Comma {
 					continue
 				}
 			}
@@ -733,13 +739,13 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
 	}
 
 	// No assign
-	if sn.peek().tokenType != TT_KW_Assign {
-		if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+	if sn.peek().TokenType != lexer.TT_KW_Assign {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
 			return
 		}
 
 		// Collect invalid tokens
-		for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile && sn.peek().tokenType != TT_DL_ParenthesisClose {
+		for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
 		}
 		return
@@ -749,7 +755,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
 	sn.consume()
 
 	// Missing expression
-	if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_EndOfFile {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
 		sn.newError(sn.peek(), "Assign statement is missing assigned expression.")
 		return
 	}
@@ -757,7 +763,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
 	sn.analyzeExpression()
 
 	// Collect invalid tokens
-	for sn.peek().tokenType != TT_EndOfCommand && sn.peek().tokenType != TT_EndOfFile && sn.peek().tokenType != TT_DL_ParenthesisClose {
+	for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
 	}
 }
@@ -766,41 +772,41 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 	sn.consume()
 
 	// Collect identifier
-	if sn.peek().tokenType != TT_Identifier {
+	if sn.peek().TokenType != lexer.TT_Identifier {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected function identifier after fun keyword, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
 	// Check for opening parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected opening parenthesis after function identifier, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()
 	}
 
-	if sn.peek().tokenType != TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
 		sn.analyzeParameters()
 	}
 
 	// Check for closing parenthesis
-	var closingParent *Token = nil
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+	var closingParent *lexer.Token = nil
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected closing parenthesis after function identifier, found \"%s\" instead.", sn.peek()))
 	} else {
 		closingParent = sn.consume()
 	}
 
 	// Check return type
-	if sn.peek().tokenType == TT_KW_returns {
+	if sn.peek().TokenType == lexer.TT_KW_returns {
 		sn.consume()
 
 		// Missing return type
-		if sn.peek().tokenType == TT_EndOfCommand || sn.peek().tokenType == TT_DL_BraceOpen {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
 		} else {
 			// Check if type is valid
-			if !sn.peek().tokenType.IsVariableType() && !(sn.peek().tokenType == TT_Identifier && sn.customTypes[sn.peek().value]) {
+			if !sn.peek().TokenType.IsVariableType() && !(sn.peek().TokenType == lexer.TT_Identifier && sn.customTypes[sn.peek().Value]) {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
 			}
 			sn.consume()
@@ -808,14 +814,14 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 	}
 
 	// Check for start of scope
-	if sn.peek().tokenType == TT_DL_BraceOpen {
+	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 		sn.analyzeScope()
 		return
 	}
 
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
-		if sn.peek().tokenType == TT_DL_BraceOpen {
+		if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 			sn.analyzeScope()
 			return
 		}
@@ -823,12 +829,12 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 
 	// Scope not found
 	// Multiple EOCs
-	if sn.peek().tokenType == TT_EndOfCommand {
-		for sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
+		for sn.peek().TokenType == lexer.TT_EndOfCommand {
 			sn.consume()
 		}
 
-		if sn.peek().tokenType == TT_DL_BraceOpen {
+		if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 			sn.newError(closingParent, "Too many EOCs (\\n or ;) after function header. Only 0 or 1 EOCs are allowed.")
 			sn.analyzeScope()
 			return
@@ -841,7 +847,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	// Enum variable declaration
-	if sn.customTypes[sn.peek().value] {
+	if sn.customTypes[sn.peek().Value] {
 		sn.analyzeVariableDeclaration()
 		return
 	}
@@ -849,10 +855,10 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	sn.consume()
 
 	// Function call
-	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		sn.analyzeFunctionCall()
 		// Assignment
-	} else if sn.peek().tokenType.IsAssignKeyword() {
+	} else if sn.peek().TokenType.IsAssignKeyword() {
 		sn.analyzeAssignment()
 	}
 }
@@ -868,10 +874,10 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 	sn.analyzeAruments()
 
 	// Check closing parenthesis
-	if sn.peek().tokenType != TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected \")\" after function call arguments, found \"%s\" instead.", sn.peek()))
 
-		for sn.peek().tokenType != TT_EndOfCommand {
+		for sn.peek().TokenType != lexer.TT_EndOfCommand {
 			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in function call.", sn.consume()))
 		}
 
@@ -881,18 +887,18 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeAruments() {
-	for sn.peek().tokenType != TT_EndOfFile {
-		if sn.peek().tokenType == TT_DL_ParenthesisClose || sn.peek().tokenType == TT_EndOfCommand {
+	for sn.peek().TokenType != lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_EndOfCommand {
 			return
 		}
 
 		sn.analyzeExpression()
 
 		// Next argument
-		if sn.peek().tokenType == TT_DL_Comma {
+		if sn.peek().TokenType == lexer.TT_DL_Comma {
 			sn.consume()
 			// End of arguments
-		} else if sn.peek().tokenType == TT_DL_ParenthesisClose || sn.peek().tokenType == TT_EndOfCommand {
+		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_EndOfCommand {
 			return
 			// Invalid token
 		} else {
@@ -902,48 +908,48 @@ func (sn *SyntaxAnalyzer) analyzeAruments() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeParameters() {
-	for sn.peek().tokenType != TT_EndOfFile && sn.peek().tokenType != TT_EndOfCommand {
+	for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_EndOfCommand {
 		// Check type
-		if !sn.peek().tokenType.IsVariableType() {
+		if !sn.peek().TokenType.IsVariableType() {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected variable type at start of parameter, found \"%s\" instead.", sn.peek()))
 		} else {
 			sn.consume()
 		}
 
 		// Check identifier
-		if sn.peek().tokenType != TT_Identifier {
+		if sn.peek().TokenType != lexer.TT_Identifier {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected parameter identifier after parameter type, found \"%s\" instead.", sn.peek()))
 		} else {
 			sn.consume()
 		}
 
 		// No default value
-		if sn.peek().tokenType == TT_DL_Comma {
+		if sn.peek().TokenType == lexer.TT_DL_Comma {
 			sn.consume()
 			continue
-		} else if sn.peek().tokenType == TT_DL_ParenthesisClose {
+		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return
 		}
 
 		// Check assign
-		if sn.peek().tokenType != TT_KW_Assign {
+		if sn.peek().TokenType != lexer.TT_KW_Assign {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected \"=\" or \",\" after parameter identifier, found \"%s\" instead.", sn.peek()))
 		} else {
 			sn.consume()
 		}
 
 		// Check default value
-		if !sn.peek().tokenType.IsLiteral() {
+		if !sn.peek().TokenType.IsLiteral() {
 			sn.newError(sn.peek(), fmt.Sprintf("Expected default value literal after = in function parameter, found \"%s\" instead.", sn.peek()))
 		} else {
 			sn.consume()
 		}
 
 		// Next parameter
-		if sn.peek().tokenType == TT_DL_Comma {
+		if sn.peek().TokenType == lexer.TT_DL_Comma {
 			sn.consume()
 			continue
-		} else if sn.peek().tokenType == TT_DL_ParenthesisClose {
+		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return
 		}
 	}
@@ -957,42 +963,42 @@ func (sn *SyntaxAnalyzer) analyzeScope() {
 
 func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// No expression
-	if sn.peek().tokenType == TT_EndOfCommand {
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.newError(sn.peek(), "Expected expression, found EOC instead.")
 		return
 	}
 
 	// Operator
-	if sn.peek().tokenType.IsUnaryOperator() {
+	if sn.peek().TokenType.IsUnaryOperator() {
 		sn.consume()
 		sn.analyzeExpression()
 		return
 	}
 	// Literal
-	if sn.peek().tokenType.IsLiteral() {
+	if sn.peek().TokenType.IsLiteral() {
 		sn.consume()
 
 		// Not end of expression
-		if sn.peek().tokenType.IsBinaryOperator() {
+		if sn.peek().TokenType.IsBinaryOperator() {
 			sn.consume()
 			sn.analyzeExpression()
 		}
 		return
 	}
 	// Variable or function call
-	if sn.peek().tokenType == TT_Identifier {
+	if sn.peek().TokenType == lexer.TT_Identifier {
 		sn.consume()
 
 		// Variable
-		if sn.peek().tokenType.IsBinaryOperator() {
+		if sn.peek().TokenType.IsBinaryOperator() {
 			sn.consume()
 			sn.analyzeExpression()
 		// Function call
-		} else if sn.peek().tokenType == TT_DL_ParenthesisOpen {
+		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 			sn.analyzeFunctionCall()
 
 			// Not end of expression
-			if sn.peek().tokenType.IsBinaryOperator() {
+			if sn.peek().TokenType.IsBinaryOperator() {
 				sn.consume()
 				sn.analyzeExpression()
 			}
@@ -1001,11 +1007,11 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 	// Sub-Expression
-	if sn.peek().tokenType == TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		sn.analyzeSubExpression()
 
 		// Not end of expression
-		if sn.peek().tokenType.IsBinaryOperator() {
+		if sn.peek().TokenType.IsBinaryOperator() {
 			sn.consume()
 			sn.analyzeExpression()
 		}
@@ -1013,19 +1019,19 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	}
 
 	// Operator missing right side expression
-	if sn.peekPrevious().tokenType.IsOperator() {
+	if sn.peekPrevious().TokenType.IsOperator() {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
 		// Operator missing left side expression
-	} else if sn.peek().tokenType.IsBinaryOperator() {
+	} else if sn.peek().TokenType.IsBinaryOperator() {
 		// Allow only for minus
-		if sn.peek().tokenType == TT_OP_Subtract {
+		if sn.peek().TokenType == lexer.TT_OP_Subtract {
 			sn.consume()
 			sn.analyzeExpression()
 		} else {
 			sn.newError(sn.peek(), fmt.Sprintf("Operator %s is missing left side expression.", sn.consume()))
 
 			// Analyze right side expression
-			if sn.peek().tokenType.IsLiteral() || sn.peek().tokenType == TT_Identifier || sn.peek().tokenType == TT_DL_ParenthesisOpen {
+			if sn.peek().TokenType.IsLiteral() || sn.peek().TokenType == lexer.TT_Identifier || sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 				sn.analyzeExpression()
 				// Right side expression is missing
 			} else {
@@ -1036,7 +1042,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	} else {
 		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in expression.", sn.peek()))
 
-		if sn.peek().tokenType != TT_DL_ParenthesisClose {
+		if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 			sn.consume()
 		}
 	}
@@ -1046,7 +1052,7 @@ func (sn *SyntaxAnalyzer) analyzeSubExpression() {
 	opening := sn.consume()
 	sn.analyzeExpression()
 
-	if sn.peek().tokenType == TT_DL_ParenthesisClose {
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		sn.consume()
 		return
 	}

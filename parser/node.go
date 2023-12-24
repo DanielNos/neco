@@ -1,9 +1,14 @@
-package main
+package parser
+
+import (
+	"neko/dataStructures"
+	"neko/lexer"
+)
 
 type NodeValue interface{}
 
 type Node struct {
-	position *CodePos
+	position *dataStructures.CodePos
 	nodeType NodeType
 	value NodeValue
 }
@@ -88,4 +93,19 @@ type BinaryNode struct {
 
 type VariableNode struct {
 	identifier string
+}
+
+var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
+	lexer.TT_OP_Add: NT_Add,
+	lexer.TT_OP_Subtract: NT_Subtract,
+	lexer.TT_OP_Multiply: NT_Multiply,
+	lexer.TT_OP_Divide: NT_Divide,
+	lexer.TT_OP_Power: NT_Power,
+	lexer.TT_OP_Modulo: NT_Modulo,
+	lexer.TT_OP_Equal: NT_Equal,
+	lexer.TT_OP_NotEqual: NT_NotEqual,
+	lexer.TT_OP_Lower: NT_Lower,
+	lexer.TT_OP_Greater: NT_Greater,
+	lexer.TT_OP_LowerEqual: NT_LowerEqual,
+	lexer.TT_OP_GreaterEqual: NT_GreaterEqual,
 }

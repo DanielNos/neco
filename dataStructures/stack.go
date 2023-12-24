@@ -1,12 +1,12 @@
-package main
+package dataStructures
 
 type Stack struct {
-	top *StackNode
-	size int
+	Top *StackNode
+	Size int
 }
 
 type StackNode struct {
-	value interface{}
+	Value interface{}
 	previous *StackNode
 }
 
@@ -15,16 +15,16 @@ func NewStack() *Stack {
 }
 
 func (s *Stack) Push(value interface{}) {
-	s.top = &StackNode{value, s.top}
+	s.Top = &StackNode{value, s.Top}
 }
 
 func (s *Stack) Pop() interface{} {
-	if s.top == nil {
+	if s.Top == nil {
 		return nil
 	}
 
-	value := s.top.value
-	s.top = s.top.previous
+	value := s.Top.Value
+	s.Top = s.Top.previous
 
 	return value
 }

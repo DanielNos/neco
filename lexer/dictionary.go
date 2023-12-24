@@ -1,4 +1,4 @@
-package main
+package lexer
 
 var KEYWORDS = map[string]TokenType {
 	"global": TT_KW_global,

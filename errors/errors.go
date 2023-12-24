@@ -1,4 +1,6 @@
-package main
+package errors
+
+const MAX_ERROR_COUNT = 15
 
 const (
 	ERROR_INTERNAL = iota + 1

@@ -1,6 +1,9 @@
-package main
+package lexer
 
-import "fmt"
+import (
+	"fmt"
+	"neko/dataStructures"
+)
 
 type TokenType int8
 
@@ -187,64 +190,49 @@ func (tt TokenType) IsAssignKeyword() bool {
 }
 
 type Token struct {
-	position *CodePos
-	tokenType TokenType
-	value string
+	Position *dataStructures.CodePos
+	TokenType TokenType
+	Value string
 }
 
 func (t *Token) String() string {
-	switch (t.tokenType) {
+	switch (t.TokenType) {
 	case TT_EndOfCommand:
-		if len(t.value) == 0 { return "\\n" }
+		if len(t.Value) == 0 { return "\\n" }
 		return ";"
 	case TT_StartOfFile:
 		return "SOF"
 	case TT_EndOfFile:
 		return "EOF"
 	case TT_Identifier:
-		return t.value
+		return t.Value
 	case TT_LT_Bool:
-		if t.value == "0" {
+		if t.Value == "0" {
 			return "false"
 		}
 		return "true"
 	default:
-		if t.tokenType.IsLiteral() {
-			return t.value
+		if t.TokenType.IsLiteral() {
+			return t.Value
 		}
-		return TokenTypeToString[t.tokenType]
+		return TokenTypeToString[t.TokenType]
 	}
 }
 
 func (t *Token) TableString() string {
-	label := fmt.Sprintf("%v", t.tokenType)
+	label := fmt.Sprintf("%v", t.TokenType)
 
 	for len(label) < 14 {
 		label = fmt.Sprintf("%s ", label)
 	}
 	
-	position := fmt.Sprintf("%s %d:%d", *t.position.file, t.position.line, t.position.startChar)
+	position := fmt.Sprintf("%s %d:%d", *t.Position.File, t.Position.Line, t.Position.StartChar)
 
 	for len(position) < 17 {
 		position = fmt.Sprintf("%s ", position)
 	}
 
-	message := fmt.Sprintf("%s %s %s", position, label, t.value)
+	message := fmt.Sprintf("%s %s %s", position, label, t.Value)
 
 	return message
-}
-
-var TokenTypeToNodeType = map[TokenType]NodeType {
-	TT_OP_Add: NT_Add,
-	TT_OP_Subtract: NT_Subtract,
-	TT_OP_Multiply: NT_Multiply,
-	TT_OP_Divide: NT_Divide,
-	TT_OP_Power: NT_Power,
-	TT_OP_Modulo: NT_Modulo,
-	TT_OP_Equal: NT_Equal,
-	TT_OP_NotEqual: NT_NotEqual,
-	TT_OP_Lower: NT_Lower,
-	TT_OP_Greater: NT_Greater,
-	TT_OP_LowerEqual: NT_LowerEqual,
-	TT_OP_GreaterEqual: NT_GreaterEqual,
 }

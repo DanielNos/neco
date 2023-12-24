@@ -1,4 +1,4 @@
-package main
+package lexer
 
 import (
 	"bufio"
@@ -8,6 +8,10 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+
+	"neko/dataStructures"
+	"neko/errors"
+	"neko/logger"
 )
 
 const EOF rune = 0x04
@@ -71,7 +75,7 @@ type Lexer struct {
 	token bytes.Buffer
 	tokens []*Token
 
-	errorCount uint
+	ErrorCount uint
 }
 
 func NewLexer(filePath string) Lexer {
@@ -86,7 +90,7 @@ func (l *Lexer) Lex() []*Token {
 	
 	if err != nil {
 		reason := strings.Split(err.Error(), ": ")[1]
-		Fatal(ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
+		logger.Fatal(errors.ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
 	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
@@ -110,12 +114,12 @@ func (l *Lexer) Lex() []*Token {
 }
 
 func (l *Lexer) newError(line, char uint, message string) {
-	l.errorCount++
-	ErrorPos(&l.filePath, line, char, char + uint(l.token.Len()), message)
+	l.ErrorCount++
+	logger.ErrorPos(&l.filePath, line, char, char + uint(l.token.Len()), message)
 
 	// Too many errors
-	if l.errorCount > MAX_ERROR_COUNT {
-		Fatal(ERROR_SYNTAX, fmt.Sprintf("Lexical analysis has aborted due to too many errors. It has failed with %d errors.", l.errorCount))
+	if l.ErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Lexical analysis has aborted due to too many errors. It has failed with %d errors.", l.ErrorCount))
 	}
 }
 
@@ -152,7 +156,7 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 }
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
-	l.tokens = append(l.tokens, &Token{&CodePos{&l.filePath, startLine, startChar, l.charIndex}, tokenType, value})
+	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{&l.filePath, startLine, startChar, l.charIndex}, tokenType, value})
 }
 
 func (l *Lexer) collectRestOfToken() {

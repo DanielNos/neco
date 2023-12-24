@@ -1,8 +1,9 @@
-package main
+package logger
 
 import (
 	"bufio"
 	"fmt"
+	"neko/dataStructures"
 	"os"
 
 	color "github.com/fatih/color"
@@ -100,8 +101,8 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	fmt.Fprintf(os.Stderr, "%s\n\n", message)
 }
 
-func ErrorCodePos(codePos *CodePos, message string) {
-	ErrorPos(codePos.file, codePos.line, codePos.startChar, codePos.endChar, message)
+func ErrorCodePos(codePos *dataStructures.CodePos, message string) {
+	ErrorPos(codePos.File, codePos.Line, codePos.StartChar, codePos.EndChar, message)
 }
 
 func Fatal(error_code int, message string) {

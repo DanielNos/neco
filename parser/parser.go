@@ -1,32 +1,36 @@
-package main
+package parser
 
 import (
 	"fmt"
+	"neko/dataStructures"
+	"neko/errors"
+	"neko/lexer"
+	"neko/logger"
 	"strings"
 )
 
 type Parser struct {
-	tokens []*Token
+	tokens []*lexer.Token
 
 	tokenIndex int
 
 	scopeCounter int
-	scopeNodeStack *Stack
+	scopeNodeStack *dataStructures.Stack
 	
 	globalSymbolTable map[string]*Symbol
 
-	errorCount uint
+	ErrorCount uint
 }
 
-func NewParser(tokens []*Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, NewStack(), map[string]*Symbol{}, previousErrors}
+func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), map[string]*Symbol{}, previousErrors}
 }
 
-func (p *Parser) peek() *Token {
+func (p *Parser) peek() *lexer.Token {
 	return p.tokens[p.tokenIndex]
 }
 
-func (p *Parser) consume() *Token {
+func (p *Parser) consume() *lexer.Token {
 	if p.tokenIndex + 1 < len(p.tokens) {
 		p.tokenIndex++
 	}
@@ -34,21 +38,21 @@ func (p *Parser) consume() *Token {
 }
 
 func (p *Parser) appendScope(node *Node) {
-	p.scopeNodeStack.top.value.(*ScopeNode).statements = append(p.scopeNodeStack.top.value.(*ScopeNode).statements, node)
+	p.scopeNodeStack.Top.Value.(*ScopeNode).statements = append(p.scopeNodeStack.Top.Value.(*ScopeNode).statements, node)
 }
 
-func (p *Parser) newError(token *Token, message string) {
-	p.errorCount++
-	ErrorCodePos(token.position, message)
+func (p *Parser) newError(token *lexer.Token, message string) {
+	p.ErrorCount++
+	logger.ErrorCodePos(token.Position, message)
 
 	// Too many errors
-	if p.errorCount > MAX_ERROR_COUNT {
-		Fatal(ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.errorCount))
+	if p.ErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }
 
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {
-	if p.scopeNodeStack.size == 0 {
+	if p.scopeNodeStack.Size == 0 {
 		p.globalSymbolTable[key] = symbol
 	}
 }
@@ -58,9 +62,9 @@ func (p *Parser) Parse() *Node {
 }
 
 func (p *Parser) collectGlobalSymbols() {
-	for p.peek().tokenType != TT_EndOfFile {
+	for p.peek().TokenType != lexer.TT_EndOfFile {
 		// Collect variable
-		if p.peek().tokenType.IsVariableType() {
+		if p.peek().TokenType.IsVariableType() {
 			p.consume()
 		} else {
 			p.consume()
@@ -70,7 +74,7 @@ func (p *Parser) collectGlobalSymbols() {
 
 func (p *Parser) parseModule() *Node {
 	// Collect module path and name
-	modulePath := p.consume().value
+	modulePath := p.consume().Value
 	pathParts := strings.Split(modulePath, "/")
 	moduleName := pathParts[len(pathParts) - 1]
 
@@ -88,7 +92,7 @@ func (p *Parser) parseModule() *Node {
 
 	// Create node
 	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scope}
-	module := &Node{p.peek().position, NT_Module, moduleNode}
+	module := &Node{p.peek().Position, NT_Module, moduleNode}
 
 	return module
 }
@@ -98,13 +102,13 @@ func (p *Parser) parseScope() *ScopeNode {
 	p.scopeNodeStack.Push(scope)
 
 	// Collect statements
-	for p.peek().tokenType != TT_EndOfFile {
-		switch p.peek().tokenType {
+	for p.peek().TokenType != lexer.TT_EndOfFile {
+		switch p.peek().TokenType {
 		// Variable declaration
-		case TT_KW_bool, TT_KW_int, TT_KW_flt, TT_KW_str:
+		case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
 			scope.statements = append(scope.statements, p.parseVariableDeclare())
 
-		case TT_EndOfCommand:
+		case lexer.TT_EndOfCommand:
 			p.consume()
 
 		default:
@@ -116,16 +120,16 @@ func (p *Parser) parseScope() *ScopeNode {
 }
 
 func (p *Parser) parseVariableDeclare() *Node {
-	startPosition := p.peek().position
-	dataType := TokenTypeToDataType[p.consume().tokenType]
+	startPosition := p.peek().Position
+	dataType := TokenTypeToDataType[p.consume().TokenType]
 
 	// Collect identifiers
 	identifiers := []string{}
-	identifiers = append(identifiers, p.consume().value)
+	identifiers = append(identifiers, p.consume().Value)
 
-	for p.peek().tokenType == TT_DL_Comma {
+	for p.peek().TokenType == lexer.TT_DL_Comma {
 		p.consume()
-		identifiers = append(identifiers, p.consume().value)
+		identifiers = append(identifiers, p.consume().Value)
 	}
 
 	// Create node
@@ -133,10 +137,10 @@ func (p *Parser) parseVariableDeclare() *Node {
 	assigned := false
 
 	// End
-	if p.peek().tokenType == TT_EndOfCommand {
+	if p.peek().TokenType ==lexer. TT_EndOfCommand {
 		p.consume()
 	// Assign
-	} else if p.peek().tokenType == TT_KW_Assign {
+	} else if p.peek().TokenType == lexer.TT_KW_Assign {
 		p.appendScope(declareNode)
 		declareNode = p.parseAssign(identifiers)
 	}
@@ -153,5 +157,5 @@ func (p *Parser) parseAssign(identifiers []string) *Node {
 	assign := p.consume()
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
 
-	return &Node{assign.position, NT_Assign, &AssignNode{identifiers, expression}}
+	return &Node{assign.Position, NT_Assign, &AssignNode{identifiers, expression}}
 }
