@@ -125,16 +125,29 @@ func (p *Parser) parseVariableDeclare() *Node {
 
 	// Collect identifiers
 	identifiers := []string{}
-	identifiers = append(identifiers, p.consume().Value)
 
-	for p.peek().TokenType == lexer.TT_DL_Comma {
-		p.consume()
-		identifiers = append(identifiers, p.consume().Value)
+	for p.peek().TokenType != lexer.TT_EndOfFile {
+		identifiers = append(identifiers, p.peek().Value)
+
+		// Check if variable is redeclared
+		_, exists := p.globalSymbolTable[p.peek().Value]
+
+		if exists {
+			p.newError(p.peek(), fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
+		} else {
+			p.consume()
+		}
+
+		// More identifiers
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		} else {
+			break
+		}
 	}
 
 	// Create node
 	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{dataType, false, identifiers}}
-	assigned := false
 
 	// End
 	if p.peek().TokenType ==lexer. TT_EndOfCommand {
@@ -147,7 +160,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 
 	// Insert symbols
 	for _, id := range identifiers {
-		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{dataType, false, assigned}})
+		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{dataType, false, declareNode.nodeType == NT_Assign}})
 	}
 
 	return declareNode

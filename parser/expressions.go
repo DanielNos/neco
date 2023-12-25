@@ -20,10 +20,14 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		p.consume()
 	// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
-		_, exists := p.globalSymbolTable[p.peek().Value]
+		symbol, exists := p.globalSymbolTable[p.peek().Value]
 
+		// Undeclared symbol
 		if !exists {
 			p.newError(p.peek(), fmt.Sprintf("Variable %s is not declared in this scope.", p.peek()))
+		// Uninitialized variable
+		} else if !symbol.value.(*VariableSymbol).isInitialized {
+			p.newError(p.peek(), fmt.Sprintf("Variable %s is not initialized.", p.peek()))
 		}
 
 		left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}

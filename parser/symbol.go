@@ -19,5 +19,5 @@ type SymbolValue interface{}
 type VariableSymbol struct {
 	dataType DataType
 	canBeNone bool
-	isDeclared bool
+	isInitialized bool
 }
