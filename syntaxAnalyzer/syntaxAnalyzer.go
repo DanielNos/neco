@@ -785,7 +785,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 		sn.consume()
 	}
 
-	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
+	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.analyzeParameters()
 	}
 
@@ -911,7 +911,7 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 	for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_EndOfCommand {
 		// Check type
 		if !sn.peek().TokenType.IsVariableType() {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected variable type at start of parameter, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), fmt.Sprintf("Expected variable type at start of parameters, found \"%s\" instead.", sn.peek()))
 		} else {
 			sn.consume()
 		}
