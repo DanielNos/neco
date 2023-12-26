@@ -71,6 +71,10 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	if err == nil {
 		color.Set(color.FgWhite)
 		
+		if startChar == endChar {
+			endChar++
+		}
+		
 		// Print line of code with error
 		fmt.Fprint(os.Stderr, "\t\t ")
 		fmt.Fprintf(os.Stderr, "%s", lineString)

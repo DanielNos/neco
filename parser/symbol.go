@@ -21,3 +21,7 @@ type VariableSymbol struct {
 	canBeNone bool
 	isInitialized bool
 }
+
+type FunctionSymbol struct {
+	parameters []*VariableSymbol
+}

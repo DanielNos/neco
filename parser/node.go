@@ -35,6 +35,7 @@ const (
 	NT_LowerEqual
 	NT_GreaterEqual
 	NT_Variable
+	NT_FunctionDeclare
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -57,6 +58,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_LowerEqual: "<=",
 	NT_GreaterEqual: ">=",
 	NT_Variable: "Variable",
+	NT_FunctionDeclare: "FunctionDeclare",
 }
 
 type ModuleNode struct {
@@ -92,6 +94,10 @@ type BinaryNode struct {
 }
 
 type VariableNode struct {
+	identifier string
+}
+
+type FunctionDeclareNode struct {
 	identifier string
 }
 

@@ -17,17 +17,24 @@ type Parser struct {
 	scopeCounter int
 	scopeNodeStack *dataStructures.Stack
 	
-	globalSymbolTable map[string]*Symbol
+	symbolTableStack *dataStructures.Stack
 
 	ErrorCount uint
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), map[string]*Symbol{}, previousErrors}
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), previousErrors}
 }
 
 func (p *Parser) peek() *lexer.Token {
 	return p.tokens[p.tokenIndex]
+}
+
+func (p *Parser) peekPrevious() *lexer.Token {
+	if p.tokenIndex > 0 {
+		return p.tokens[p.tokenIndex - 1]
+	}
+	return p.tokens[0]
 }
 
 func (p *Parser) consume() *lexer.Token {
@@ -52,9 +59,7 @@ func (p *Parser) newError(token *lexer.Token, message string) {
 }
 
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {
-	if p.scopeNodeStack.Size == 0 {
-		p.globalSymbolTable[key] = symbol
-	}
+	p.symbolTableStack.Top.Value.(map[string]*Symbol)[key] = symbol
 }
 
 func (p *Parser) Parse() *Node {
@@ -82,13 +87,16 @@ func (p *Parser) parseModule() *Node {
 		moduleName = strings.Split(moduleName, ".")[0]
 	}
 
+	// Enter global scope
+	p.symbolTableStack.Push(symbolTable{})
+	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})
+
 	// Collect global symbols
 	p.collectGlobalSymbols()
 	p.tokenIndex = 0
 
 	// Parse module
-	p.consume()
-	scope := p.parseScope()
+	scope := p.parseScope(false)
 
 	// Create node
 	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scope}
@@ -97,23 +105,57 @@ func (p *Parser) parseModule() *Node {
 	return module
 }
 
-func (p *Parser) parseScope() *ScopeNode {
-	scope := &ScopeNode{p.scopeCounter, []*Node{}}
-	p.scopeNodeStack.Push(scope)
+func (p *Parser) parseScope(enterScope bool) *ScopeNode {
+	// Consume opening brace
+	opening := p.consume()
+
+	var scope *ScopeNode
+	
+	if enterScope {
+		scope = &ScopeNode{p.scopeCounter, []*Node{}}
+		p.scopeNodeStack.Push(scope)
+		p.scopeCounter++
+	} else {
+		scope = p.scopeNodeStack.Top.Value.(*ScopeNode)
+	}
 
 	// Collect statements
 	for p.peek().TokenType != lexer.TT_EndOfFile {
 		switch p.peek().TokenType {
+
 		// Variable declaration
 		case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
 			scope.statements = append(scope.statements, p.parseVariableDeclare())
 
+		// Function declaration
+		case lexer.TT_KW_fun:
+			scope.statements = append(scope.statements, p.parseFunctionDeclare())
+
+		// Leave scope
+		case lexer.TT_DL_BraceClose:
+			// Pop scope
+			if p.scopeNodeStack.Size > 1 {
+				if enterScope {
+					p.scopeNodeStack.Pop()
+					p.symbolTableStack.Pop()
+				}
+			// Root scope
+			} else {
+				p.newError(p.consume(), "Unexpected closing brace in root scope.")
+			}
+			return scope
+			
 		case lexer.TT_EndOfCommand:
 			p.consume()
 
 		default:
 			panic(fmt.Sprintf("Unexpected token \"%s\".", p.consume()))
 		}
+	}
+
+	if enterScope {
+		p.scopeNodeStack.Pop()
+		p.newError(opening, "Scope is missing a closing brace.")
 	}
 
 	return scope
@@ -130,7 +172,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 		identifiers = append(identifiers, p.peek().Value)
 
 		// Check if variable is redeclared
-		_, exists := p.globalSymbolTable[p.peek().Value]
+		_, exists := p.symbolTableStack.Top.Value.(symbolTable)[p.peek().Value]
 
 		if exists {
 			p.newError(p.peek(), fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
