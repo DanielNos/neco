@@ -107,6 +107,14 @@ func visualize(node *Node, indent string, isLast bool) {
 		for i, statement := range scopeNode.statements {
 			visualize(statement, indent, i == len(scopeNode.statements) - 1)
 		}
+	
+	case NT_FunctionCall:
+		functionCall := node.value.(*FunctionCallNode)
+		fmt.Printf("%s\n", functionCall.identifier)
+
+		for i, argument := range functionCall.arguments {
+			visualize(argument, indent, i == len(functionCall.arguments) - 1)
+		}
 		
 	default:
 		fmt.Printf("%s\n", NodeTypeToString[node.nodeType])

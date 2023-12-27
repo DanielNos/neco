@@ -36,6 +36,7 @@ const (
 	NT_GreaterEqual
 	NT_Variable
 	NT_FunctionDeclare
+	NT_FunctionCall
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -59,6 +60,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_GreaterEqual: ">=",
 	NT_Variable: "Variable",
 	NT_FunctionDeclare: "FunctionDeclare",
+	NT_FunctionCall: "FunctionCall",
 }
 
 type ModuleNode struct {
@@ -108,6 +110,11 @@ type Parameter struct {
 	dataType DataType
 	identifier string
 	defaultValue *Node
+}
+
+type FunctionCallNode struct {
+	identifier string
+	arguments []*Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {

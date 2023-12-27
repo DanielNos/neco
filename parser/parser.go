@@ -186,10 +186,11 @@ func (p *Parser) parseIdentifier() *Node {
 		}
 
 	} else {
+		// Variable assignment
 		if symbol.symbolType == ST_Variable {
 			return p.parseAssign([]string{p.consume().Value})
-		} else {
-			
+		} else if symbol.symbolType == ST_Function {
+			return p.parseFunctionCall(symbol)
 		}
 	}
 

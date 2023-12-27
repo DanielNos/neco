@@ -23,5 +23,5 @@ type VariableSymbol struct {
 }
 
 type FunctionSymbol struct {
-	parameters []*VariableSymbol
+	parameters []Parameter
 }
