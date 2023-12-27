@@ -20,6 +20,7 @@ func (s *Stack) Push(value interface{}) {
 	if s.Bottom == nil {
 		s.Bottom = s.Top
 	}
+	s.Size++
 }
 
 func (s *Stack) Pop() interface{} {
@@ -29,6 +30,7 @@ func (s *Stack) Pop() interface{} {
 
 	value := s.Top.Value
 	s.Top = s.Top.Previous
+	s.Size--
 
 	if s.Top == nil {
 		s.Bottom = nil
