@@ -1,6 +1,8 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func Visualize(tree *Node) {
 	moduleNode := tree.value.(*ModuleNode)
@@ -68,8 +70,45 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Variable:
 		println(node.value.(*VariableNode).identifier)
+
+	case NT_FunctionDeclare:
+		functionDeclareNode := node.value.(*FunctionDeclareNode)
+	
+		fmt.Printf("fun %s(", functionDeclareNode.identifier)
+
+		if len(functionDeclareNode.parameters) > 0 {
+			fmt.Printf("%s %s", functionDeclareNode.parameters[0].dataType, functionDeclareNode.parameters[0].identifier)
+		}
+		
+		if len(functionDeclareNode.parameters) > 1 {
+			for _, parameter := range functionDeclareNode.parameters[1:] {
+				fmt.Printf(", %s %s", parameter.dataType, parameter.identifier)
+			}
+		}
+
+		print(") ")
+
+		if functionDeclareNode.returnType != nil {
+			fmt.Printf("-> %s", functionDeclareNode.returnType)
+		}
+
+		println()
+
+		scopeNode := functionDeclareNode.body.value.(*ScopeNode)
+
+		for i, statement := range scopeNode.statements {
+			visualize(statement, indent, i == len(scopeNode.statements) - 1)
+		}
+
+	case NT_Scope:
+		println("Scope")
+		scopeNode := node.value.(*ScopeNode)
+
+		for i, statement := range scopeNode.statements {
+			visualize(statement, indent, i == len(scopeNode.statements) - 1)
+		}
 		
 	default:
-		println("???")
+		fmt.Printf("%s\n", NodeTypeToString[node.nodeType])
 	}
 }

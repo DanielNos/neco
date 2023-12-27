@@ -99,6 +99,15 @@ type VariableNode struct {
 
 type FunctionDeclareNode struct {
 	identifier string
+	parameters []Parameter
+	returnType *DataType
+	body *Node
+}
+
+type Parameter struct {
+	dataType DataType
+	identifier string
+	defaultValue *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {

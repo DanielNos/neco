@@ -59,7 +59,13 @@ func (p *Parser) newError(token *lexer.Token, message string) {
 }
 
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {
-	p.symbolTableStack.Top.Value.(map[string]*Symbol)[key] = symbol
+	p.symbolTableStack.Top.Value.(symbolTable)[key] = symbol
+}
+
+func (p *Parser) enterScope() {
+	p.symbolTableStack.Push(symbolTable{})
+	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})
+	p.scopeCounter++
 }
 
 func (p *Parser) Parse() *Node {
@@ -88,8 +94,7 @@ func (p *Parser) parseModule() *Node {
 	}
 
 	// Enter global scope
-	p.symbolTableStack.Push(symbolTable{})
-	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})
+	p.enterScope()
 
 	// Collect global symbols
 	p.collectGlobalSymbols()
@@ -139,11 +144,17 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 					p.scopeNodeStack.Pop()
 					p.symbolTableStack.Pop()
 				}
+				p.consume()
 			// Root scope
 			} else {
 				p.newError(p.consume(), "Unexpected closing brace in root scope.")
 			}
+
 			return scope
+		
+		// Identifier
+		case lexer.TT_Identifier:
+			scope.statements = append(scope.statements, p.parseIdentifier())
 			
 		case lexer.TT_EndOfCommand:
 			p.consume()
@@ -161,6 +172,30 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 	return scope
 }
 
+func (p *Parser) parseIdentifier() *Node {
+	symbol := p.findSymbol(p.peek().Value)
+
+	// Undeclared symbol
+	if symbol == nil {
+		identifier := p.consume()
+
+		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
+			p.newError(identifier, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
+		} else {
+			p.newError(identifier, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
+		}
+
+	} else {
+		if symbol.symbolType == ST_Variable {
+			return p.parseAssign([]string{p.consume().Value})
+		} else {
+			
+		}
+	}
+
+	return nil
+}
+
 func (p *Parser) parseVariableDeclare() *Node {
 	startPosition := p.peek().Position
 	dataType := TokenTypeToDataType[p.consume().TokenType]
@@ -172,9 +207,9 @@ func (p *Parser) parseVariableDeclare() *Node {
 		identifiers = append(identifiers, p.peek().Value)
 
 		// Check if variable is redeclared
-		_, exists := p.symbolTableStack.Top.Value.(symbolTable)[p.peek().Value]
+		symbol := p.getSymbol(p.peek().Value)
 
-		if exists {
+		if symbol != nil {
 			p.newError(p.peek(), fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
 		} else {
 			p.consume()
