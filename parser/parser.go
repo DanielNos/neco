@@ -181,8 +181,10 @@ func (p *Parser) parseIdentifier() *Node {
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 			p.newError(identifier, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
+			return p.parseFunctionCall(symbol, p.consume())
 		} else {
 			p.newError(identifier, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
+			return p.parseAssign([]string{p.consume().Value})
 		}
 
 	} else {
