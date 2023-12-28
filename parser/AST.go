@@ -110,7 +110,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	
 	case NT_FunctionCall:
 		functionCall := node.value.(*FunctionCallNode)
-		fmt.Printf("%s\n", functionCall.identifier)
+		fmt.Printf("%s(...)\n", functionCall.identifier)
 
 		for i, argument := range functionCall.arguments {
 			visualize(argument, indent, i == len(functionCall.arguments) - 1)

@@ -67,19 +67,7 @@ func (p *Parser) parseParameters() []Parameter {
 	return paremeters
 }
 
-func (p *Parser) parseFunctionCall(functionSymbol *Symbol) *Node {
-	identifier := p.consume()
-
-	// Symbol not provided
-	if functionSymbol == nil {
-		functionSymbol = p.getGlobalSymbol(identifier.Value)
-	}
-
-	// Undeclared function
-	if functionSymbol == nil {
-		p.newError(identifier, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
-	}
-
+func (p *Parser) parseFunctionCall(functionSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
 	arguments := p.parseArguments()
 

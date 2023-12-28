@@ -190,7 +190,7 @@ func (p *Parser) parseIdentifier() *Node {
 		if symbol.symbolType == ST_Variable {
 			return p.parseAssign([]string{p.consume().Value})
 		} else if symbol.symbolType == ST_Function {
-			return p.parseFunctionCall(symbol)
+			return p.parseFunctionCall(symbol, p.consume())
 		}
 	}
 

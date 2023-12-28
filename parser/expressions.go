@@ -24,13 +24,31 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Undeclared symbol
 		if symbol == nil {
-			p.newError(p.peek(), fmt.Sprintf("Variable %s is not declared in this scope.", p.peek()))
-		// Uninitialized variable
-		} else if !symbol.value.(*VariableSymbol).isInitialized {
-			p.newError(p.peek(), fmt.Sprintf("Variable %s is not initialized.", p.peek()))
+			identifier := p.consume()
+			
+			// Undeclared function
+			if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
+				p.newError(identifier, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
+				left = p.parseFunctionCall(nil, identifier)
+			// Undeclared variable
+			} else {
+				p.newError(identifier, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
+				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value}}
+			}
+		// Function call
+		} else if symbol.symbolType == ST_Function {
+			left = p.parseFunctionCall(symbol, p.consume())
+		// Variable
+		} else if symbol.symbolType == ST_Variable{
+			// Uninitialized variable
+			if !symbol.value.(*VariableSymbol).isInitialized {
+				p.newError(p.peek(), fmt.Sprintf("Variable %s is not initialized.", p.peek()))
+			}
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}
+		} else {
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}
 		}
 
-		left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}
 	// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
