@@ -55,7 +55,7 @@ type VariableType struct {
 }
 
 func (vt VariableType) Equals(other VariableType) bool {
-	return vt.dataType == other.dataType && vt.canBeNone == vt.canBeNone
+	return vt.dataType == other.dataType && vt.canBeNone == other.canBeNone
 }
 
 func (v VariableType) String() string {
