@@ -1,11 +1,15 @@
 package parser
 
-import "neko/lexer"
+import (
+	"fmt"
+	"neko/lexer"
+)
 
 type DataType uint8
 
 const (
-	DT_None DataType = iota
+	DT_NoType DataType = iota
+	DT_None
 	DT_Bool
 	DT_Int
 	DT_Float
@@ -43,4 +47,20 @@ var TokenTypeToDataType = map[lexer.TokenType]DataType {
 
 	lexer.TT_KW_str: DT_String,
 	lexer.TT_LT_String: DT_String,
+}
+
+type VariableType struct {
+	dataType DataType
+	canBeNone bool
+}
+
+func (vt VariableType) Equals(other VariableType) bool {
+	return vt.dataType == other.dataType && vt.canBeNone == vt.canBeNone
+}
+
+func (v VariableType) String() string {
+	if v.canBeNone {
+		return fmt.Sprintf("%s?", v.dataType)
+	}
+	return v.dataType.String()
 }

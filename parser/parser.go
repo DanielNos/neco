@@ -48,9 +48,9 @@ func (p *Parser) appendScope(node *Node) {
 	p.scopeNodeStack.Top.Value.(*ScopeNode).statements = append(p.scopeNodeStack.Top.Value.(*ScopeNode).statements, node)
 }
 
-func (p *Parser) newError(token *lexer.Token, message string) {
+func (p *Parser) newError(position *dataStructures.CodePos, message string) {
 	p.ErrorCount++
-	logger.ErrorCodePos(token.Position, message)
+	logger.ErrorCodePos(position, message)
 
 	// Too many errors
 	if p.ErrorCount > errors.MAX_ERROR_COUNT {
@@ -112,7 +112,7 @@ func (p *Parser) parseModule() *Node {
 
 func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 	// Consume opening brace
-	opening := p.consume()
+	opening := p.consume().Position
 
 	var scope *ScopeNode
 	
@@ -147,7 +147,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 				p.consume()
 			// Root scope
 			} else {
-				p.newError(p.consume(), "Unexpected closing brace in root scope.")
+				p.newError(p.consume().Position, "Unexpected closing brace in root scope.")
 			}
 
 			return scope
@@ -180,17 +180,17 @@ func (p *Parser) parseIdentifier() *Node {
 		identifier := p.consume()
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-			p.newError(identifier, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
+			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
 			return p.parseFunctionCall(symbol, p.consume())
 		} else {
-			p.newError(identifier, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			return p.parseAssign([]string{p.consume().Value})
+			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
+			return p.parseAssign([]string{identifier.Value}, VariableType{DT_NoType, false})
 		}
 
 	} else {
 		// Variable assignment
 		if symbol.symbolType == ST_Variable {
-			return p.parseAssign([]string{p.consume().Value})
+			return p.parseAssign([]string{p.consume().Value}, symbol.value.(*VariableSymbol).variableType)
 		} else if symbol.symbolType == ST_Function {
 			return p.parseFunctionCall(symbol, p.consume())
 		}
@@ -201,7 +201,7 @@ func (p *Parser) parseIdentifier() *Node {
 
 func (p *Parser) parseVariableDeclare() *Node {
 	startPosition := p.peek().Position
-	dataType := TokenTypeToDataType[p.consume().TokenType]
+	variableType := VariableType{TokenTypeToDataType[p.consume().TokenType], false}
 
 	// Collect identifiers
 	identifiers := []string{}
@@ -213,7 +213,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 		symbol := p.getSymbol(p.peek().Value)
 
 		if symbol != nil {
-			p.newError(p.peek(), fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
+			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
 		} else {
 			p.consume()
 		}
@@ -227,7 +227,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 	}
 
 	// Create node
-	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{dataType, false, identifiers}}
+	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{variableType, identifiers}}
 
 	// End
 	if p.peek().TokenType ==lexer. TT_EndOfCommand {
@@ -235,20 +235,32 @@ func (p *Parser) parseVariableDeclare() *Node {
 	// Assign
 	} else if p.peek().TokenType == lexer.TT_KW_Assign {
 		p.appendScope(declareNode)
-		declareNode = p.parseAssign(identifiers)
+		declareNode = p.parseAssign(identifiers, variableType)
 	}
 
 	// Insert symbols
 	for _, id := range identifiers {
-		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{dataType, false, declareNode.nodeType == NT_Assign}})
+		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.nodeType == NT_Assign}})
 	}
 
 	return declareNode
 }
 
-func (p *Parser) parseAssign(identifiers []string) *Node {
-	assign := p.consume()
+func (p *Parser) parseAssign(identifiers []string, variableType VariableType) *Node {
+	assignPosition := p.consume().Position
+	expressionStart := p.peek().Position
+
+	// Collect expression
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
 
-	return &Node{assign.Position, NT_Assign, &AssignNode{identifiers, expression}}
+	// Get expression type
+	expressionType := p.getExpressionType(expression)
+
+	// Uncompatible data types
+	if !expressionType.Equals(variableType) {
+		expressionPosition := dataStructures.CodePos{expressionStart.File, expressionStart.Line, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
+		p.newError(&expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+	}
+
+	return &Node{assignPosition, NT_Assign, &AssignNode{identifiers, expression}}
 }

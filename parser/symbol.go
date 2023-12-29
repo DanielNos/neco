@@ -17,11 +17,11 @@ const (
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	dataType DataType
-	canBeNone bool
+	variableType VariableType
 	isInitialized bool
 }
 
 type FunctionSymbol struct {
 	parameters []Parameter
+	returnType VariableType
 }

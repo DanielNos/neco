@@ -12,7 +12,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	symbol := p.findSymbol(p.peek().Value)
 
 	if symbol != nil {
-		p.newError(p.peek(), fmt.Sprintf("Redeclaration of symbol %s.", p.peek().Value))
+		p.newError(p.peek().Position, fmt.Sprintf("Redeclaration of symbol %s.", p.peek().Value))
 	}
 
 	// Collect name
@@ -29,12 +29,11 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.consume()
 
 	// Collect return type
-	var returnType *DataType = nil
+	returnType := VariableType{DT_NoType, false}
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
 		p.consume()
-		returnTypeToken := TokenTypeToDataType[p.consume().TokenType]
-		returnType = &returnTypeToken
+		returnType.dataType = TokenTypeToDataType[p.consume().TokenType]
 	}
 
 	// Parse body
@@ -44,9 +43,8 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.scopeNodeStack.Pop()
 	p.symbolTableStack.Pop()
 
-
 	// Insert function symbol
-	p.insertSymbol(identifier, &Symbol{ST_Function, &FunctionSymbol{parameters}})
+	p.insertSymbol(identifier, &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}})
 
 	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{identifier, parameters, returnType, body}}
 }
@@ -61,7 +59,7 @@ func (p *Parser) parseParameters() []Parameter {
 
 		// Create parameter and symbol
 		paremeters = append(paremeters, Parameter{dataType, identifier, nil})
-		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{dataType, false, false}})
+		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, false}})
 	}
 
 	return paremeters
@@ -69,15 +67,16 @@ func (p *Parser) parseParameters() []Parameter {
 
 func (p *Parser) parseFunctionCall(functionSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
-	arguments := p.parseArguments()
+	arguments := p.parseArguments(functionSymbol.value.(*FunctionSymbol).parameters)
 
-	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments}}
+	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, &functionSymbol.value.(*FunctionSymbol).returnType}}
 }
 
-func (p *Parser) parseArguments() []*Node {
+func (p *Parser) parseArguments(paramters []Parameter) []*Node {
 	p.consume()
 	var arguments = []*Node{}
 
+	// Collect arguments
 	for p.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		arguments = append(arguments, p.parseExpression(MINIMAL_PRECEDENCE))
 	}

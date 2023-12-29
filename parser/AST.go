@@ -30,9 +30,9 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_VariableDeclare:
 		declare := node.value.(*VariableDeclareNode)
 		
-		fmt.Printf("Declare %s", declare.dataType)
+		fmt.Printf("Declare %s", declare.variableType)
 
-		if declare.canBeNone {
+		if declare.variableType.canBeNone {
 			print("?:")
 		} else {
 			print(":")
@@ -88,7 +88,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		print(") ")
 
-		if functionDeclareNode.returnType != nil {
+		if functionDeclareNode.returnType.dataType != DT_NoType {
 			fmt.Printf("-> %s", functionDeclareNode.returnType)
 		}
 

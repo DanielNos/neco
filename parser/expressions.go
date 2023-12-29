@@ -28,12 +28,12 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			
 			// Undeclared function
 			if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-				p.newError(identifier, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
+				p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
 				left = p.parseFunctionCall(nil, identifier)
 			// Undeclared variable
 			} else {
-				p.newError(identifier, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
-				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value}}
+				p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
+				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, VariableType{DT_NoType, false}}}
 			}
 		// Function call
 		} else if symbol.symbolType == ST_Function {
@@ -42,11 +42,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		} else if symbol.symbolType == ST_Variable{
 			// Uninitialized variable
 			if !symbol.value.(*VariableSymbol).isInitialized {
-				p.newError(p.peek(), fmt.Sprintf("Variable %s is not initialized.", p.peek()))
+				p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
 			}
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, symbol.value.(*VariableSymbol).variableType}}
 		} else {
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value}}
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, VariableType{DT_NoType, false}}}
 		}
 
 	// Invalid token
@@ -80,4 +80,37 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	default:
 		panic(fmt.Sprintf("Can't get operator precedence of token type %s.", operator))
 	}
+}
+
+func (p *Parser) getExpressionType(expression *Node) VariableType {
+	if expression.nodeType.IsOperator() {
+		leftType := p.getExpressionType(expression.value.(*BinaryNode).left)
+		rightType := p.getExpressionType(expression.value.(*BinaryNode).right)
+
+		// Same type on both sides
+		if leftType.Equals(rightType) {
+			if leftType.dataType == DT_String && expression.nodeType > NT_Add && expression.nodeType <= NT_Modulo {
+				p.newError(expression.position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.nodeType], leftType, rightType))
+			}
+
+			return leftType
+		}
+
+		// Failed to get data type
+		if leftType.dataType == DT_NoType || rightType.dataType == DT_NoType {
+			return VariableType{DT_NoType, false}
+		}
+
+	}
+
+	switch expression.nodeType {
+	case NT_Literal:
+		return VariableType{expression.value.(*LiteralNode).dataType, false}
+	case NT_Variable:
+		return expression.value.(*VariableNode).variableType
+	case NT_FunctionCall:
+		return *expression.value.(*FunctionCallNode).returnType
+	}
+
+	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.nodeType]))
 }

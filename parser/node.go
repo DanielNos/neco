@@ -75,8 +75,7 @@ type ScopeNode struct {
 }
 
 type VariableDeclareNode struct {
-	dataType DataType
-	canBeNone bool
+	variableType VariableType
 	identifiers []string
 }
 
@@ -97,12 +96,13 @@ type BinaryNode struct {
 
 type VariableNode struct {
 	identifier string
+	variableType VariableType
 }
 
 type FunctionDeclareNode struct {
 	identifier string
 	parameters []Parameter
-	returnType *DataType
+	returnType VariableType
 	body *Node
 }
 
@@ -115,6 +115,7 @@ type Parameter struct {
 type FunctionCallNode struct {
 	identifier string
 	arguments []*Node
+	returnType *VariableType
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
@@ -130,4 +131,8 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
 	lexer.TT_OP_Greater: NT_Greater,
 	lexer.TT_OP_LowerEqual: NT_LowerEqual,
 	lexer.TT_OP_GreaterEqual: NT_GreaterEqual,
+}
+
+func (nt NodeType) IsOperator() bool {
+	return nt >= NT_Add && nt <= NT_GreaterEqual
 }
