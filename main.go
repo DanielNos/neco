@@ -66,7 +66,7 @@ func compile(path string, showTokens, showTree bool) {
 
 	exitCode := 0
 	if lexer.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Lexical analysis failed with %d errors.", lexer.ErrorCount))
+		logger.Error(fmt.Sprintf("Lexical analysis failed with %d error/s.", lexer.ErrorCount))
 		exitCode = errors.ERROR_LEXICAL
 	}
 
@@ -77,7 +77,7 @@ func compile(path string, showTokens, showTree bool) {
 	syntaxAnalyzer.Analyze()
 
 	if syntaxAnalyzer.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.ErrorCount))
+		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
 		
 		// Print tokens
 		println()
@@ -85,9 +85,9 @@ func compile(path string, showTokens, showTree bool) {
 		println()
 
 		if exitCode == 0 {
-			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
 		} else {
-			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
 		}
 	} else {
 		logger.Success("Passed syntax analysis.")
@@ -98,7 +98,7 @@ func compile(path string, showTokens, showTree bool) {
 	tree := p.Parse()
 
 	if p.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Semantic analysis failed with %d errors.", p.ErrorCount))
+		logger.Error(fmt.Sprintf("Semantic analysis failed with %d error/s.", p.ErrorCount))
 		if exitCode == 0 {
 			exitCode = errors.ERROR_SEMANTIC
 		}
@@ -123,7 +123,7 @@ func compile(path string, showTokens, showTree bool) {
 	}
 
 	if exitCode != 0 {
-		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
+		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
 	}
 
 	logger.Success("Compilation completed.")

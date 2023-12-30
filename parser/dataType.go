@@ -16,8 +16,10 @@ const (
 	DT_String
 )
 
-func (d DataType) String() string {
-	switch d {
+func (dt DataType) String() string {
+	switch dt {
+	case DT_NoType:
+		return "Unkown"
 	case DT_None:
 		return "None"
 	case DT_Bool:

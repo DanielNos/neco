@@ -263,7 +263,7 @@ func (p *Parser) parseAssign(identifiers []string, variableType VariableType) *N
 	expressionType := p.getExpressionType(expression)
 
 	// Uncompatible data types
-	if !expressionType.Equals(variableType) {
+	if expressionType.dataType != DT_NoType && !expressionType.Equals(variableType) {
 		expressionPosition := dataStructures.CodePos{expressionStart.File, expressionStart.Line, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 		p.newError(&expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
 	}
