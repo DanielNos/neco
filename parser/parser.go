@@ -120,6 +120,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 	// Consume opening brace
 	opening := p.consume().Position
 
+	// Enter or use current scope
 	var scope *ScopeNode
 	
 	if enterScope {
@@ -161,7 +162,8 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		// Identifier
 		case lexer.TT_Identifier:
 			scope.statements = append(scope.statements, p.parseIdentifier())
-			
+		
+		// Skip EOCs
 		case lexer.TT_EndOfCommand:
 			p.consume()
 
@@ -170,6 +172,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		}
 	}
 
+	// Un-exited scope 
 	if enterScope {
 		p.scopeNodeStack.Pop()
 		p.newError(opening, "Scope is missing a closing brace.")
@@ -264,7 +267,7 @@ func (p *Parser) parseAssign(identifiers []string, variableType VariableType) *N
 
 	// Uncompatible data types
 	if expressionType.dataType != DT_NoType && !expressionType.Equals(variableType) {
-		expressionPosition := dataStructures.CodePos{expressionStart.File, expressionStart.Line, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
+		expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
 		p.newError(&expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
 	}
 

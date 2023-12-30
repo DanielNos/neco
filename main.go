@@ -84,6 +84,7 @@ func compile(path string, showTokens, showTree bool) {
 		printTokens(tokens)
 		println()
 
+		// Exit with correct return code
 		if exitCode == 0 {
 			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
 		} else {
@@ -97,6 +98,7 @@ func compile(path string, showTokens, showTree bool) {
 	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount)
 	tree := p.Parse()
 
+	// Print info
 	if p.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Semantic analysis failed with %d error/s.", p.ErrorCount))
 		if exitCode == 0 {
