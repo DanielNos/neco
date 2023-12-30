@@ -126,7 +126,7 @@ func compile(path string, showTokens, showTree bool) {
 		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
 	}
 
-	logger.Success("Passed semantic analysis.")
+	logger.Success("Compilation completed.")
 }
 
 func main() {

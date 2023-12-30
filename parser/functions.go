@@ -37,6 +37,9 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	}
 
 	// Parse body
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
 	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false)}
 
 	// Leave scope
