@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/fatih/color"
 
@@ -59,6 +60,7 @@ func processArguments() (string, bool, bool, string) {
 
 func compile(path string, showTokens, showTree bool) {
 	logger.Info(fmt.Sprintf("Compiling %s.", path))
+	startTime := time.Now()
 
 	// Tokenize
 	lexer := lexer.NewLexer(path)
@@ -68,6 +70,8 @@ func compile(path string, showTokens, showTree bool) {
 	if lexer.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Lexical analysis failed with %d error/s.", lexer.ErrorCount))
 		exitCode = errors.ERROR_LEXICAL
+	} else {
+		logger.Success("Passed lexical analysis.")
 	}
 
 	logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
@@ -130,7 +134,7 @@ func compile(path string, showTokens, showTree bool) {
 		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
 	}
 
-	logger.Success("Compilation completed.")
+	logger.Success(fmt.Sprintf("Compilation completed in %s.", time.Since(startTime)))
 }
 
 func main() {
