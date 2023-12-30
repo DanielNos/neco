@@ -377,24 +377,27 @@ func (l *Lexer) lexNumber() {
 	var base string
 
 	for i := 0; i < 2; i++{
-		if !unicode.IsDigit(l.currRune) && l.currRune != '_' && l.currRune != 'x' {
-			l.collectRestOfToken()
-			l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
-			l.newToken(startLine, startChar, TT_LT_Int)
-			return
-		}
-
-		l.token.WriteRune(l.currRune)
-		l.advance()
-
-		if l.currRune == 'x' {
+		// Digit
+		if unicode.IsDigit(l.currRune) {
+			l.token.WriteRune(l.currRune)
+			l.advance()
+		// Space
+		} else if l.currRune == '_' {
+			l.advance()
+		// Base end
+		} else if l.currRune == 'x' {
 			base = l.token.String()
 			l.token.Reset()
 			l.advance()
 			break
-		}
-
-		if isTokenBreaker(l.currRune) {
+		// Float
+		} else if l.currRune == '.' {
+			l.lexFloat(startLine, startChar)
+			return
+		// Invalid character
+		} else {
+			l.collectRestOfToken()
+			l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
 			l.newToken(startLine, startChar, TT_LT_Int)
 			return
 		}
