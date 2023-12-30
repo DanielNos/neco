@@ -398,6 +398,9 @@ func (l *Lexer) lexNumber() {
 		} else if l.currRune == '.' {
 			l.lexFloat(startLine, startChar)
 			return
+		// End of number
+		} else if isTokenBreaker(l.currRune) {
+			break
 		// Invalid character
 		} else {
 			l.collectRestOfToken()
