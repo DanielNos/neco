@@ -32,6 +32,7 @@ func printTokens(tokens []*lexer.Token) {
 		}
 		fmt.Printf("%v\n", token.TableString())
 	}
+	color.Set(color.FgHiWhite)
 }
 
 func processArguments() (string, bool, bool, string) {
@@ -57,43 +58,72 @@ func processArguments() (string, bool, bool, string) {
 }
 
 func compile(path string, showTokens, showTree bool) {
-	logger.Info(fmt.Sprintf("Compiling %s.\n", path))
+	logger.Info(fmt.Sprintf("Compiling %s.", path))
 
 	// Tokenize
 	lexer := lexer.NewLexer(path)
 	tokens := lexer.Lex()
 
-	logger.Info(fmt.Sprintf("Lexed %d tokens.\n", len(tokens)))
-
-	// Print tokens
-	if showTokens {
-		printTokens(tokens)
-		println()
+	exitCode := 0
+	if lexer.ErrorCount != 0 {
+		logger.Error(fmt.Sprintf("Lexical analysis failed with %d errors.", lexer.ErrorCount))
+		exitCode = errors.ERROR_LEXICAL
 	}
+
+	logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
 
 	// Analyze syntax
 	syntaxAnalyzer := syntaxAnalyzer.NewSyntaxAnalyzer(tokens, lexer.ErrorCount)
 	syntaxAnalyzer.Analyze()
 
 	if syntaxAnalyzer.ErrorCount != 0 {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.ErrorCount))
-	}
+		logger.Error(fmt.Sprintf("Syntax analysis failed with %d errors.", syntaxAnalyzer.ErrorCount))
+		
+		// Print tokens
+		println()
+		printTokens(tokens)
+		println()
 
-	logger.Success("Passed syntax analysis.")
+		if exitCode == 0 {
+			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+		} else {
+			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+		}
+	} else {
+		logger.Success("Passed syntax analysis.")
+	}
 
 	// Construct AST
 	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount)
 	tree := p.Parse()
 
 	if p.ErrorCount != 0 {
-		logger.Fatal(errors.ERROR_SEMANTIC, fmt.Sprintf("Semantic analysis failed with %d errors.", p.ErrorCount))
+		logger.Error(fmt.Sprintf("Semantic analysis failed with %d errors.", p.ErrorCount))
+		if exitCode == 0 {
+			exitCode = errors.ERROR_SEMANTIC
+		}
+	} else {
+		logger.Success("Passed semantic analysis.")
+	}
+
+	// Print tokens
+	if showTokens {
+		println()
+		printTokens(tokens)
+		println()
 	}
 
 	// Visualize tree
 	if showTree {
-		println()
+		if !showTokens {
+			println()
+		}
 		parser.Visualize(tree)
 		println()
+	}
+
+	if exitCode != 0 {
+		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d errors.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
 	}
 
 	logger.Success("Passed semantic analysis.")

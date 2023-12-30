@@ -110,6 +110,10 @@ func ErrorCodePos(codePos *dataStructures.CodePos, message string) {
 }
 
 func Fatal(error_code int, message string) {
-	Error(message)
+	color.Set(color.FgHiRed)
+	color.Set(color.Bold)
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n", message);
+	color.Set(color.Reset)
+
 	os.Exit(error_code)
 }

@@ -6,6 +6,7 @@ import (
 	"neko/errors"
 	"neko/lexer"
 	"neko/logger"
+	"os"
 	"strings"
 )
 
@@ -20,10 +21,11 @@ type Parser struct {
 	symbolTableStack *dataStructures.Stack
 
 	ErrorCount uint
+	totalErrorCount uint
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), previousErrors}
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors}
 }
 
 func (p *Parser) peek() *lexer.Token {
@@ -49,11 +51,15 @@ func (p *Parser) appendScope(node *Node) {
 }
 
 func (p *Parser) newError(position *dataStructures.CodePos, message string) {
-	p.ErrorCount++
+	if p.ErrorCount + p.totalErrorCount == 0 {
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+	
 	logger.ErrorCodePos(position, message)
-
+	p.ErrorCount++
+	
 	// Too many errors
-	if p.ErrorCount > errors.MAX_ERROR_COUNT {
+	if p.ErrorCount + p.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }

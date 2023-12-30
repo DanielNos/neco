@@ -2,6 +2,7 @@ package syntaxAnalyzer
 
 import (
 	"fmt"
+	"os"
 
 	"neko/errors"
 	"neko/lexer"
@@ -15,28 +16,37 @@ type SyntaxAnalyzer struct {
 	customTypes map[string]bool
 
 	ErrorCount uint
+	totalErrorCount uint
 }
 
 func NewSyntaxAnalyzer(tokens []*lexer.Token, previousErrors uint) SyntaxAnalyzer {
-	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, previousErrors}
+	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, 0, previousErrors}
 }
 
 func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
+	if sn.ErrorCount == 0 || sn.totalErrorCount == 0 {
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+
 	sn.ErrorCount++
 	logger.ErrorCodePos(token.Position, message)
 
 	// Too many errors
-	if sn.ErrorCount > errors.MAX_ERROR_COUNT {
+	if sn.ErrorCount + sn.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
 
 func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message string) {
+	if sn.ErrorCount == 0 || sn.totalErrorCount == 0 {
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+	
 	sn.ErrorCount++
 	logger.ErrorPos(sn.peek().Position.File, line, startChar, endChar, message)
 
 	// Too many errors
-	if sn.ErrorCount > errors.MAX_ERROR_COUNT {
+	if sn.ErrorCount + sn.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }

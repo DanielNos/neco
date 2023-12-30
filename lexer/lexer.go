@@ -114,6 +114,10 @@ func (l *Lexer) Lex() []*Token {
 }
 
 func (l *Lexer) newError(line, char uint, message string) {
+	if l.ErrorCount == 0 {
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+
 	l.ErrorCount++
 	logger.ErrorPos(&l.filePath, line, char, char + uint(l.token.Len()), message)
 
@@ -495,8 +499,8 @@ func (l *Lexer) lexFloat(startLine, startChar uint) {
 	// Invalid characters
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
-		l.newToken(startLine, startChar, TT_LT_Int)
+		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in float literal \"%s\".", l.token.String()))
+		l.newToken(startLine, startChar, TT_LT_Float)
 		return
 	}
 
