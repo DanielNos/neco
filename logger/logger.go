@@ -109,6 +109,60 @@ func ErrorCodePos(codePos *dataStructures.CodePos, message string) {
 	ErrorPos(codePos.File, codePos.Line, codePos.StartChar, codePos.EndChar, message)
 }
 
+func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
+		// Print error line
+	lineString, err := readLine(*codePos1.File, codePos1.Line)
+
+	if err == nil {
+		color.Set(color.FgWhite)
+		
+		if codePos1.StartChar == codePos1.EndChar {
+			codePos1.EndChar++
+		}
+		if codePos2.StartChar == codePos2.EndChar {
+			codePos2.EndChar++
+		}
+		
+		// Print line of code with errors
+		fmt.Fprint(os.Stderr, "\t\t ")
+		fmt.Fprintf(os.Stderr, "%s", lineString)
+		fmt.Fprint(os.Stderr, "\n\t\t")
+
+		// Move to error token 1
+		var i uint
+		for i = 0; i < codePos1.StartChar; i++ {
+			fmt.Fprintf(os.Stderr, " ");
+		}
+
+		// Draw arrows under the error token 1
+		color.Set(color.FgHiRed)
+		for i = codePos1.StartChar; i < codePos1.EndChar; i++ {
+			fmt.Fprintf(os.Stderr, "^");
+		}
+
+		// Move to error token 2
+		for i = codePos1.EndChar; i < codePos2.StartChar; i++ {
+			fmt.Fprintf(os.Stderr, " ");
+		}
+				
+		// Draw arrows under the error token 2
+		for i = codePos2.StartChar; i < codePos2.EndChar; i++ {
+			fmt.Fprintf(os.Stderr, "^");
+		}
+
+		fmt.Fprintf(os.Stderr, "\n");
+	}
+
+	// Print message
+	fmt.Fprintf(os.Stderr, "[ERROR] ")
+	
+	color.Set(color.FgHiCyan)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.Line, codePos1.StartChar)
+
+	color.Set(color.FgHiWhite)
+	fmt.Fprintf(os.Stderr, "%s\n\n", message)
+}
+
 func Fatal(error_code int, message string) {
 	color.Set(color.FgHiRed)
 	color.Set(color.Bold)

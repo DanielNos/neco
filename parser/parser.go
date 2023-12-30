@@ -64,6 +64,19 @@ func (p *Parser) newError(position *dataStructures.CodePos, message string) {
 	}
 }
 
+func (p *Parser) newErrorNoMessage(position *dataStructures.CodePos) {
+	if p.ErrorCount + p.totalErrorCount == 0 {
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+
+	p.ErrorCount++
+	
+	// Too many errors
+	if p.ErrorCount + p.totalErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
+	}
+}
+
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {
 	p.symbolTableStack.Top.Value.(symbolTable)[key] = symbol
 }
@@ -182,30 +195,75 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 }
 
 func (p *Parser) parseIdentifier() *Node {
-	symbol := p.findSymbol(p.peek().Value)
+	identifier := p.consume()
+	symbol := p.findSymbol(identifier.Value)
 
-	// Undeclared symbol
-	if symbol == nil {
-		identifier := p.consume()
-
-		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
-			return p.parseFunctionCall(symbol, p.consume())
-		} else {
+	// Assign to variable
+	if p.peek().TokenType.IsAssignKeyword() {
+		// Undeclared symbol
+		if symbol == nil {
 			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			return p.parseAssign([]string{identifier.Value}, VariableType{DT_NoType, false})
-		}
-
-	} else {
-		// Variable assignment
-		if symbol.symbolType == ST_Variable {
-			return p.parseAssign([]string{p.consume().Value}, symbol.value.(*VariableSymbol).variableType)
-		} else if symbol.symbolType == ST_Function {
-			return p.parseFunctionCall(symbol, p.consume())
+			return p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
+		} else {
+			// Assignment to function
+			if symbol.symbolType == ST_Function {
+				p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
+				return p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
+			// Assignment to variable
+			} else {
+				return p.parseAssign([]*lexer.Token{identifier}, []VariableType{symbol.value.(*VariableSymbol).variableType})
+			}
 		}
 	}
 
-	return nil
+	// Assign to multiple variables
+	if p.peek().TokenType == lexer.TT_DL_Comma {
+		var identifiers = []*lexer.Token{identifier}
+		var dataTypes = []VariableType{}
+
+		// Check symbol
+		if symbol == nil {
+			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
+			dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+		} else if symbol.symbolType == ST_Function {
+			p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
+			dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+		} else {
+			dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
+		}
+
+		// Collect identifiers
+		for p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+
+			// Look up identifier and collect identifier
+			symbol = p.findSymbol(p.peek().Value)
+			identifiers = append(identifiers, p.consume())
+
+			// Check symbol
+			if symbol == nil {
+				p.newError(p.peekPrevious().Position, fmt.Sprintf("Use of undeclared variable %s.", identifiers[len(identifiers) - 1]))
+				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+			} else if symbol.symbolType == ST_Function {
+				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers) - 1]))
+				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+			} else {
+				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
+			}
+		}
+
+		return p.parseAssign(identifiers, dataTypes)
+	}
+
+	// Function call
+	// Undeclared function
+	if symbol == nil {
+		p.newError(identifier.Position, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
+		return p.parseFunctionCall(symbol, p.consume())
+	}
+
+	// Declared function
+	return p.parseFunctionCall(symbol, p.consume())
 }
 
 func (p *Parser) parseVariableDeclare() *Node {
@@ -213,10 +271,14 @@ func (p *Parser) parseVariableDeclare() *Node {
 	variableType := VariableType{TokenTypeToDataType[p.consume().TokenType], false}
 
 	// Collect identifiers
+	identifierTokens := []*lexer.Token{}
 	identifiers := []string{}
+	variableTypes := []VariableType{}
 
 	for p.peek().TokenType != lexer.TT_EndOfFile {
+		identifierTokens = append(identifierTokens, p.peek())
 		identifiers = append(identifiers, p.peek().Value)
+		variableTypes = append(variableTypes, variableType)
 
 		// Check if variable is redeclared
 		symbol := p.getSymbol(p.peek().Value)
@@ -244,7 +306,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 	// Assign
 	} else if p.peek().TokenType == lexer.TT_KW_Assign {
 		p.appendScope(declareNode)
-		declareNode = p.parseAssign(identifiers, variableType)
+		declareNode = p.parseAssign(identifierTokens, variableTypes)
 	}
 
 	// Insert symbols
@@ -255,7 +317,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 	return declareNode
 }
 
-func (p *Parser) parseAssign(identifiers []string, variableType VariableType) *Node {
+func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []VariableType) *Node {
 	assignPosition := p.consume().Position
 	expressionStart := p.peek().Position
 
@@ -266,9 +328,23 @@ func (p *Parser) parseAssign(identifiers []string, variableType VariableType) *N
 	expressionType := p.getExpressionType(expression)
 
 	// Uncompatible data types
-	if expressionType.dataType != DT_NoType && !expressionType.Equals(variableType) {
-		expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
-		p.newError(&expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+	expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
+
+	// Print errors
+	if expressionType.dataType != DT_NoType {
+		for i, identifier := range identifierTokens {
+			// Variable has a type and it's incompatible with expression
+			if variableTypes[i].dataType != DT_NoType && !expressionType.Equals(variableTypes[i]) {
+				p.newErrorNoMessage(&expressionPosition)
+				logger.Error2CodePos(identifierTokens[i].Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable %s of type %s.", expressionType, identifier, variableTypes[i]))
+			}
+		}
+	}
+
+	var identifiers = []string{}
+	
+	for _, identifier := range identifierTokens {
+		identifiers = append(identifiers, identifier.Value)
 	}
 
 	return &Node{assignPosition, NT_Assign, &AssignNode{identifiers, expression}}

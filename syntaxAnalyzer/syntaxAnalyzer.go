@@ -225,6 +225,28 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 				sn.analyzeAssignment()
 				break
 			}
+			// Assignment to multiple variables
+			if sn.peekNext().TokenType == lexer.TT_DL_Comma {
+				sn.consume()
+				for sn.peek().TokenType == lexer.TT_DL_Comma {
+					sn.consume()
+					if sn.peek().TokenType != lexer.TT_Identifier {
+						sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after comma, found %s instead.", sn.peek()))
+						break
+					}
+					sn.consume()
+				}
+
+				// No = after variables
+				if !sn.peek().TokenType.IsAssignKeyword() {
+					sn.newError(sn.peek(), fmt.Sprintf("Expected = after list of variable identifiers, found %s instead.", sn.peek()))
+					break
+				}
+
+				// Assignment
+				sn.analyzeAssignment()
+				break
+			}
 
 			// Declare custom variable
 			if sn.customTypes[sn.peek().Value] {
@@ -253,7 +275,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case lexer.TT_LT_None, lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 			startChar := sn.peek().Position.StartChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar,"Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 
 
 	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str: // Variable declarations

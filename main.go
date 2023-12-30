@@ -80,9 +80,11 @@ func compile(path string, showTokens, showTree bool) {
 		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
 		
 		// Print tokens
-		println()
-		printTokens(tokens)
-		println()
+		if showTokens {
+			println()
+			printTokens(tokens)
+			println()
+		}
 
 		// Exit with correct return code
 		if exitCode == 0 {
