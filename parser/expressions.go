@@ -101,6 +101,8 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 			return VariableType{DT_NoType, false}
 		}
 
+		p.newError(expression.position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.nodeType, leftType, rightType))
+		return VariableType{max(leftType.dataType, rightType.dataType), leftType.canBeNone || rightType.canBeNone}
 	}
 
 	switch expression.nodeType {

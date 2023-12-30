@@ -63,6 +63,10 @@ var NodeTypeToString = map[NodeType]string {
 	NT_FunctionCall: "FunctionCall",
 }
 
+func (nt NodeType) String() string {
+	return NodeTypeToString[nt]
+}
+
 type ModuleNode struct {
 	filePath string
 	name string
