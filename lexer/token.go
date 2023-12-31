@@ -21,6 +21,10 @@ const (
 	TT_DL_BraceOpen
 	TT_DL_BraceClose
 	TT_DL_Comma
+	
+	TT_OP_Not
+	TT_OP_And
+	TT_OP_Or
 
 	TT_OP_Add
 	TT_OP_Subtract
@@ -28,6 +32,7 @@ const (
 	TT_OP_Divide
 	TT_OP_Power
 	TT_OP_Modulo
+
 	TT_OP_Equal
 	TT_OP_NotEqual
 	TT_OP_Lower
@@ -35,10 +40,6 @@ const (
 	TT_OP_Greater
 	TT_OP_GreaterEqual
 	
-	TT_OP_And
-	TT_OP_Or
-	TT_OP_Not
-
 	TT_LT_Bool
 	TT_LT_Int
 	TT_LT_Float
@@ -79,8 +80,8 @@ const (
 	TT_KW_class
 
 	TT_KW_if
-	TT_KW_else
 	TT_KW_elif
+	TT_KW_else
 	TT_KW_drop
 )
 
@@ -98,6 +99,10 @@ var TokenTypeToString = map[TokenType]string {
 	TT_DL_BraceOpen: "{",
 	TT_DL_BraceClose: "}",
 	TT_DL_Comma: ",",
+	
+	TT_OP_And: "&",
+	TT_OP_Or: "|",
+	TT_OP_Not: "!",
 
 	TT_OP_Add: "+",
 	TT_OP_Subtract: "-",
@@ -105,16 +110,13 @@ var TokenTypeToString = map[TokenType]string {
 	TT_OP_Divide: "/",
 	TT_OP_Power: "^",
 	TT_OP_Modulo: "%",
+
 	TT_OP_Equal: "==",
 	TT_OP_NotEqual: "!=",
 	TT_OP_Lower: "<",
 	TT_OP_LowerEqual: "<=",
 	TT_OP_Greater: ">",
 	TT_OP_GreaterEqual: ">=",
-
-	TT_OP_And: "&",
-	TT_OP_Or: "|",
-	TT_OP_Not: "!",
 
 	TT_LT_Bool: "Bool",
 	TT_LT_Int: "Int",
@@ -174,19 +176,23 @@ func (tt TokenType) IsLiteral() bool {
 }
 
 func (tt TokenType) IsOperator() bool {
-	return tt >= TT_OP_Add && tt <= TT_OP_Not
+	return tt >= TT_OP_And && tt <= TT_OP_GreaterEqual
 }
 
 func (tt TokenType) IsBinaryOperator() bool {
-	return tt >= TT_OP_Add && tt <= TT_OP_Or
+	return tt >= TT_OP_And && tt <= TT_OP_GreaterEqual
 }
 
 func (tt TokenType) IsUnaryOperator() bool {
-	return tt >= TT_OP_Not && tt <= TT_OP_Not
+	return tt == TT_OP_Not || tt == TT_OP_Subtract
 }
 
 func (tt TokenType) IsAssignKeyword() bool {
 	return tt >= TT_KW_Assign && tt <= TT_KW_ModuloAssign
+}
+
+func (tt TokenType) IsDelimiter() bool {
+	return tt >= TT_DL_ParenthesisOpen && tt <= TT_DL_Comma
 }
 
 type Token struct {

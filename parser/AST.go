@@ -61,12 +61,20 @@ func visualize(node *Node, indent string, isLast bool) {
 		println(literal.dataType.String(), literal.value)
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
-		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual:
+		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
+		NT_And, NT_Or:
 		println(NodeTypeToString[node.nodeType])
 		binary := node.value.(*BinaryNode)
 
-		visualize(binary.left, indent, false)
+		if binary.left != nil {
+			visualize(binary.left, indent, false)
+		}
+
 		visualize(binary.right, indent, true)
+	
+	case NT_Not:
+		println("!")
+		visualize(node.value.(*BinaryNode).right, indent, true)
 
 	case NT_Variable:
 		println(node.value.(*VariableNode).identifier)

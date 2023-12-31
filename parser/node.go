@@ -22,6 +22,9 @@ const (
 	NT_VariableDeclare
 	NT_Assign
 	NT_Literal
+	NT_And
+	NT_Or
+	NT_Not
 	NT_Add
 	NT_Subtract
 	NT_Multiply
@@ -47,6 +50,9 @@ var NodeTypeToString = map[NodeType]string {
 	NT_VariableDeclare: "VariableDeclare",
 	NT_Assign: "Assign",
 	NT_Literal: "Literal",
+	NT_And: "&",
+	NT_Or: "|",
+	NT_Not: "!",
 	NT_Add: "+",
 	NT_Subtract: "-",
 	NT_Multiply: "*",
@@ -125,12 +131,17 @@ type FunctionCallNode struct {
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
+	lexer.TT_OP_And: NT_And,
+	lexer.TT_OP_Or: NT_Or,
+	lexer.TT_OP_Not: NT_Not,
+
 	lexer.TT_OP_Add: NT_Add,
 	lexer.TT_OP_Subtract: NT_Subtract,
 	lexer.TT_OP_Multiply: NT_Multiply,
 	lexer.TT_OP_Divide: NT_Divide,
 	lexer.TT_OP_Power: NT_Power,
 	lexer.TT_OP_Modulo: NT_Modulo,
+
 	lexer.TT_OP_Equal: NT_Equal,
 	lexer.TT_OP_NotEqual: NT_NotEqual,
 	lexer.TT_OP_Lower: NT_Lower,
@@ -140,5 +151,13 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
 }
 
 func (nt NodeType) IsOperator() bool {
-	return nt >= NT_Add && nt <= NT_GreaterEqual
+	return nt >= NT_And && nt <= NT_GreaterEqual
+}
+
+func (nt NodeType) IsComparisonOperator() bool {
+	return nt >= NT_Equal && nt <= NT_GreaterEqual
+}
+
+func (nt NodeType) IsLogicOperator() bool {
+	return nt == NT_And || nt == NT_Or
 }

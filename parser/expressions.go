@@ -18,6 +18,12 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		p.consume()
 		left = p.parseExpression(MINIMAL_PRECEDENCE)
 		p.consume()
+	// Unary operators
+	} else if p.peek().TokenType.IsUnaryOperator() {
+		operator := p.consume()
+		right := p.parseExpression(operatorPrecedence(operator.TokenType))
+		
+		left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
 	// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
 		symbol := p.findSymbol(p.peek().Value)
@@ -67,16 +73,20 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
+	case lexer.TT_OP_And, lexer.TT_OP_Or:
+		return 0
 	case lexer.TT_OP_Equal, lexer.TT_OP_NotEqual,
 		 lexer.TT_OP_Lower, lexer.TT_OP_Greater,
 		 lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual:
-		return 0
-	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 1
-	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
+	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 2
-	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
+	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
 		return 3
+	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
+		return 4
+	case lexer.TT_OP_Not:
+		return 5
 	default:
 		panic(fmt.Sprintf("Can't get operator precedence of token type %s.", operator))
 	}
@@ -84,13 +94,31 @@ func operatorPrecedence(operator lexer.TokenType) int {
 
 func (p *Parser) getExpressionType(expression *Node) VariableType {
 	if expression.nodeType.IsOperator() {
+		// Unary operator
+		if expression.value.(*BinaryNode).left == nil {
+			return p.getExpressionType(expression.value.(*BinaryNode).right)
+		}
+
 		leftType := p.getExpressionType(expression.value.(*BinaryNode).left)
 		rightType := p.getExpressionType(expression.value.(*BinaryNode).right)
 
 		// Same type on both sides
 		if leftType.Equals(rightType) {
-			if leftType.dataType == DT_String && expression.nodeType > NT_Add && expression.nodeType <= NT_Modulo {
+			// Logic operators can be used only on booleans
+			if expression.nodeType.IsLogicOperator() && (leftType.dataType != DT_Bool || rightType.dataType != DT_Bool) {
+				p.newError(expression.position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.nodeType))
+				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
+			}
+
+			// Only + can be used on strings
+			if leftType.dataType == DT_String && expression.nodeType != NT_Add {
 				p.newError(expression.position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.nodeType], leftType, rightType))
+				return leftType
+			}
+
+			// Comparison operators return boolean
+			if expression.nodeType.IsComparisonOperator() {
+				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
 			}
 
 			return leftType

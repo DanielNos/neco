@@ -24,9 +24,9 @@ func printTokens(tokens []*lexer.Token) {
 			color.Set(color.FgHiGreen)
 		} else if token.TokenType == lexer.TT_StartOfFile || token.TokenType == lexer.TT_EndOfFile {
 			color.Set(color.FgHiRed)
-		} else if token.TokenType >= lexer.TT_OP_Add && token.TokenType <= lexer.TT_OP_GreaterEqual {
+		} else if token.TokenType.IsOperator() {
 			color.Set(color.FgHiMagenta)
-		} else if token.TokenType >= lexer.TT_DL_ParenthesisOpen && token.TokenType <= lexer.TT_DL_Comma {
+		} else if token.TokenType.IsDelimiter() {
 			color.Set(color.FgHiBlue)
 		} else {
 			color.Set(color.FgHiWhite)
