@@ -115,6 +115,13 @@ func visualize(node *Node, indent string, isLast bool) {
 		for i, argument := range functionCall.arguments {
 			visualize(argument, indent, i == len(functionCall.arguments) - 1)
 		}
+
+	case NT_Return:
+		println("return")
+
+		if node.value != nil {
+			visualize(node.value.(*Node), indent, true)
+		}
 		
 	default:
 		fmt.Printf("%s\n", NodeTypeToString[node.nodeType])

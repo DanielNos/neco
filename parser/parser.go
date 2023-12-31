@@ -175,6 +175,18 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		// Identifier
 		case lexer.TT_Identifier:
 			scope.statements = append(scope.statements, p.parseIdentifier())
+
+		// Return
+		case lexer.TT_KW_return:
+			returnPosition := p.consume().Position
+			
+			// Return value
+			if p.peek().TokenType != lexer.TT_EndOfCommand {
+				scope.statements = append(scope.statements, &Node{returnPosition, NT_Return, p.parseExpression(MINIMAL_PRECEDENCE)})
+			// Return
+			} else {
+				scope.statements = append(scope.statements, &Node{returnPosition, NT_Return, nil})
+			}
 		
 		// Skip EOCs
 		case lexer.TT_EndOfCommand:

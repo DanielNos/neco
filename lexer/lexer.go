@@ -113,13 +113,18 @@ func (l *Lexer) Lex() []*Token {
 	}
 }
 
-func (l *Lexer) newError(line, char uint, message string) {
+func (l *Lexer) newError(line, char uint, useTokenLength bool, message string) {
 	if l.ErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	l.ErrorCount++
-	logger.ErrorPos(&l.filePath, line, char, char + uint(l.token.Len()), message)
+	
+	var tokenLength uint = 1
+	if useTokenLength {
+		tokenLength = uint(l.token.Len())
+	}
+	logger.ErrorPos(&l.filePath, line, char, char + tokenLength, message)
 
 	// Too many errors
 	if l.ErrorCount > errors.MAX_ERROR_COUNT {
@@ -178,6 +183,9 @@ func (l *Lexer) lexRune() {
 	} else {
 		switch l.currRune {
 		
+		case '_': // Identifier
+			l.lexLetter()
+		
 		case '"': // String
 			l.lexString()
 
@@ -194,7 +202,7 @@ func (l *Lexer) lexRune() {
 
 			// Invalid Windows line ending
 			if l.currRune != '\n' {
-				l.newError(l.lineIndex, l.charIndex - 1, "Invalid Windows line ending.")
+				l.newError(l.lineIndex, l.charIndex - 1, true, "Invalid Windows line ending.", )
 			} else {
 				l.advance()
 			}
@@ -312,7 +320,7 @@ func (l *Lexer) lexRune() {
 				// Invalid character
 				if !unicode.IsSpace(l.currRune) {
 					l.token.WriteRune(l.currRune)
-					l.newError(l.lineIndex, l.charIndex, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
+					l.newError(l.lineIndex, l.charIndex, true, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
 				}
 			}
 			l.advance()
@@ -365,8 +373,21 @@ func (l *Lexer) lexString() {
 
 	// Collect string
 	for l.currRune != '"' {
-		l.token.WriteRune(l.currRune)
-		l.advance()
+		if l.currRune == '\r' {
+			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
+			l.advance()
+			l.advance()
+			l.lineIndex++
+			l.charIndex = 1
+		} else if l.currRune == '\n' {
+			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
+			l.advance()
+			l.lineIndex++
+			l.charIndex = 1
+		} else {
+			l.token.WriteRune(l.currRune)
+			l.advance()
+		}
 	}
 	l.advance()
 
@@ -404,7 +425,7 @@ func (l *Lexer) lexNumber() {
 		// Invalid character
 		} else {
 			l.collectRestOfToken()
-			l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+			l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
 			l.newToken(startLine, startChar, TT_LT_Int)
 			return
 		}
@@ -434,7 +455,7 @@ func (l *Lexer) lexNumber() {
 	// Invalid characters in number
 	} else {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Int)
 	}
 }
@@ -446,7 +467,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	// Invalid base
 	if base < 2 || base > 36 {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, fmt.Sprintf("Invalid integer base %d. Only bases in range <2, 36> are supported.", base))
+		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid integer base %d. Only bases in range <2, 36> are supported.", base))
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -467,7 +488,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 
 	// Digits exceed base
 	if invalidDigits {
-		l.newError(startLine, startChar + uint(len(baseString)) + 1, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
+		l.newError(startLine, startChar + uint(len(baseString)) + 1, true, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -475,7 +496,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	// Invalid characters in number
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -502,7 +523,7 @@ func (l *Lexer) lexFloat(startLine, startChar uint) {
 	// Invalid characters
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, fmt.Sprintf("Invalid character/s in float literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in float literal \"%s\".", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Float)
 		return
 	}
@@ -542,7 +563,7 @@ func (l *Lexer) skipMultiLineComment() {
 		case '\r': // Windows new line
 			l.advance()
 			if l.currRune != '\n' {
-				l.newError(l.lineIndex, l.charIndex - 1, "Invalid Windows line ending.")
+				l.newError(l.lineIndex, l.charIndex - 1, true, "Invalid Windows line ending.")
 			} else {
 				l.advance()
 			}

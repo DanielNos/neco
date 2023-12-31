@@ -37,6 +37,7 @@ const (
 	NT_Variable
 	NT_FunctionDeclare
 	NT_FunctionCall
+	NT_Return
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -61,6 +62,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_Variable: "Variable",
 	NT_FunctionDeclare: "FunctionDeclare",
 	NT_FunctionCall: "FunctionCall",
+	NT_Return: "Return",
 }
 
 func (nt NodeType) String() string {
