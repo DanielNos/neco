@@ -36,6 +36,8 @@ func (dt DataType) String() string {
 }
 
 var TokenTypeToDataType = map[lexer.TokenType]DataType {
+	lexer.TT_KW_var: DT_NoType,
+	
 	lexer.TT_LT_None: DT_None,
 
 	lexer.TT_KW_bool: DT_Bool,
