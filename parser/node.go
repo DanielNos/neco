@@ -92,7 +92,7 @@ type VariableDeclareNode struct {
 }
 
 type AssignNode struct {
-	identifiers []string
+	identifier string
 	expression *Node
 }
 
@@ -148,6 +148,15 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
 	lexer.TT_OP_Greater: NT_Greater,
 	lexer.TT_OP_LowerEqual: NT_LowerEqual,
 	lexer.TT_OP_GreaterEqual: NT_GreaterEqual,
+}
+
+var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType {
+	lexer.TT_KW_AddAssign: NT_Add,
+	lexer.TT_KW_SubtractAssign: NT_Subtract,
+	lexer.TT_KW_MultiplyAssign: NT_Multiply,
+	lexer.TT_KW_DivideAssign: NT_Divide,
+	lexer.TT_KW_PowerAssign: NT_Power,
+	lexer.TT_KW_ModuloAssign: NT_Modulo,
 }
 
 func (nt NodeType) IsOperator() bool {

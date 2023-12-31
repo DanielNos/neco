@@ -47,12 +47,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		assign := node.value.(*AssignNode)
 
 		println("Assign")
-		print(indent, "├─ ")
-
-		for _, id := range assign.identifiers {
-			fmt.Printf("%s ", id)
-		}
-		println()
+		fmt.Printf("%s├─ %s\n", indent, assign.identifier)
 
 		visualize(assign.expression, indent, true)
 

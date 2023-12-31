@@ -352,7 +352,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 }
 
 func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []VariableType) (*Node, VariableType) {
-	assignPosition := p.consume().Position
+	assign := p.consume()
 	expressionStart := p.peek().Position
 
 	// Collect expression
@@ -375,11 +375,22 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 		}
 	}
 
-	var identifiers = []string{}
-	
-	for _, identifier := range identifierTokens {
-		identifiers = append(identifiers, identifier.Value)
+	// Operation-Assign nodes
+	if assign.TokenType != lexer.TT_KW_Assign {
+		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
+		for i, identifier := range identifierTokens[:len(identifierTokens) - 1] {
+			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
+			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}})
+		}
+
+		variableNode := &Node{identifierTokens[len(identifierTokens) - 1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens) - 1].Value, expressionType}}
+		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens) - 1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}}, expressionType
 	}
 
-	return &Node{assignPosition, NT_Assign, &AssignNode{identifiers, expression}}, expressionType
+	// Assign nodes
+	for _, identifier := range identifierTokens[:len(identifierTokens) - 1] {
+		p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, expression}})
+	}
+
+	return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens) - 1].Value, expression}}, expressionType
 }
