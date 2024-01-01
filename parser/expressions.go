@@ -39,7 +39,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	// Unary operators
 	} else if p.peek().TokenType.IsUnaryOperator() {
 		operator := p.consume()
-		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not))
+		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
 
 		// Combine - and int node
 		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Int {
