@@ -15,7 +15,22 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 	// Literal
 	if p.peek().TokenType.IsLiteral() {
-		left = &Node{p.peek().Position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.peek().TokenType], p.consume().Value}}
+		var literalValue LiteralValue
+		
+		switch p.peek().TokenType {
+		case lexer.TT_LT_None:
+			literalValue = nil
+		case lexer.TT_LT_Bool:
+			literalValue = p.peek().Value[0] == '1'
+		case lexer.TT_LT_Int:
+			literalValue, _ = strconv.ParseInt(p.peek().Value, 10, 64)
+		case lexer.TT_LT_Float:
+			literalValue, _ = strconv.ParseFloat(p.peek().Value, 64)
+		case lexer.TT_LT_String:
+			literalValue = p.peek().Value
+		}
+
+		left = &Node{p.peek().Position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.consume().TokenType], literalValue}}
 	// Sub-Expression
 	} else if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		p.consume()
@@ -24,20 +39,19 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	// Unary operators
 	} else if p.peek().TokenType.IsUnaryOperator() {
 		operator := p.consume()
-		right := p.parseExpression(operatorPrecedence(operator.TokenType))
+		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not))
 
-		// Combine - and int/float nodes
-		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && (right.value.(*LiteralNode).dataType == DT_Int || right.value.(*LiteralNode).dataType == DT_Float){
-			right.value.(*LiteralNode).value = fmt.Sprintf("-%s", right.value.(*LiteralNode).value)
+		// Combine - and int node
+		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Int {
+			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(int64)
 			left = right
-		// Combine ! and bool nodes
+		// Combine - and float node
+		} else if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Float {
+			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(float64)
+			left = right
+		// Combine ! and bool node
 		} else if  right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.value.(*LiteralNode).dataType == DT_Bool {
-			if right.value.(*LiteralNode).value[0] == '0' {
-				right.value.(*LiteralNode).value = "1"
-			} else {
-				right.value.(*LiteralNode).value = "0"
-			}
-			
+			right.value.(*LiteralNode).value = !right.value.(*LiteralNode).value.(bool)
 			left = right
 		} else {
 			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
@@ -204,81 +218,104 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	switch leftLiteral.dataType {
 	// Booleans
 	case DT_Bool:
-		leftValue := leftLiteral.value[0] == '1'
-		rightValue := rightLiteral.value[0] == '1'
-
 		switch parentNodeType {
 		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) == rightLiteral.value.(bool)}}
 		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) != rightLiteral.value.(bool)}}
 		case NT_And:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue && rightValue)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) && rightLiteral.value.(bool)}}
 		case NT_Or:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue || rightValue)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) || rightLiteral.value.(bool)}}
 		}
 	// Integers
 	case DT_Int:
-		leftValue, _ := strconv.ParseInt(leftLiteral.value, 10, 64)
-		rightValue, _ := strconv.ParseInt(rightLiteral.value, 10, 64)
+		var value LiteralValue = nil
 
+		// Arithmetic operations
 		switch parentNodeType {
 		case NT_Add:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue + rightValue)}}
+			value = leftLiteral.value.(int64) + rightLiteral.value.(int64)
 		case NT_Subtract:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue - rightValue)}}
+			value = leftLiteral.value.(int64) - rightLiteral.value.(int64)
 		case NT_Multiply:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue * rightValue)}}
+			value = leftLiteral.value.(int64) * rightLiteral.value.(int64)
 		case NT_Divide:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue / rightValue)}}
+			value = leftLiteral.value.(int64) / rightLiteral.value.(int64)
 		case NT_Power:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", powerInt64(leftValue, rightValue))}}
+			value = powerInt64(leftLiteral.value.(int64), rightLiteral.value.(int64))
 		case NT_Modulo:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue % rightValue)}}
-		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
-		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
-		case NT_Lower:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue < rightValue)}}
-		case NT_Greater:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue > rightValue)}}
-		case NT_LowerEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue <= rightValue)}}
-		case NT_GreaterEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue >= rightValue)}}
+			value = leftLiteral.value.(int64) % rightLiteral.value.(int64)
 		}
+		
+		if value != nil {
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, value}}
+		}
+
+		// Comparison operators
+		switch parentNodeType {
+		case NT_Equal:
+			value = leftLiteral.value.(int64) == rightLiteral.value.(int64)
+		case NT_NotEqual:
+			value = leftLiteral.value.(int64) != rightLiteral.value.(int64)
+		case NT_Lower:
+			value = leftLiteral.value.(int64) < rightLiteral.value.(int64)
+		case NT_Greater:
+			value = leftLiteral.value.(int64) > rightLiteral.value.(int64)
+		case NT_LowerEqual:
+			value = leftLiteral.value.(int64) <= rightLiteral.value.(int64)
+		case NT_GreaterEqual:
+			value = leftLiteral.value.(int64) >= rightLiteral.value.(int64)
+		}
+		
+		if value != nil {
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
+		}
+
 	// Floats
 	case DT_Float:
-		leftValue, _ := strconv.ParseFloat(leftLiteral.value, 64)
-		rightValue, _ := strconv.ParseFloat(rightLiteral.value, 64)
+		var value LiteralValue = nil
 
+		// Arithmetic operations
 		switch parentNodeType {
 		case NT_Add:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue + rightValue)}}
+			value = leftLiteral.value.(float64) + rightLiteral.value.(float64)
 		case NT_Subtract:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue - rightValue)}}
+			value = leftLiteral.value.(float64) - rightLiteral.value.(float64)
 		case NT_Multiply:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue * rightValue)}}
+			value = leftLiteral.value.(float64) * rightLiteral.value.(float64)
 		case NT_Divide:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue / rightValue)}}
+			value = leftLiteral.value.(float64) / rightLiteral.value.(float64)
 		case NT_Power:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", math.Pow(leftValue, rightValue))}}
+			value = math.Pow(leftLiteral.value.(float64), rightLiteral.value.(float64))
 		case NT_Modulo:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", math.Mod(leftValue, rightValue))}}
-		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
-		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
-		case NT_Lower:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue < rightValue)}}
-		case NT_Greater:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue > rightValue)}}
-		case NT_LowerEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue <= rightValue)}}
-		case NT_GreaterEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue >= rightValue)}}
+			value = math.Mod(leftLiteral.value.(float64), rightLiteral.value.(float64))
 		}
+		
+		if value != nil {
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, value}}
+		}
+
+		// Comparison operators
+		switch parentNodeType {
+		case NT_Equal:
+			value = leftLiteral.value.(float64) == rightLiteral.value.(float64)
+		case NT_NotEqual:
+			value = leftLiteral.value.(float64) != rightLiteral.value.(float64)
+		case NT_Lower:
+			value = leftLiteral.value.(float64) < rightLiteral.value.(float64)
+		case NT_Greater:
+			value = leftLiteral.value.(float64) > rightLiteral.value.(float64)
+		case NT_LowerEqual:
+			value = leftLiteral.value.(float64) <= rightLiteral.value.(float64)
+		case NT_GreaterEqual:
+			value = leftLiteral.value.(float64) >= rightLiteral.value.(float64)
+		}
+		
+		if value != nil {
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
+		}
+
 	// Strings
 	case DT_String:
 		if parentNodeType == NT_Add {
@@ -302,11 +339,4 @@ func powerInt64(base, exponent int64) int64 {
 	}
 
 	return result
-}
-
-func boolToString(value bool) string {
-	if value {
-		return "1"
-	}
-	return "0"
 }

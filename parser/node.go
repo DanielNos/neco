@@ -96,9 +96,11 @@ type AssignNode struct {
 	expression *Node
 }
 
+type LiteralValue interface{}
+
 type LiteralNode struct {
 	dataType DataType
-	value string
+	value LiteralValue
 }
 
 type BinaryNode struct {
