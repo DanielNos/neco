@@ -2,8 +2,10 @@ package parser
 
 import (
 	"fmt"
+	"math"
 	"neko/dataStructures"
 	"neko/lexer"
+	"strconv"
 )
 
 const MINIMAL_PRECEDENCE = -100
@@ -23,8 +25,24 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	} else if p.peek().TokenType.IsUnaryOperator() {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
+
+		// Combine - and int/float nodes
+		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && (right.value.(*LiteralNode).dataType == DT_Int || right.value.(*LiteralNode).dataType == DT_Float){
+			right.value.(*LiteralNode).value = fmt.Sprintf("-%s", right.value.(*LiteralNode).value)
+			left = right
+		// Combine ! and bool nodes
+		} else if  right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.value.(*LiteralNode).dataType == DT_Bool {
+			if right.value.(*LiteralNode).value[0] == '0' {
+				right.value.(*LiteralNode).value = "1"
+			} else {
+				right.value.(*LiteralNode).value = "0"
+			}
+			
+			left = right
+		} else {
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
+		}
 		
-		left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
 	// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
 		symbol := p.findSymbol(p.peek().Value)
@@ -66,7 +84,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 
-		left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right}}
+		if left.nodeType == NT_Literal && right.nodeType == NT_Literal && left.value.(*LiteralNode).dataType == right.value.(*LiteralNode).dataType{
+			left = combineLiteralNodes(left, right, TokenTypeToNodeType[operator.TokenType], operator.Position)
+		} else {
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right}}
+		}
 	}
 
 	return left
@@ -147,16 +169,22 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 }
 
 func getExpressionPosition(expression *Node, left, right uint) dataStructures.CodePos {
+	// Binary node
 	if expression.nodeType.IsOperator() {
 		binaryNode := expression.value.(*BinaryNode)
 
-		leftPosition := getExpressionPosition(binaryNode.left, left, right)
-		rightPosition := getExpressionPosition(binaryNode.right, left, right)
+		if binaryNode.left != nil {
+			leftPosition := getExpressionPosition(binaryNode.left, left, right)
+			rightPosition := getExpressionPosition(binaryNode.right, left, right)
+	
+			return dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
+		}
 
-		return dataStructures.CodePos{leftPosition.File, leftPosition.Line, leftPosition.StartChar, rightPosition.EndChar}
+		expression = binaryNode.left
 	}
 
-	position := dataStructures.CodePos{expression.position.File, expression.position.Line, left, right}
+	// Check if node position is outside of bounds of max found position
+	position := dataStructures.CodePos{File: expression.position.File, Line: expression.position.Line, StartChar: left, EndChar: right}
 
 	if expression.position.StartChar < left {
 		position.StartChar = expression.position.StartChar
@@ -167,4 +195,118 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 	}
 
 	return position
+}
+
+func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *dataStructures.CodePos) *Node {
+	leftLiteral := left.value.(*LiteralNode)
+	rightLiteral := right.value.(*LiteralNode)
+
+	switch leftLiteral.dataType {
+	// Booleans
+	case DT_Bool:
+		leftValue := leftLiteral.value[0] == '1'
+		rightValue := rightLiteral.value[0] == '1'
+
+		switch parentNodeType {
+		case NT_Equal:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
+		case NT_NotEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
+		case NT_And:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue && rightValue)}}
+		case NT_Or:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue || rightValue)}}
+		}
+	// Integers
+	case DT_Int:
+		leftValue, _ := strconv.ParseInt(leftLiteral.value, 10, 64)
+		rightValue, _ := strconv.ParseInt(rightLiteral.value, 10, 64)
+
+		switch parentNodeType {
+		case NT_Add:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue + rightValue)}}
+		case NT_Subtract:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue - rightValue)}}
+		case NT_Multiply:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue * rightValue)}}
+		case NT_Divide:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue / rightValue)}}
+		case NT_Power:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", powerInt64(leftValue, rightValue))}}
+		case NT_Modulo:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, fmt.Sprintf("%d", leftValue % rightValue)}}
+		case NT_Equal:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
+		case NT_NotEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
+		case NT_Lower:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue < rightValue)}}
+		case NT_Greater:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue > rightValue)}}
+		case NT_LowerEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue <= rightValue)}}
+		case NT_GreaterEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue >= rightValue)}}
+		}
+	// Floats
+	case DT_Float:
+		leftValue, _ := strconv.ParseFloat(leftLiteral.value, 64)
+		rightValue, _ := strconv.ParseFloat(rightLiteral.value, 64)
+
+		switch parentNodeType {
+		case NT_Add:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue + rightValue)}}
+		case NT_Subtract:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue - rightValue)}}
+		case NT_Multiply:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue * rightValue)}}
+		case NT_Divide:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", leftValue / rightValue)}}
+		case NT_Power:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", math.Pow(leftValue, rightValue))}}
+		case NT_Modulo:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, fmt.Sprintf("%.75g", math.Mod(leftValue, rightValue))}}
+		case NT_Equal:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue == rightValue)}}
+		case NT_NotEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue != rightValue)}}
+		case NT_Lower:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue < rightValue)}}
+		case NT_Greater:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue > rightValue)}}
+		case NT_LowerEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue <= rightValue)}}
+		case NT_GreaterEqual:
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, boolToString(leftValue >= rightValue)}}
+		}
+	// Strings
+	case DT_String:
+		if parentNodeType == NT_Add {
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.value, right.value)}}
+		}
+	}
+
+	// Invalid operation, can't combine
+	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right}}
+}
+
+func powerInt64(base, exponent int64) int64 {
+	var result int64 = 1
+
+	for exponent > 0 {
+		if exponent % 2 == 1 {
+			result *= base
+		}
+		base *= base
+		exponent /= 2
+	}
+
+	return result
+}
+
+func boolToString(value bool) string {
+	if value {
+		return "1"
+	}
+	return "0"
 }

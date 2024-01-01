@@ -108,6 +108,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 			} else {
 				// Incorrect return value data type
 				expressionType := p.getExpressionType(statement.value.(*Node))
+				
 				if !returnType.Equals(expressionType) {
 					position := getExpressionPosition(statement.value.(*Node), statement.value.(*Node).position.StartChar, statement.value.(*Node).position.EndChar)
 					p.newError(&position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
