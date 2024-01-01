@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"neko/dataStructures"
 	"neko/lexer"
 )
 
@@ -143,4 +144,27 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.nodeType]))
+}
+
+func getExpressionPosition(expression *Node, left, right uint) dataStructures.CodePos {
+	if expression.nodeType.IsOperator() {
+		binaryNode := expression.value.(*BinaryNode)
+
+		leftPosition := getExpressionPosition(binaryNode.left, left, right)
+		rightPosition := getExpressionPosition(binaryNode.right, left, right)
+
+		return dataStructures.CodePos{leftPosition.File, leftPosition.Line, leftPosition.StartChar, rightPosition.EndChar}
+	}
+
+	position := dataStructures.CodePos{expression.position.File, expression.position.Line, left, right}
+
+	if expression.position.StartChar < left {
+		position.StartChar = expression.position.StartChar
+	}
+
+	if expression.position.EndChar > right {
+		position.EndChar = expression.position.EndChar
+	}
+
+	return position
 }
