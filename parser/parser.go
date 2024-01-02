@@ -195,6 +195,10 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 			} else {
 				scope.statements = append(scope.statements, &Node{returnPosition, NT_Return, nil})
 			}
+
+		// If statement
+		case lexer.TT_KW_if:
+			scope.statements = append(scope.statements, p.parseIfStatement())
 		
 		// Skip EOCs
 		case lexer.TT_EndOfCommand:

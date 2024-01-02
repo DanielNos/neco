@@ -125,6 +125,24 @@ func visualize(node *Node, indent string, isLast bool) {
 		if node.value != nil {
 			visualize(node.value.(*Node), indent, true)
 		}
+
+	case NT_If:
+		println("if")
+		ifNode := node.value.(*IfNode)
+		visualize(ifNode.condition, indent, false)
+		visualize(ifNode.body, indent, false)
+
+		if len(ifNode.elseIfs) == 0 {
+			visualize(ifNode.body, indent, ifNode.elseBody == nil)
+		} else {
+			for i, elif := range ifNode.elseIfs {
+				visualize(elif, indent, i == len(ifNode.elseIfs) - 1 && ifNode.elseBody == nil)
+			}
+		}
+
+		if ifNode.elseBody != nil {
+			visualize(ifNode.elseBody, indent, true)
+		}
 		
 	default:
 		fmt.Printf("%s\n", NodeTypeToString[node.nodeType])

@@ -41,6 +41,7 @@ const (
 	NT_FunctionDeclare
 	NT_FunctionCall
 	NT_Return
+	NT_If
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -69,6 +70,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_FunctionDeclare: "FunctionDeclare",
 	NT_FunctionCall: "FunctionCall",
 	NT_Return: "Return",
+	NT_If: "If",
 }
 
 func (nt NodeType) String() string {
@@ -131,6 +133,13 @@ type FunctionCallNode struct {
 	identifier string
 	arguments []*Node
 	returnType *VariableType
+}
+
+type IfNode struct {
+	condition *Node
+	body *Node
+	elseIfs []*Node
+	elseBody *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {
