@@ -279,7 +279,11 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 
 	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str: // Variable declarations
-		sn.analyzeVariableDeclaration()
+		sn.analyzeVariableDeclaration(false)
+
+	case lexer.TT_KW_const: // Constant declarations
+		sn.consume()
+		sn.analyzeVariableDeclaration(true)
 
 	case lexer.TT_DL_BraceClose: // Leave scope
 		if isScope {
@@ -739,11 +743,14 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 	}
 }
 
-func (sn *SyntaxAnalyzer) analyzeVariableDeclaration() {
+func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 	sn.consume()
 
 	// Check identifier
 	if sn.peek().TokenType != lexer.TT_Identifier {
+		if constant {
+			sn.newError(sn.peekPrevious(), "Expected variable identifier after const keyword.")
+		}
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after %s keyword.", sn.peekPrevious()))
 	} else {
 		sn.consume()
@@ -880,7 +887,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	// Enum variable declaration
 	if sn.customTypes[sn.peek().Value] {
-		sn.analyzeVariableDeclaration()
+		sn.analyzeVariableDeclaration(false)
 		return
 	}
 

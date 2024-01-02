@@ -19,6 +19,7 @@ type SymbolValue interface{}
 type VariableSymbol struct {
 	variableType VariableType
 	isInitialized bool
+	isConstant bool
 }
 
 type FunctionSymbol struct {

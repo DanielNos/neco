@@ -88,6 +88,7 @@ type ScopeNode struct {
 
 type VariableDeclareNode struct {
 	variableType VariableType
+	constant bool
 	identifiers []string
 }
 

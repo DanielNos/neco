@@ -150,10 +150,15 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 
 		// Variable declaration
 		case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
-			scope.statements = append(scope.statements, p.parseVariableDeclare())
+			scope.statements = append(scope.statements, p.parseVariableDeclare(false))
 
 		case lexer.TT_KW_var:
-			scope.statements = append(scope.statements, p.parseVariableDeclare())
+			scope.statements = append(scope.statements, p.parseVariableDeclare(false))
+
+		// Constant variable
+		case lexer.TT_KW_const:
+			p.consume()
+			scope.statements = append(scope.statements, p.parseVariableDeclare(true))
 
 		// Function declaration
 		case lexer.TT_KW_fun:
@@ -227,6 +232,11 @@ func (p *Parser) parseIdentifier() *Node {
 				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
 			// Assignment to variable
 			} else {
+				// Can't assign to constants
+				if symbol.value.(*VariableSymbol).isConstant {
+					p.newError(p.peek().Position, fmt.Sprintf("Can't assign to constant variable %s.", identifier.Value))
+				}
+
 				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{symbol.value.(*VariableSymbol).variableType})
 			}
 		}
@@ -284,7 +294,7 @@ func (p *Parser) parseIdentifier() *Node {
 	return p.parseFunctionCall(symbol, p.consume())
 }
 
-func (p *Parser) parseVariableDeclare() *Node {
+func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	startPosition := p.peek().Position
 	variableType := VariableType{TokenTypeToDataType[p.consume().TokenType], false}
 
@@ -316,7 +326,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 	}
 
 	// Create node
-	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{variableType, identifiers}}
+	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{variableType, constant, identifiers}}
 
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -345,7 +355,7 @@ func (p *Parser) parseVariableDeclare() *Node {
 
 	// Insert symbols
 	for _, id := range identifiers {
-		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.nodeType == NT_Assign}})
+		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.nodeType == NT_Assign, constant}})
 	}
 
 	return declareNode

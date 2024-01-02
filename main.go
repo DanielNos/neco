@@ -16,7 +16,7 @@ import (
 
 func printTokens(tokens []*lexer.Token) {
 	for _, token := range tokens {
-		if token.TokenType > lexer.TT_KW_const {
+		if token.TokenType >= lexer.TT_KW_const {
 			color.Set(color.FgHiCyan)
 		} else if token.TokenType == lexer.TT_EndOfCommand {
 			color.Set(color.FgHiYellow)
