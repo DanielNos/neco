@@ -72,7 +72,7 @@ func (p *Parser) parseParameters() []Parameter {
 
 		// Create parameter and symbol
 		paremeters = append(paremeters, Parameter{dataType, identifier, nil})
-		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, false, false}})
+		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, true, false}})
 	}
 
 	return paremeters
