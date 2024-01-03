@@ -133,7 +133,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(ifNode.body, indent, false)
 
 		if len(ifNode.elseIfs) == 0 {
-			visualize(ifNode.body, indent, true)
+			visualize(ifNode.elseBody, indent, true)
 		} else {
 			for i, elif := range ifNode.elseIfs {
 				visualize(elif, indent, i == len(ifNode.elseIfs) - 1 && ifNode.elseBody == nil)
