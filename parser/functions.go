@@ -18,7 +18,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 
 	// Collect name
 	identifier := p.consume().Value
-
+	
 	// Enter scope
 	p.enterScope()
 

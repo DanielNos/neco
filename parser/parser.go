@@ -32,6 +32,13 @@ func (p *Parser) peek() *lexer.Token {
 	return p.tokens[p.tokenIndex]
 }
 
+func (p *Parser) peekNext() *lexer.Token {
+	if p.tokenIndex + 1 < len(p.tokens) {
+		return p.tokens[p.tokenIndex + 1]
+	}
+	return p.tokens[p.tokenIndex]
+}
+
 func (p *Parser) peekPrevious() *lexer.Token {
 	if p.tokenIndex > 0 {
 		return p.tokens[p.tokenIndex - 1]
@@ -91,33 +98,18 @@ func (p *Parser) Parse() *Node {
 	return p.parseModule()
 }
 
-func (p *Parser) collectGlobalSymbols() {
-	for p.peek().TokenType != lexer.TT_EndOfFile {
-		// Collect variable
-		if p.peek().TokenType.IsVariableType() {
-			p.consume()
-		} else {
-			p.consume()
-		}
-	}
-}
-
 func (p *Parser) parseModule() *Node {
 	// Collect module path and name
 	modulePath := p.consume().Value
 	pathParts := strings.Split(modulePath, "/")
 	moduleName := pathParts[len(pathParts) - 1]
 
-	if strings.Contains(moduleName, ".") { 
+	if strings.Contains(moduleName, ".") {
 		moduleName = strings.Split(moduleName, ".")[0]
 	}
 
 	// Enter global scope
 	p.enterScope()
-
-	// Collect global symbols
-	p.collectGlobalSymbols()
-	p.tokenIndex = 0
 
 	// Parse module
 	scope := p.parseScope(false)
@@ -131,18 +123,19 @@ func (p *Parser) parseModule() *Node {
 
 func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 	// Consume opening brace
-	opening := p.consume().Position
+	opening := p.peek().Position
+
+	if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+		p.consume()
+	}
 
 	// Enter or use current scope
 	var scope *ScopeNode
 	
 	if enterScope {
-		scope = &ScopeNode{p.scopeCounter, []*Node{}}
-		p.scopeNodeStack.Push(scope)
-		p.scopeCounter++
-	} else {
-		scope = p.scopeNodeStack.Top.Value.(*ScopeNode)
+		p.enterScope()
 	}
+	scope = p.scopeNodeStack.Top.Value.(*ScopeNode)
 
 	// Collect statements
 	for p.peek().TokenType != lexer.TT_EndOfFile {
@@ -205,7 +198,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 			p.consume()
 
 		default:
-			panic(fmt.Sprintf("Unexpected token \"%s\".", p.consume()))
+			panic(fmt.Sprintf("%v Unexpected token \"%s\".", p.peek().Position, p.consume()))
 		}
 	}
 

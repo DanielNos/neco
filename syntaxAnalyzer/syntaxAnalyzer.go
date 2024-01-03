@@ -203,7 +203,7 @@ func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	}
 
 	if isScope {
-		sn.newError(start, "Code block is missing closing brace.")
+		sn.newError(start, "Scope is missing a closing brace.")
 	}
 }
 
@@ -273,10 +273,9 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		}
 	
 	case lexer.TT_LT_None, lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
-			startChar := sn.peek().Position.StartChar
-			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
-
+		startChar := sn.peek().Position.StartChar
+		sn.analyzeExpression()
+		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 
 	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str: // Variable declarations
 		sn.analyzeVariableDeclaration(false)
@@ -342,7 +341,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	}
 
 	// Collect tokens after statement
-	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
+	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_BraceClose {
 		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return true
 		}
@@ -563,7 +562,9 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		sn.analyzeIfStatement(true)
 		return
 	// Skip 1 EOC
-	} else {
+	} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
+		sn.consume()
+		
 		// Check else statement
 		if sn.peekNext().TokenType == lexer.TT_KW_else {
 			sn.consume()
@@ -578,6 +579,10 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	}
 
 	// Look for else or elif after many EOCs
+	if sn.peekNext().TokenType != lexer.TT_EndOfCommand {
+			return
+	}
+
 	for sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 

@@ -1,6 +1,8 @@
 package parser
 
-import "neko/lexer"
+import (
+	"neko/lexer"
+)
 
 func (p *Parser) parseIfStatement() *Node {
 	ifPosition := p.consume().Position
@@ -64,7 +66,7 @@ func (p *Parser) parseIfStatement() *Node {
 	}
 
 	// Collect else
-	if p.peek().TokenType == lexer.TT_EndOfCommand {
+	if p.peek().TokenType == lexer.TT_EndOfCommand && p.peekNext().TokenType == lexer.TT_KW_else {
 		p.consume()
 	}
 
