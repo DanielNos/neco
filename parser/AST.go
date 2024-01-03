@@ -130,10 +130,12 @@ func visualize(node *Node, indent string, isLast bool) {
 		println("if")
 		ifNode := node.value.(*IfNode)
 		visualize(ifNode.condition, indent, false)
-		visualize(ifNode.body, indent, false)
+		visualize(ifNode.body, indent, len(ifNode.elseIfs) == 0 && ifNode.elseBody == nil)
 
 		if len(ifNode.elseIfs) == 0 {
-			visualize(ifNode.elseBody, indent, true)
+			if ifNode.elseBody != nil {
+				visualize(ifNode.elseBody, indent, true)
+			}
 		} else {
 			for i, elif := range ifNode.elseIfs {
 				visualize(elif, indent, i == len(ifNode.elseIfs) - 1 && ifNode.elseBody == nil)
