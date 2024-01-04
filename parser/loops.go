@@ -23,7 +23,7 @@ func (p *Parser) parseWhile() *Node {
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
 	}
-	
+
 	// Enter loop scope
 	p.enterScope()
 

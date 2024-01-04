@@ -16,7 +16,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	// Literal
 	if p.peek().TokenType.IsLiteral() {
 		var literalValue LiteralValue
-		
+
 		switch p.peek().TokenType {
 		case lexer.TT_LT_None:
 			literalValue = nil
@@ -31,12 +31,12 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		}
 
 		left = &Node{p.peek().Position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.consume().TokenType], literalValue}}
-	// Sub-Expression
+		// Sub-Expression
 	} else if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		p.consume()
 		left = p.parseExpression(MINIMAL_PRECEDENCE)
 		p.consume()
-	// Unary operators
+		// Unary operators
 	} else if p.peek().TokenType.IsUnaryOperator() {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
@@ -45,40 +45,40 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Int {
 			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(int64)
 			left = right
-		// Combine - and float node
+			// Combine - and float node
 		} else if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Float {
 			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(float64)
 			left = right
-		// Combine ! and bool node
-		} else if  right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.value.(*LiteralNode).dataType == DT_Bool {
+			// Combine ! and bool node
+		} else if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.value.(*LiteralNode).dataType == DT_Bool {
 			right.value.(*LiteralNode).value = !right.value.(*LiteralNode).value.(bool)
 			left = right
 		} else {
 			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
 		}
-		
-	// Identifiers
+
+		// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
 		symbol := p.findSymbol(p.peek().Value)
 
 		// Undeclared symbol
 		if symbol == nil {
 			identifier := p.consume()
-			
+
 			// Undeclared function
 			if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 				p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
 				left = p.parseFunctionCall(nil, identifier)
-			// Undeclared variable
+				// Undeclared variable
 			} else {
 				p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
 				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, VariableType{DT_NoType, false}}}
 			}
-		// Function call
+			// Function call
 		} else if symbol.symbolType == ST_Function {
 			left = p.parseFunctionCall(symbol, p.consume())
-		// Variable
-		} else if symbol.symbolType == ST_Variable{
+			// Variable
+		} else if symbol.symbolType == ST_Variable {
 			// Uninitialized variable
 			if !symbol.value.(*VariableSymbol).isInitialized {
 				p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
@@ -88,7 +88,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, VariableType{DT_NoType, false}}}
 		}
 
-	// Invalid token
+		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
 	}
@@ -98,7 +98,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 
-		if left.nodeType == NT_Literal && right.nodeType == NT_Literal && left.value.(*LiteralNode).dataType == right.value.(*LiteralNode).dataType{
+		if left.nodeType == NT_Literal && right.nodeType == NT_Literal && left.value.(*LiteralNode).dataType == right.value.(*LiteralNode).dataType {
 			left = combineLiteralNodes(left, right, TokenTypeToNodeType[operator.TokenType], operator.Position)
 		} else {
 			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right}}
@@ -113,8 +113,8 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	case lexer.TT_OP_And, lexer.TT_OP_Or:
 		return 0
 	case lexer.TT_OP_Equal, lexer.TT_OP_NotEqual,
-		 lexer.TT_OP_Lower, lexer.TT_OP_Greater,
-		 lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual:
+		lexer.TT_OP_Lower, lexer.TT_OP_Greater,
+		lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual:
 		return 1
 	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 2
@@ -190,7 +190,7 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 		if binaryNode.left != nil {
 			leftPosition := getExpressionPosition(binaryNode.left, left, right)
 			rightPosition := getExpressionPosition(binaryNode.right, left, right)
-	
+
 			return dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
 		}
 
@@ -247,7 +247,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_Modulo:
 			value = leftLiteral.value.(int64) % rightLiteral.value.(int64)
 		}
-		
+
 		if value != nil {
 			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, value}}
 		}
@@ -267,7 +267,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_GreaterEqual:
 			value = leftLiteral.value.(int64) >= rightLiteral.value.(int64)
 		}
-		
+
 		if value != nil {
 			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
 		}
@@ -291,7 +291,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_Modulo:
 			value = math.Mod(leftLiteral.value.(float64), rightLiteral.value.(float64))
 		}
-		
+
 		if value != nil {
 			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, value}}
 		}
@@ -311,7 +311,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_GreaterEqual:
 			value = leftLiteral.value.(float64) >= rightLiteral.value.(float64)
 		}
-		
+
 		if value != nil {
 			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
 		}
@@ -331,7 +331,7 @@ func powerInt64(base, exponent int64) int64 {
 	var result int64 = 1
 
 	for exponent > 0 {
-		if exponent % 2 == 1 {
+		if exponent%2 == 1 {
 			result *= base
 		}
 		base *= base

@@ -35,9 +35,9 @@ func (dt DataType) String() string {
 	return "[INVALID DATA TYPE]"
 }
 
-var TokenTypeToDataType = map[lexer.TokenType]DataType {
+var TokenTypeToDataType = map[lexer.TokenType]DataType{
 	lexer.TT_KW_var: DT_NoType,
-	
+
 	lexer.TT_LT_None: DT_None,
 
 	lexer.TT_KW_bool: DT_Bool,
@@ -46,15 +46,15 @@ var TokenTypeToDataType = map[lexer.TokenType]DataType {
 	lexer.TT_KW_int: DT_Int,
 	lexer.TT_LT_Int: DT_Int,
 
-	lexer.TT_KW_flt: DT_Float,
+	lexer.TT_KW_flt:   DT_Float,
 	lexer.TT_LT_Float: DT_Float,
 
-	lexer.TT_KW_str: DT_String,
+	lexer.TT_KW_str:    DT_String,
 	lexer.TT_LT_String: DT_String,
 }
 
 type VariableType struct {
-	dataType DataType
+	dataType  DataType
 	canBeNone bool
 }
 

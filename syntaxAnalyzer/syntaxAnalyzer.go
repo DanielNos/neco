@@ -15,7 +15,7 @@ type SyntaxAnalyzer struct {
 	tokenIndex  int
 	customTypes map[string]bool
 
-	ErrorCount uint
+	ErrorCount      uint
 	totalErrorCount uint
 }
 
@@ -32,7 +32,7 @@ func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
 	logger.ErrorCodePos(token.Position, message)
 
 	// Too many errors
-	if sn.ErrorCount + sn.totalErrorCount > errors.MAX_ERROR_COUNT {
+	if sn.ErrorCount+sn.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
@@ -41,12 +41,12 @@ func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message 
 	if sn.ErrorCount == 0 || sn.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
-	
+
 	sn.ErrorCount++
 	logger.ErrorPos(sn.peek().Position.File, line, startChar, endChar, message)
 
 	// Too many errors
-	if sn.ErrorCount + sn.totalErrorCount > errors.MAX_ERROR_COUNT {
+	if sn.ErrorCount+sn.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
@@ -56,24 +56,24 @@ func (sn *SyntaxAnalyzer) peek() *lexer.Token {
 }
 
 func (sn *SyntaxAnalyzer) peekNext() *lexer.Token {
-	if sn.tokenIndex + 1 < len(sn.tokens) {
-		return sn.tokens[sn.tokenIndex + 1]
+	if sn.tokenIndex+1 < len(sn.tokens) {
+		return sn.tokens[sn.tokenIndex+1]
 	}
 	return sn.tokens[sn.tokenIndex]
 }
 
 func (sn *SyntaxAnalyzer) peekPrevious() *lexer.Token {
 	if sn.tokenIndex > 0 {
-		return sn.tokens[sn.tokenIndex - 1]
+		return sn.tokens[sn.tokenIndex-1]
 	}
 	return sn.tokens[0]
 }
 
 func (sn *SyntaxAnalyzer) consume() *lexer.Token {
-	if sn.tokenIndex + 1 < len(sn.tokens) {
+	if sn.tokenIndex+1 < len(sn.tokens) {
 		sn.tokenIndex++
 	}
-	return sn.tokens[sn.tokenIndex - 1]
+	return sn.tokens[sn.tokenIndex-1]
 }
 
 func (sn *SyntaxAnalyzer) rewind() {
@@ -217,7 +217,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		// Function call
 		if sn.peekNext().TokenType == lexer.TT_DL_ParenthesisOpen {
 			sn.analyzeIdentifier()
-		// Variable
+			// Variable
 		} else {
 			// Assignment
 			if sn.peekNext().TokenType.IsAssignKeyword() {
@@ -251,7 +251,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			// Declare custom variable
 			if sn.customTypes[sn.peek().Value] {
 				sn.consume()
-				
+
 				// Check identifier
 				if sn.peek().TokenType != lexer.TT_Identifier {
 					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().Value, sn.peek()))
@@ -271,7 +271,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			sn.analyzeExpression()
 			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 		}
-	
+
 	case lexer.TT_LT_None, lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 		startChar := sn.peek().Position.StartChar
 		sn.analyzeExpression()
@@ -289,10 +289,10 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			return true
 		}
 		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
-	
+
 	case lexer.TT_DL_ParenthesisClose:
 		return true
-	
+
 	case lexer.TT_DL_BraceOpen: // Enter scope
 		sn.analyzeScope()
 
@@ -332,7 +332,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		}
 
 	case lexer.TT_EndOfCommand: // Ignore EOCs
-		
+
 	default:
 		// Collect line and print error
 		startChar := sn.peek().Position.StartChar
@@ -429,11 +429,11 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 		if sn.peek().Value == "" {
 			sn.newError(sn.peek(), "Expected for loop initialization statement, found \"\\n\" instead.")
 			return
-		// No condition
+			// No condition
 		} else {
 			sn.consume()
 		}
-	// Check condition statement
+		// Check condition statement
 	} else {
 		sn.analyzeStatement(false)
 	}
@@ -447,11 +447,11 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 		} else {
 			sn.newError(sn.peek(), "For loop missing condition.")
 		}
-	// No condition
+		// No condition
 	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.consume(), "For loop missing condition and step statement.")
 		return
-	// Check condition expression
+		// Check condition expression
 	} else {
 		sn.analyzeExpression()
 	}
@@ -459,7 +459,7 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 	// Check step
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
-	// No step
+		// No step
 	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		return
 	}
@@ -557,20 +557,20 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 	if sn.peek().TokenType == lexer.TT_KW_else {
 		sn.analyzeElseStatement()
 		return
-	// Check elif statement
+		// Check elif statement
 	} else if sn.peek().TokenType == lexer.TT_KW_elif {
 		sn.analyzeIfStatement(true)
 		return
-	// Skip 1 EOC
+		// Skip 1 EOC
 	} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
-		
+
 		// Check else statement
 		if sn.peekNext().TokenType == lexer.TT_KW_else {
 			sn.consume()
 			sn.analyzeElseStatement()
 			return
-		// Check elif statement
+			// Check elif statement
 		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
 			sn.consume()
 			sn.analyzeIfStatement(true)
@@ -580,7 +580,7 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 
 	// Look for else or elif after many EOCs
 	if sn.peekNext().TokenType != lexer.TT_EndOfCommand {
-			return
+		return
 	}
 
 	for sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -592,13 +592,13 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeElseStatement()
 			return
-		// Found elif
+			// Found elif
 		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
 			sn.consume()
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeIfStatement(true)
 			return
-		// Other tokens
+			// Other tokens
 		} else if sn.peekNext().TokenType != lexer.TT_EndOfCommand {
 			return
 		}
@@ -1037,7 +1037,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		if sn.peek().TokenType.IsBinaryOperator() {
 			sn.consume()
 			sn.analyzeExpression()
-		// Function call
+			// Function call
 		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 			sn.analyzeFunctionCall()
 

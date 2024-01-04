@@ -9,7 +9,7 @@ func (p *Parser) parseIfStatement() *Node {
 
 	// Collect condition
 	condition := p.parseCondition(true)
-	
+
 	// Collect body
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
@@ -41,7 +41,7 @@ func (p *Parser) parseIfStatement() *Node {
 				conditionPosition := getExpressionPosition(elifCondition, elifCondition.position.StartChar, elifCondition.position.EndChar)
 				p.newError(&conditionPosition, "Condition expression isn't of type Bool.")
 			}
-			
+
 			// Collect body
 			if p.peek().TokenType == lexer.TT_EndOfCommand {
 				p.consume()

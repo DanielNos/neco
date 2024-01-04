@@ -16,26 +16,26 @@ import (
 
 const EOF rune = 0x04
 
-var TOKEN_BREAKERS = map[rune]bool {
+var TOKEN_BREAKERS = map[rune]bool{
 	'+': true,
 	'-': true,
 	'*': true,
 	'/': true,
 	'^': true,
 	'%': true,
-	
+
 	'=': true,
 	'<': true,
 	'>': true,
-	
+
 	'!': true,
 	'&': true,
 	'|': true,
-	
+
 	';': true,
 }
 
-var DIGIT_VALUE = map[rune]int {
+var DIGIT_VALUE = map[rune]int{
 	'0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
 	'5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
 	'a': 10, 'A': 10, 'b': 11, 'B': 11,
@@ -62,8 +62,8 @@ func isTokenBreaker(char rune) bool {
 
 type Lexer struct {
 	filePath string
-	file *os.File
-	reader *bufio.Reader
+	file     *os.File
+	reader   *bufio.Reader
 	fileOpen bool
 
 	currRune rune
@@ -72,7 +72,7 @@ type Lexer struct {
 	lineIndex uint
 	charIndex uint
 
-	token bytes.Buffer
+	token  bytes.Buffer
 	tokens []*Token
 
 	ErrorCount uint
@@ -87,14 +87,14 @@ func (l *Lexer) Lex() []*Token {
 	file, err := os.Open(l.filePath)
 	l.file = file
 	l.fileOpen = true
-	
+
 	if err != nil {
 		reason := strings.Split(err.Error(), ": ")[1]
 		logger.Fatal(errors.ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
 	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
-	
+
 	// Read first 2 chars
 	l.reader = bufio.NewReader(file)
 	l.advance()
@@ -102,10 +102,10 @@ func (l *Lexer) Lex() []*Token {
 
 	l.charIndex = 1
 	l.lineIndex = 1
-	
+
 	for {
 		l.lexRune()
-		
+
 		if l.currRune == EOF {
 			l.newToken(l.lineIndex, l.charIndex, TT_EndOfFile)
 			return l.tokens
@@ -119,12 +119,12 @@ func (l *Lexer) newError(line, char uint, useTokenLength bool, message string) {
 	}
 
 	l.ErrorCount++
-	
+
 	var tokenLength uint = 1
 	if useTokenLength {
 		tokenLength = uint(l.token.Len())
 	}
-	logger.ErrorPos(&l.filePath, line, char, char + tokenLength, message)
+	logger.ErrorPos(&l.filePath, line, char, char+tokenLength, message)
 
 	// Too many errors
 	if l.ErrorCount > errors.MAX_ERROR_COUNT {
@@ -145,14 +145,14 @@ func (l *Lexer) advance() {
 
 	// Move next to current
 	l.currRune = l.nextRune
-	
+
 	r, _, err := l.reader.ReadRune()
 	// Failed to read rune
 	if err != nil {
 		l.nextRune = EOF
 		l.file.Close()
 		l.fileOpen = false
-	// Read rune
+		// Read rune
 	} else {
 		l.nextRune = r
 	}
@@ -182,10 +182,10 @@ func (l *Lexer) lexRune() {
 		l.lexNumber()
 	} else {
 		switch l.currRune {
-		
+
 		case '_': // Identifier
 			l.lexLetter()
-		
+
 		case '"': // String
 			l.lexString()
 
@@ -202,68 +202,68 @@ func (l *Lexer) lexRune() {
 
 			// Invalid Windows line ending
 			if l.currRune != '\n' {
-				l.newError(l.lineIndex, l.charIndex - 1, true, "Invalid Windows line ending.", )
+				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line ending.")
 			} else {
 				l.advance()
 			}
-		
+
 		// Boolean operators
 		case '=':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Equal, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Equal, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_Assign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_Assign, "")
 			}
 		case '<':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_LowerEqual, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_LowerEqual, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Lower, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Lower, "")
 			}
 		case '>':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_GreaterEqual, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_GreaterEqual, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Greater, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Greater, "")
 			}
 		// Operators
 		case '+':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_AddAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_AddAssign, "")
 				l.advance()
 			} else {
-					l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Add, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Add, "")
 			}
 		case '-':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_SubtractAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_SubtractAssign, "")
 				l.advance()
 			} else if l.currRune == '>' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_returns, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_returns, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Subtract, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Subtract, "")
 			}
 		case '*':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_MultiplyAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_MultiplyAssign, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Multiply, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Multiply, "")
 			}
 		case '/':
 			l.advance()
 			if l.currRune == '=' { // /=
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_DivideAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_DivideAssign, "")
 				l.advance()
 			} else if l.currRune == '/' { // //
 				l.advance()
@@ -272,48 +272,48 @@ func (l *Lexer) lexRune() {
 				l.advance()
 				l.skipMultiLineComment()
 			} else { // /
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Divide, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Divide, "")
 			}
 		case '^':
 			l.advance()
 			if l.currRune == '=' { // ^=
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_PowerAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_PowerAssign, "")
 				l.advance()
 			} else { // ^
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Power, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Power, "")
 			}
 		case '%':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_KW_ModuloAssign, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_ModuloAssign, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Modulo, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Modulo, "")
 			}
 		case '!':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_NotEqual, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_NotEqual, "")
 				l.advance()
 			} else {
-				l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Not, "")
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Not, "")
 			}
 		case '&':
 			l.advance()
-			l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_And, "")
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_And, "")
 		case '|':
 			l.advance()
-			l.newTokenFrom(l.lineIndex, l.charIndex - 1, TT_OP_Or, "")
-									
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Or, "")
+
 		// EOC
 		case ';':
 			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, ";")
 			l.advance()
-									
+
 		default:
 			// Delimiters
 			delimiter, isDelimiter := DELIMITERS[l.currRune]
-			
+
 			if isDelimiter {
 				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
 			} else {
@@ -324,14 +324,14 @@ func (l *Lexer) lexRune() {
 				}
 			}
 			l.advance()
-		}					
+		}
 	}
 }
-							
+
 func (l *Lexer) lexLetter() {
 	startLine := l.lineIndex
 	startChar := l.charIndex
-	
+
 	// Collect identifier/keyword
 	l.token.WriteRune(l.currRune)
 	l.advance()
@@ -359,7 +359,7 @@ func (l *Lexer) lexLetter() {
 		} else { // Identifier
 			l.newToken(startLine, startChar, TT_Identifier)
 		}
-	// Keyword
+		// Keyword
 	} else {
 		l.newTokenFrom(startLine, startChar, keyword, "")
 		l.token.Reset()
@@ -397,32 +397,32 @@ func (l *Lexer) lexString() {
 func (l *Lexer) lexNumber() {
 	startLine := l.lineIndex
 	startChar := l.charIndex
-	
+
 	// Collect number/base
 	var base string
 
-	for i := 0; i < 2; i++{
+	for i := 0; i < 2; i++ {
 		// Digit
 		if unicode.IsDigit(l.currRune) {
 			l.token.WriteRune(l.currRune)
 			l.advance()
-		// Space
+			// Space
 		} else if l.currRune == '_' {
 			l.advance()
-		// Base end
+			// Base end
 		} else if l.currRune == 'x' {
 			base = l.token.String()
 			l.token.Reset()
 			l.advance()
 			break
-		// Float
+			// Float
 		} else if l.currRune == '.' {
 			l.lexFloat(startLine, startChar)
 			return
-		// End of number
+			// End of number
 		} else if isTokenBreaker(l.currRune) {
 			break
-		// Invalid character
+			// Invalid character
 		} else {
 			l.collectRestOfToken()
 			l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
@@ -443,16 +443,16 @@ func (l *Lexer) lexNumber() {
 		}
 		l.advance()
 	}
-	
+
 	// Create token
 	if isTokenBreaker(l.currRune) {
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
-	// Float
+		// Float
 	} else if l.currRune == '.' {
 		l.lexFloat(startLine, startChar)
 		return
-	// Invalid characters in number
+		// Invalid characters in number
 	} else {
 		l.collectRestOfToken()
 		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
@@ -488,7 +488,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 
 	// Digits exceed base
 	if invalidDigits {
-		l.newError(startLine, startChar + uint(len(baseString)) + 1, true, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
+		l.newError(startLine, startChar+uint(len(baseString))+1, true, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -556,20 +556,20 @@ func (l *Lexer) skipMultiLineComment() {
 			}
 
 		case '\n': // New line
-			l.lineIndex++;
-			l.charIndex = 1;
+			l.lineIndex++
+			l.charIndex = 1
 			l.advance()
 
 		case '\r': // Windows new line
 			l.advance()
 			if l.currRune != '\n' {
-				l.newError(l.lineIndex, l.charIndex - 1, true, "Invalid Windows line ending.")
+				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line ending.")
 			} else {
 				l.advance()
 			}
 
-			l.lineIndex++;
-			l.charIndex = 1;
+			l.lineIndex++
+			l.charIndex = 1
 
 		default:
 			l.advance()

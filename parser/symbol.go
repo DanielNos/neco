@@ -2,7 +2,7 @@ package parser
 
 type Symbol struct {
 	symbolType SymbolType
-	value SymbolValue
+	value      SymbolValue
 }
 
 type SymbolType uint8
@@ -17,9 +17,9 @@ const (
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	variableType VariableType
+	variableType  VariableType
 	isInitialized bool
-	isConstant bool
+	isConstant    bool
 }
 
 type FunctionSymbol struct {
@@ -34,7 +34,7 @@ func (p *Parser) findSymbol(identifier string) *Symbol {
 
 	for stackNode != nil {
 		symbol, exists := stackNode.Value.(symbolTable)[identifier]
-		
+
 		if exists {
 			return symbol
 		}

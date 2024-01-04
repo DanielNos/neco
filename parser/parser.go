@@ -15,12 +15,12 @@ type Parser struct {
 
 	tokenIndex int
 
-	scopeCounter int
+	scopeCounter   int
 	scopeNodeStack *dataStructures.Stack
-	
+
 	symbolTableStack *dataStructures.Stack
 
-	ErrorCount uint
+	ErrorCount      uint
 	totalErrorCount uint
 }
 
@@ -33,24 +33,24 @@ func (p *Parser) peek() *lexer.Token {
 }
 
 func (p *Parser) peekNext() *lexer.Token {
-	if p.tokenIndex + 1 < len(p.tokens) {
-		return p.tokens[p.tokenIndex + 1]
+	if p.tokenIndex+1 < len(p.tokens) {
+		return p.tokens[p.tokenIndex+1]
 	}
 	return p.tokens[p.tokenIndex]
 }
 
 func (p *Parser) peekPrevious() *lexer.Token {
 	if p.tokenIndex > 0 {
-		return p.tokens[p.tokenIndex - 1]
+		return p.tokens[p.tokenIndex-1]
 	}
 	return p.tokens[0]
 }
 
 func (p *Parser) consume() *lexer.Token {
-	if p.tokenIndex + 1 < len(p.tokens) {
+	if p.tokenIndex+1 < len(p.tokens) {
 		p.tokenIndex++
 	}
-	return p.tokens[p.tokenIndex - 1]
+	return p.tokens[p.tokenIndex-1]
 }
 
 func (p *Parser) appendScope(node *Node) {
@@ -58,28 +58,28 @@ func (p *Parser) appendScope(node *Node) {
 }
 
 func (p *Parser) newError(position *dataStructures.CodePos, message string) {
-	if p.ErrorCount + p.totalErrorCount == 0 {
+	if p.ErrorCount+p.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
-	
+
 	logger.ErrorCodePos(position, message)
 	p.ErrorCount++
-	
+
 	// Too many errors
-	if p.ErrorCount + p.totalErrorCount > errors.MAX_ERROR_COUNT {
+	if p.ErrorCount+p.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }
 
 func (p *Parser) newErrorNoMessage(position *dataStructures.CodePos) {
-	if p.ErrorCount + p.totalErrorCount == 0 {
+	if p.ErrorCount+p.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	p.ErrorCount++
-	
+
 	// Too many errors
-	if p.ErrorCount + p.totalErrorCount > errors.MAX_ERROR_COUNT {
+	if p.ErrorCount+p.totalErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }
@@ -102,7 +102,7 @@ func (p *Parser) parseModule() *Node {
 	// Collect module path and name
 	modulePath := p.consume().Value
 	pathParts := strings.Split(modulePath, "/")
-	moduleName := pathParts[len(pathParts) - 1]
+	moduleName := pathParts[len(pathParts)-1]
 
 	if strings.Contains(moduleName, ".") {
 		moduleName = strings.Split(moduleName, ".")[0]
@@ -131,7 +131,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 
 	// Enter or use current scope
 	var scope *ScopeNode
-	
+
 	if enterScope {
 		p.enterScope()
 	}
@@ -148,7 +148,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		scope.statements = append(scope.statements, statement)
 	}
 
-	// Un-exited scope 
+	// Un-exited scope
 	if enterScope {
 		p.scopeNodeStack.Pop()
 		p.newError(opening, "Scope is missing a closing brace.")
@@ -185,13 +185,13 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 				p.symbolTableStack.Pop()
 			}
 			p.consume()
-		// Root scope
+			// Root scope
 		} else {
 			p.newError(p.consume().Position, "Unexpected closing brace in root scope.")
 		}
 
 		return nil
-		
+
 	// Identifier
 	case lexer.TT_Identifier:
 		return p.parseIdentifier()
@@ -199,11 +199,11 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	// Return
 	case lexer.TT_KW_return:
 		returnPosition := p.consume().Position
-			
+
 		// Return value
 		if p.peek().TokenType != lexer.TT_EndOfCommand {
 			return &Node{returnPosition, NT_Return, p.parseExpression(MINIMAL_PRECEDENCE)}
-		// Return
+			// Return
 		} else {
 			return &Node{returnPosition, NT_Return, nil}
 		}
@@ -215,7 +215,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	// Loop
 	case lexer.TT_KW_loop:
 		return p.parseLoop()
-		
+
 	// While
 	case lexer.TT_KW_while:
 		return p.parseWhile()
@@ -223,7 +223,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	// For
 	case lexer.TT_KW_for:
 		return p.parseFor()
-		
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()
@@ -249,7 +249,7 @@ func (p *Parser) parseIdentifier() *Node {
 			if symbol.symbolType == ST_Function {
 				p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
 				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
-			// Assignment to variable
+				// Assignment to variable
 			} else {
 				// Can't assign to constants
 				if symbol.value.(*VariableSymbol).isConstant {
@@ -288,10 +288,10 @@ func (p *Parser) parseIdentifier() *Node {
 
 			// Check symbol
 			if symbol == nil {
-				p.newError(p.peekPrevious().Position, fmt.Sprintf("Use of undeclared variable %s.", identifiers[len(identifiers) - 1]))
+				p.newError(p.peekPrevious().Position, fmt.Sprintf("Use of undeclared variable %s.", identifiers[len(identifiers)-1]))
 				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
 			} else if symbol.symbolType == ST_Function {
-				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers) - 1]))
+				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers)-1]))
 				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
 			} else {
 				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
@@ -355,16 +355,16 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 			p.newError(startPosition, "Variables declared using keyword var have to have an expression assigned to them, so a data type can be derived from it.")
 		}
 		p.consume()
-	// Assign
+		// Assign
 	} else if p.peek().TokenType == lexer.TT_KW_Assign {
 		// Push declare node
 		node := declareNode
 		p.appendScope(node)
-		
+
 		// Parse expression and collect type
 		var expressionType VariableType
 		declareNode, expressionType = p.parseAssign(identifierTokens, variableTypes)
-		
+
 		// Change variable type if no was provided
 		if variableType.dataType == DT_NoType {
 			variableType = expressionType
@@ -407,19 +407,19 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 	// Operation-Assign nodes
 	if assign.TokenType != lexer.TT_KW_Assign {
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
-		for i, identifier := range identifierTokens[:len(identifierTokens) - 1] {
+		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
 			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
 			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}})
 		}
 
-		variableNode := &Node{identifierTokens[len(identifierTokens) - 1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens) - 1].Value, expressionType}}
-		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens) - 1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}}, expressionType
+		variableNode := &Node{identifierTokens[len(identifierTokens)-1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens)-1].Value, expressionType}}
+		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}}, expressionType
 	}
 
 	// Assign nodes
-	for _, identifier := range identifierTokens[:len(identifierTokens) - 1] {
+	for _, identifier := range identifierTokens[:len(identifierTokens)-1] {
 		p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, expression}})
 	}
 
-	return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens) - 1].Value, expression}}, expressionType
+	return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, expression}}, expressionType
 }

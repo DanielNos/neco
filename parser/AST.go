@@ -29,7 +29,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_VariableDeclare:
 		declare := node.value.(*VariableDeclareNode)
-		
+
 		fmt.Printf("Declare %s", declare.variableType)
 
 		if declare.variableType.canBeNone {
@@ -66,7 +66,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		}
 
 		visualize(binary.right, indent, true)
-	
+
 	case NT_Not:
 		println("!")
 		visualize(node.value.(*BinaryNode).right, indent, true)
@@ -76,13 +76,13 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_FunctionDeclare:
 		functionDeclareNode := node.value.(*FunctionDeclareNode)
-	
+
 		fmt.Printf("fun %s(", functionDeclareNode.identifier)
 
 		if len(functionDeclareNode.parameters) > 0 {
 			fmt.Printf("%s %s", functionDeclareNode.parameters[0].dataType, functionDeclareNode.parameters[0].identifier)
 		}
-		
+
 		if len(functionDeclareNode.parameters) > 1 {
 			for _, parameter := range functionDeclareNode.parameters[1:] {
 				fmt.Printf(", %s %s", parameter.dataType, parameter.identifier)
@@ -100,7 +100,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		scopeNode := functionDeclareNode.body.value.(*ScopeNode)
 
 		for i, statement := range scopeNode.statements {
-			visualize(statement, indent, i == len(scopeNode.statements) - 1)
+			visualize(statement, indent, i == len(scopeNode.statements)-1)
 		}
 
 	case NT_Scope:
@@ -108,15 +108,15 @@ func visualize(node *Node, indent string, isLast bool) {
 		scopeNode := node.value.(*ScopeNode)
 
 		for i, statement := range scopeNode.statements {
-			visualize(statement, indent, i == len(scopeNode.statements) - 1)
+			visualize(statement, indent, i == len(scopeNode.statements)-1)
 		}
-	
+
 	case NT_FunctionCall:
 		functionCall := node.value.(*FunctionCallNode)
 		fmt.Printf("%s(...)\n", functionCall.identifier)
 
 		for i, argument := range functionCall.arguments {
-			visualize(argument, indent, i == len(functionCall.arguments) - 1)
+			visualize(argument, indent, i == len(functionCall.arguments)-1)
 		}
 
 	case NT_Return:
@@ -138,7 +138,7 @@ func visualize(node *Node, indent string, isLast bool) {
 			}
 		} else {
 			for i, elif := range ifNode.elseIfs {
-				visualize(elif, indent, i == len(ifNode.elseIfs) - 1 && ifNode.elseBody == nil)
+				visualize(elif, indent, i == len(ifNode.elseIfs)-1 && ifNode.elseBody == nil)
 			}
 			if ifNode.elseBody != nil {
 				visualize(ifNode.elseBody, indent, true)

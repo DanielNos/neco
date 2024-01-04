@@ -8,7 +8,7 @@ import (
 
 func (p *Parser) parseFunctionDeclare() *Node {
 	start := p.consume().Position
-	
+
 	// Check for redeclaration
 	symbol := p.findSymbol(p.peek().Value)
 
@@ -18,7 +18,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 
 	// Collect name
 	identifier := p.consume().Value
-	
+
 	// Enter scope
 	p.enterScope()
 
@@ -106,7 +106,7 @@ func (p *Parser) parseArguments(paramters *[]Parameter) []*Node {
 	return arguments
 }
 
-func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {	
+func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {
 	for _, statement := range statementList.value.(*ScopeNode).statements {
 		// Return
 		if statement.nodeType == NT_Return {
@@ -116,7 +116,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 			} else {
 				// Incorrect return value data type
 				expressionType := p.getExpressionType(statement.value.(*Node))
-				
+
 				if !returnType.Equals(expressionType) {
 					position := getExpressionPosition(statement.value.(*Node), statement.value.(*Node).position.StartChar, statement.value.(*Node).position.EndChar)
 					p.newError(&position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
@@ -124,10 +124,10 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 			}
 
 			return true
-		// If statement
+			// If statement
 		} else if statement.nodeType == NT_If {
 			ifNode := statement.value.(*IfNode)
-			
+
 			// Check if body
 			if !p.verifyReturns(ifNode.body, returnType) {
 				return false
