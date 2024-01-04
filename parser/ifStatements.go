@@ -8,16 +8,7 @@ func (p *Parser) parseIfStatement() *Node {
 	ifPosition := p.consume().Position
 
 	// Collect condition
-	p.consume()
-	condition := p.parseExpression(MINIMAL_PRECEDENCE)
-	p.consume()
-	
-	// Check condition type
-	conditionType := p.getExpressionType(condition)
-	if !conditionType.Equals(VariableType{DT_Bool, false}) {
-		conditionPosition := getExpressionPosition(condition, condition.position.StartChar, condition.position.EndChar)
-		p.newError(&conditionPosition, "Condition expression isn't of type Bool.")
-	}
+	condition := p.parseCondition()
 	
 	// Collect body
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -80,4 +71,21 @@ func (p *Parser) parseIfStatement() *Node {
 	}
 
 	return &Node{ifPosition, NT_If, &IfNode{condition, body, elseIfs, elseBody}}
+}
+
+func (p *Parser) parseCondition() *Node {
+	// Collect condition
+	p.consume()
+	condition := p.parseExpression(MINIMAL_PRECEDENCE)
+	p.consume()
+
+	// Check condition type
+	conditionType := p.getExpressionType(condition)
+
+	if !conditionType.Equals(VariableType{DT_Bool, false}) {
+		conditionPosition := getExpressionPosition(condition, condition.position.StartChar, condition.position.EndChar)
+		p.newError(&conditionPosition, "Condition expression isn't of type Bool.")
+	}
+
+	return condition
 }

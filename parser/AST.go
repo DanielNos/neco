@@ -149,6 +149,9 @@ func visualize(node *Node, indent string, isLast bool) {
 		println("loop")
 		visualize(node.value.(*Node), indent, true)
 
+	case NT_Drop:
+		fmt.Printf("drop %d\n", node.value.(int))
+
 	default:
 		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.nodeType])
 	}

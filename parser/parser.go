@@ -197,6 +197,10 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		case lexer.TT_KW_loop:
 			scope.statements = append(scope.statements, p.parseLoop())
 		
+		// While
+		case lexer.TT_KW_while:
+			scope.statements = append(scope.statements, p.parseWhile())
+		
 		// Skip EOCs
 		case lexer.TT_EndOfCommand:
 			p.consume()
