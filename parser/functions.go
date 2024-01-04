@@ -80,12 +80,20 @@ func (p *Parser) parseParameters() []Parameter {
 
 func (p *Parser) parseFunctionCall(functionSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
-	arguments := p.parseArguments(functionSymbol.value.(*FunctionSymbol).parameters)
+	var parameters *[]Parameter = nil
+	returnType := &VariableType{DT_NoType, false}
 
-	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, &functionSymbol.value.(*FunctionSymbol).returnType}}
+	if functionSymbol != nil {
+		parameters = &functionSymbol.value.(*FunctionSymbol).parameters
+		returnType = &functionSymbol.value.(*FunctionSymbol).returnType
+	}
+
+	arguments := p.parseArguments(parameters)
+
+	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, returnType}}
 }
 
-func (p *Parser) parseArguments(paramters []Parameter) []*Node {
+func (p *Parser) parseArguments(paramters *[]Parameter) []*Node {
 	p.consume()
 	var arguments = []*Node{}
 
@@ -112,6 +120,28 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 				if !returnType.Equals(expressionType) {
 					position := getExpressionPosition(statement.value.(*Node), statement.value.(*Node).position.StartChar, statement.value.(*Node).position.EndChar)
 					p.newError(&position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
+				}
+			}
+
+			return true
+		// If statement
+		} else if statement.nodeType == NT_If {
+			ifNode := statement.value.(*IfNode)
+			
+			// Check if body
+			if !p.verifyReturns(ifNode.body, returnType) {
+				return false
+			}
+
+			// Check else body
+			if ifNode.elseBody != nil && !p.verifyReturns(ifNode.elseBody, returnType) {
+				return false
+			}
+
+			// Check else if bodies
+			for _, elif := range ifNode.elseIfs {
+				if !p.verifyReturns(elif.value.(*IfNode).body, returnType) {
+					return false
 				}
 			}
 

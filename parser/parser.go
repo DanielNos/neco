@@ -192,6 +192,10 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		// If statement
 		case lexer.TT_KW_if:
 			scope.statements = append(scope.statements, p.parseIfStatement())
+
+		// Loop
+		case lexer.TT_KW_loop:
+			scope.statements = append(scope.statements, p.parseLoop())
 		
 		// Skip EOCs
 		case lexer.TT_EndOfCommand:
@@ -284,11 +288,11 @@ func (p *Parser) parseIdentifier() *Node {
 	// Undeclared function
 	if symbol == nil {
 		p.newError(identifier.Position, fmt.Sprintf("Use of undeclared function %s.", identifier.Value))
-		return p.parseFunctionCall(symbol, p.consume())
+		return p.parseFunctionCall(symbol, identifier)
 	}
 
 	// Declared function
-	return p.parseFunctionCall(symbol, p.consume())
+	return p.parseFunctionCall(symbol, identifier)
 }
 
 func (p *Parser) parseVariableDeclare(constant bool) *Node {

@@ -145,7 +145,11 @@ func visualize(node *Node, indent string, isLast bool) {
 			}
 		}
 
+	case NT_Loop:
+		println("loop")
+		visualize(node.value.(*Node), indent, true)
+
 	default:
-		fmt.Printf("%s\n", NodeTypeToString[node.nodeType])
+		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.nodeType])
 	}
 }

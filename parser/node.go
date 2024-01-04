@@ -42,6 +42,7 @@ const (
 	NT_FunctionCall
 	NT_Return
 	NT_If
+	NT_Loop
 )
 
 var NodeTypeToString = map[NodeType]string {
@@ -71,6 +72,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_FunctionCall: "FunctionCall",
 	NT_Return: "Return",
 	NT_If: "If",
+	NT_Loop: "Loop",
 }
 
 func (nt NodeType) String() string {
