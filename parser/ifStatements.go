@@ -8,7 +8,7 @@ func (p *Parser) parseIfStatement() *Node {
 	ifPosition := p.consume().Position
 
 	// Collect condition
-	condition := p.parseCondition()
+	condition := p.parseCondition(true)
 	
 	// Collect body
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -73,11 +73,16 @@ func (p *Parser) parseIfStatement() *Node {
 	return &Node{ifPosition, NT_If, &IfNode{condition, body, elseIfs, elseBody}}
 }
 
-func (p *Parser) parseCondition() *Node {
+func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	// Collect condition
-	p.consume()
-	condition := p.parseExpression(MINIMAL_PRECEDENCE)
-	p.consume()
+	var condition *Node
+	if removeParenthesis {
+		p.consume()
+		condition = p.parseExpression(MINIMAL_PRECEDENCE)
+		p.consume()
+	} else {
+		condition = p.parseExpression(MINIMAL_PRECEDENCE)
+	}
 
 	// Check condition type
 	conditionType := p.getExpressionType(condition)

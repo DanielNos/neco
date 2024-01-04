@@ -43,6 +43,7 @@ const (
 	NT_Return
 	NT_If
 	NT_Loop
+	NT_For
 	NT_Drop
 )
 
@@ -74,6 +75,7 @@ var NodeTypeToString = map[NodeType]string {
 	NT_Return: "Return",
 	NT_If: "If",
 	NT_Loop: "Loop",
+	NT_For: "For",
 	NT_Drop: "Drop",
 }
 
@@ -144,6 +146,13 @@ type IfNode struct {
 	body *Node
 	elseIfs []*Node
 	elseBody *Node
+}
+
+type ForNode struct {
+	initStatement *Node
+	condition *Node
+	stepStatement *Node
+	body *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType {

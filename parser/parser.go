@@ -139,75 +139,13 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 
 	// Collect statements
 	for p.peek().TokenType != lexer.TT_EndOfFile {
-		switch p.peek().TokenType {
+		statement := p.parseStatement(enterScope)
 
-		// Variable declaration
-		case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
-			scope.statements = append(scope.statements, p.parseVariableDeclare(false))
-
-		case lexer.TT_KW_var:
-			scope.statements = append(scope.statements, p.parseVariableDeclare(false))
-
-		// Constant variable
-		case lexer.TT_KW_const:
-			p.consume()
-			scope.statements = append(scope.statements, p.parseVariableDeclare(true))
-
-		// Function declaration
-		case lexer.TT_KW_fun:
-			scope.statements = append(scope.statements, p.parseFunctionDeclare())
-
-		// Leave scope
-		case lexer.TT_DL_BraceClose:
-			// Pop scope
-			if p.scopeNodeStack.Size > 1 {
-				if enterScope {
-					p.scopeNodeStack.Pop()
-					p.symbolTableStack.Pop()
-				}
-				p.consume()
-			// Root scope
-			} else {
-				p.newError(p.consume().Position, "Unexpected closing brace in root scope.")
-			}
-
-			return scope
-		
-		// Identifier
-		case lexer.TT_Identifier:
-			scope.statements = append(scope.statements, p.parseIdentifier())
-
-		// Return
-		case lexer.TT_KW_return:
-			returnPosition := p.consume().Position
-			
-			// Return value
-			if p.peek().TokenType != lexer.TT_EndOfCommand {
-				scope.statements = append(scope.statements, &Node{returnPosition, NT_Return, p.parseExpression(MINIMAL_PRECEDENCE)})
-			// Return
-			} else {
-				scope.statements = append(scope.statements, &Node{returnPosition, NT_Return, nil})
-			}
-
-		// If statement
-		case lexer.TT_KW_if:
-			scope.statements = append(scope.statements, p.parseIfStatement())
-
-		// Loop
-		case lexer.TT_KW_loop:
-			scope.statements = append(scope.statements, p.parseLoop())
-		
-		// While
-		case lexer.TT_KW_while:
-			scope.statements = append(scope.statements, p.parseWhile())
-		
-		// Skip EOCs
-		case lexer.TT_EndOfCommand:
-			p.consume()
-
-		default:
-			panic(fmt.Sprintf("%v Unexpected token \"%s\".", p.peek().Position, p.consume()))
+		if statement == nil {
+			break
 		}
+
+		scope.statements = append(scope.statements, statement)
 	}
 
 	// Un-exited scope 
@@ -217,6 +155,82 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 	}
 
 	return scope
+}
+
+func (p *Parser) parseStatement(enteredScope bool) *Node {
+	switch p.peek().TokenType {
+
+	// Variable declaration
+	case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
+		return p.parseVariableDeclare(false)
+
+	case lexer.TT_KW_var:
+		return p.parseVariableDeclare(false)
+
+	// Constant variable
+	case lexer.TT_KW_const:
+		p.consume()
+		return p.parseVariableDeclare(true)
+
+	// Function declaration
+	case lexer.TT_KW_fun:
+		return p.parseFunctionDeclare()
+
+	// Leave scope
+	case lexer.TT_DL_BraceClose:
+		// Pop scope
+		if p.scopeNodeStack.Size > 1 {
+			if enteredScope {
+				p.scopeNodeStack.Pop()
+				p.symbolTableStack.Pop()
+			}
+			p.consume()
+		// Root scope
+		} else {
+			p.newError(p.consume().Position, "Unexpected closing brace in root scope.")
+		}
+
+		return nil
+		
+	// Identifier
+	case lexer.TT_Identifier:
+		return p.parseIdentifier()
+
+	// Return
+	case lexer.TT_KW_return:
+		returnPosition := p.consume().Position
+			
+		// Return value
+		if p.peek().TokenType != lexer.TT_EndOfCommand {
+			return &Node{returnPosition, NT_Return, p.parseExpression(MINIMAL_PRECEDENCE)}
+		// Return
+		} else {
+			return &Node{returnPosition, NT_Return, nil}
+		}
+
+	// If statement
+	case lexer.TT_KW_if:
+		return p.parseIfStatement()
+
+	// Loop
+	case lexer.TT_KW_loop:
+		return p.parseLoop()
+		
+	// While
+	case lexer.TT_KW_while:
+		return p.parseWhile()
+
+	// For
+	case lexer.TT_KW_for:
+		return p.parseFor()
+		
+	// Skip EOCs
+	case lexer.TT_EndOfCommand:
+		p.consume()
+		return p.parseStatement(enteredScope)
+	}
+
+	panic(fmt.Sprintf("%v Unexpected token \"%s\".", p.peek().Position, p.consume()))
 }
 
 func (p *Parser) parseIdentifier() *Node {

@@ -18,7 +18,7 @@ func (p *Parser) parseWhile() *Node {
 	p.consume()
 
 	// Collect condition
-	condition := p.parseCondition()
+	condition := p.parseCondition(true)
 
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
@@ -40,4 +40,25 @@ func (p *Parser) parseWhile() *Node {
 	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false)}
 
 	return body
+}
+
+func (p *Parser) parseFor() *Node {
+	forPosition := p.consume().Position
+
+	// Collect init, condition and step
+	p.consume()
+
+	initStatement := p.parseStatement(false)
+	condition := p.parseCondition(false)
+	stepStatement := p.parseStatement(false)
+
+	p.consume()
+
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
+	body := &Node{p.peek().Position, NT_Scope, p.parseScope(true)}
+
+	return &Node{forPosition, NT_For, &ForNode{initStatement, condition, stepStatement, body}}
 }
