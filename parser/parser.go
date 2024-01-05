@@ -123,6 +123,11 @@ func (p *Parser) parseModule() *Node {
 	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scope}
 	module := &Node{p.peek().Position, NT_Module, moduleNode}
 
+	// No entry function
+	if p.getGlobalSymbol("entry") == nil {
+		logger.Warning("The entry() function wasn't found. The compiled program won't be executable by itself.")
+	}
+
 	return module
 }
 

@@ -54,3 +54,13 @@ func (p *Parser) getSymbol(identifier string) *Symbol {
 
 	return nil
 }
+
+func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
+	symbol, exists := p.symbolTableStack.Bottom.Value.(symbolTable)[identifier]
+
+	if exists {
+		return symbol
+	}
+
+	return nil
+}
