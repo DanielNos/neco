@@ -35,22 +35,22 @@ func readLine(filePath string, lineIndex uint) (string, error) {
 
 func Success(message string) {
 	color.Set(color.FgHiGreen)
-	fmt.Print( "[SUCCESS] ");
+	fmt.Print("[SUCCESS] ")
 	color.Set(color.FgHiWhite)
-	
+
 	fmt.Println(message)
 }
 
 func Info(message string) {
 	color.Set(color.FgHiWhite)
-	fmt.Print( "[INFO] ");
-	
+	fmt.Print("[INFO] ")
+
 	fmt.Println(message)
 }
 
 func Warning(message string) {
 	color.Set(color.FgHiYellow)
-	fmt.Print( "[WARNING] ");
+	fmt.Print("[WARNING] ")
 	color.Set(color.FgHiWhite)
 
 	fmt.Println(message)
@@ -58,7 +58,7 @@ func Warning(message string) {
 
 func Error(message string) {
 	color.Set(color.FgHiRed)
-	fmt.Fprint(os.Stderr, "[ERROR] ");
+	fmt.Fprint(os.Stderr, "[ERROR] ")
 	color.Set(color.FgHiWhite)
 
 	fmt.Fprintln(os.Stderr, message)
@@ -70,11 +70,11 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 
 	if err == nil {
 		color.Set(color.FgWhite)
-		
+
 		if startChar == endChar {
 			endChar++
 		}
-		
+
 		// Print line of code with error
 		fmt.Fprint(os.Stderr, "\t\t ")
 		fmt.Fprintf(os.Stderr, "%s", lineString)
@@ -83,21 +83,22 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 		// Move to error token
 		var i uint
 		for i = 0; i < startChar; i++ {
-			fmt.Fprintf(os.Stderr, " ");
+			fmt.Fprintf(os.Stderr, " ")
 		}
 
 		// Draw arrows under the error token
 		color.Set(color.FgHiRed)
 		for i = startChar; i < endChar; i++ {
-			fmt.Fprintf(os.Stderr, "^");
+			fmt.Fprintf(os.Stderr, "^")
 		}
 
-		fmt.Fprintf(os.Stderr, "\n");
+		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	// Print message
+	color.Set(color.FgHiRed)
 	fmt.Fprintf(os.Stderr, "[ERROR] ")
-	
+
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
 
@@ -110,19 +111,19 @@ func ErrorCodePos(codePos *dataStructures.CodePos, message string) {
 }
 
 func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
-		// Print error line
+	// Print error line
 	lineString, err := readLine(*codePos1.File, codePos1.Line)
 
 	if err == nil {
 		color.Set(color.FgWhite)
-		
+
 		if codePos1.StartChar == codePos1.EndChar {
 			codePos1.EndChar++
 		}
 		if codePos2.StartChar == codePos2.EndChar {
 			codePos2.EndChar++
 		}
-		
+
 		// Print line of code with errors
 		fmt.Fprint(os.Stderr, "\t\t ")
 		fmt.Fprintf(os.Stderr, "%s", lineString)
@@ -131,31 +132,31 @@ func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
 		// Move to error token 1
 		var i uint
 		for i = 0; i < codePos1.StartChar; i++ {
-			fmt.Fprintf(os.Stderr, " ");
+			fmt.Fprintf(os.Stderr, " ")
 		}
 
 		// Draw arrows under the error token 1
 		color.Set(color.FgHiRed)
 		for i = codePos1.StartChar; i < codePos1.EndChar; i++ {
-			fmt.Fprintf(os.Stderr, "^");
+			fmt.Fprintf(os.Stderr, "^")
 		}
 
 		// Move to error token 2
 		for i = codePos1.EndChar; i < codePos2.StartChar; i++ {
-			fmt.Fprintf(os.Stderr, " ");
-		}
-				
-		// Draw arrows under the error token 2
-		for i = codePos2.StartChar; i < codePos2.EndChar; i++ {
-			fmt.Fprintf(os.Stderr, "^");
+			fmt.Fprintf(os.Stderr, " ")
 		}
 
-		fmt.Fprintf(os.Stderr, "\n");
+		// Draw arrows under the error token 2
+		for i = codePos2.StartChar; i < codePos2.EndChar; i++ {
+			fmt.Fprintf(os.Stderr, "^")
+		}
+
+		fmt.Fprintf(os.Stderr, "\n")
 	}
 
 	// Print message
 	fmt.Fprintf(os.Stderr, "[ERROR] ")
-	
+
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.Line, codePos1.StartChar)
 
@@ -166,7 +167,7 @@ func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
 func Fatal(error_code int, message string) {
 	color.Set(color.FgHiRed)
 	color.Set(color.Bold)
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n", message);
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n", message)
 	color.Set(color.Reset)
 
 	os.Exit(error_code)

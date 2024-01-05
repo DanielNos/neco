@@ -318,7 +318,7 @@ func (l *Lexer) lexRune() {
 				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
 			} else {
 				// Invalid character
-				if !unicode.IsSpace(l.currRune) {
+				if !unicode.IsSpace(l.currRune) && l.currRune != EOF {
 					l.token.WriteRune(l.currRune)
 					l.newError(l.lineIndex, l.charIndex, true, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
 				}
