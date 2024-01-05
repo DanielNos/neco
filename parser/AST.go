@@ -149,6 +149,16 @@ func visualize(node *Node, indent string, isLast bool) {
 		println("loop")
 		visualize(node.value.(*Node), indent, true)
 
+	case NT_For:
+		println("for")
+
+		forNode := node.value.(*ForNode)
+
+		visualize(forNode.initStatement, indent, false)
+		visualize(forNode.condition, indent, false)
+		visualize(forNode.stepStatement, indent, false)
+		visualize(forNode.body, indent, true)
+
 	case NT_Drop:
 		fmt.Printf("drop %d\n", node.value.(int))
 

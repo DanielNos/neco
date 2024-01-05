@@ -94,6 +94,11 @@ func (p *Parser) enterScope() {
 	p.scopeCounter++
 }
 
+func (p *Parser) leaveScope() {
+	p.scopeNodeStack.Pop()
+	p.symbolTableStack.Pop()
+}
+
 func (p *Parser) Parse() *Node {
 	return p.parseModule()
 }
@@ -142,7 +147,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		statement := p.parseStatement(enterScope)
 
 		if statement == nil {
-			break
+			return scope
 		}
 
 		scope.statements = append(scope.statements, statement)
@@ -224,13 +229,16 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_KW_for:
 		return p.parseFor()
 
+	case lexer.TT_EndOfFile:
+		return nil
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()
 		return p.parseStatement(enteredScope)
 	}
 
-	panic(fmt.Sprintf("%v Unexpected token \"%s\".", p.peek().Position, p.consume()))
+	panic(fmt.Sprintf("%v Unexpected token %s \"%s\".", p.peek().Position, p.peek().TokenType, p.consume()))
 }
 
 func (p *Parser) parseIdentifier() *Node {
@@ -257,6 +265,8 @@ func (p *Parser) parseIdentifier() *Node {
 				}
 
 				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{symbol.value.(*VariableSymbol).variableType})
+
+				symbol.value.(*VariableSymbol).isInitialized = true
 			}
 		}
 		return expression
@@ -264,7 +274,6 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Assign to multiple variables
 	if p.peek().TokenType == lexer.TT_DL_Comma {
-		var identifiers = []*lexer.Token{identifier}
 		var dataTypes = []VariableType{}
 
 		// Check symbol
@@ -279,6 +288,9 @@ func (p *Parser) parseIdentifier() *Node {
 		}
 
 		// Collect identifiers
+		var identifiers = []*lexer.Token{identifier}
+		symbols := []*Symbol{}
+
 		for p.peek().TokenType == lexer.TT_DL_Comma {
 			p.consume()
 
@@ -296,9 +308,18 @@ func (p *Parser) parseIdentifier() *Node {
 			} else {
 				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
 			}
+
+			symbols = append(symbols, symbol)
 		}
 
 		expression, _ := p.parseAssign(identifiers, dataTypes)
+
+		// Set symbols as initialized
+
+		for _, symbol := range symbols {
+			symbol.value.(*VariableSymbol).isInitialized = true
+		}
+
 		return expression
 	}
 

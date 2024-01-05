@@ -46,10 +46,14 @@ func (p *Parser) parseFor() *Node {
 	forPosition := p.consume().Position
 
 	// Collect init, condition and step
+	p.enterScope()
 	p.consume()
 
 	initStatement := p.parseStatement(false)
+	p.consume()
+
 	condition := p.parseCondition(false)
+
 	stepStatement := p.parseStatement(false)
 
 	p.consume()
@@ -58,7 +62,9 @@ func (p *Parser) parseFor() *Node {
 		p.consume()
 	}
 
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(true)}
+	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false)}
+
+	p.leaveScope()
 
 	return &Node{forPosition, NT_For, &ForNode{initStatement, condition, stepStatement, body}}
 }
