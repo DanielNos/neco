@@ -19,7 +19,7 @@ const (
 func (dt DataType) String() string {
 	switch dt {
 	case DT_NoType:
-		return "Unkown"
+		return "No Type"
 	case DT_None:
 		return "None"
 	case DT_Bool:

@@ -116,6 +116,10 @@ func (p *Parser) parseModule() *Node {
 	// Enter global scope
 	p.enterScope()
 
+	// Insert built-in functions
+	p.symbolTableStack.Top.Value.(symbolTable)["print"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["printLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
+
 	// Parse module
 	scope := p.parseScope(false)
 
@@ -320,7 +324,6 @@ func (p *Parser) parseIdentifier() *Node {
 		expression, _ := p.parseAssign(identifiers, dataTypes)
 
 		// Set symbols as initialized
-
 		for _, symbol := range symbols {
 			symbol.value.(*VariableSymbol).isInitialized = true
 		}

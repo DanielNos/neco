@@ -130,7 +130,7 @@ type FunctionDeclareNode struct {
 }
 
 type Parameter struct {
-	dataType     DataType
+	dataType     VariableType
 	identifier   string
 	defaultValue *Node
 }
