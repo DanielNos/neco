@@ -82,6 +82,15 @@ func (p *Parser) parseParameters() []Parameter {
 			break
 		}
 		p.consume()
+
+		for p.peek().TokenType == lexer.TT_Identifier {
+			// Create parameter and symbol
+			identifier = p.consume().Value
+			paremeters = append(paremeters, Parameter{VariableType{dataType, false}, identifier, nil})
+			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, true, false}})
+
+			p.consume()
+		}
 	}
 
 	return paremeters

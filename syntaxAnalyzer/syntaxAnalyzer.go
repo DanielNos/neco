@@ -970,6 +970,15 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 		// No default value
 		if sn.peek().TokenType == lexer.TT_DL_Comma {
 			sn.consume()
+
+			// Multiple identifiers
+			for sn.peek().TokenType == lexer.TT_Identifier {
+				sn.consume()
+
+				if sn.peek().TokenType == lexer.TT_DL_Comma {
+					sn.consume()
+				}
+			}
 			continue
 		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return
