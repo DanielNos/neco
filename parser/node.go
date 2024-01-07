@@ -9,8 +9,8 @@ type NodeValue interface{}
 
 type Node struct {
 	position *dataStructures.CodePos
-	nodeType NodeType
-	value    NodeValue
+	NodeType NodeType
+	Value    NodeValue
 }
 
 type NodeType uint8
@@ -84,75 +84,75 @@ func (nt NodeType) String() string {
 }
 
 type ModuleNode struct {
-	filePath   string
-	name       string
-	statements *ScopeNode
+	FilePath   string
+	Name       string
+	Statements *ScopeNode
 }
 
 type ScopeNode struct {
-	id         int
-	statements []*Node
+	Id         int
+	Statements []*Node
 }
 
 type VariableDeclareNode struct {
-	variableType VariableType
-	constant     bool
-	identifiers  []string
+	VariableType VariableType
+	Constant     bool
+	Identifiers  []string
 }
 
 type AssignNode struct {
-	identifier string
-	expression *Node
+	Identifier string
+	Expression *Node
 }
 
 type LiteralValue interface{}
 
 type LiteralNode struct {
-	dataType DataType
-	value    LiteralValue
+	DataType DataType
+	Value    LiteralValue
 }
 
 type BinaryNode struct {
-	left  *Node
-	right *Node
+	Left  *Node
+	Right *Node
 }
 
 type VariableNode struct {
-	identifier   string
-	variableType VariableType
+	Identifier   string
+	VariableType VariableType
 }
 
 type FunctionDeclareNode struct {
-	identifier string
-	parameters []Parameter
-	returnType VariableType
-	body       *Node
+	Identifier string
+	Parameters []Parameter
+	ReturnType VariableType
+	Body       *Node
 }
 
 type Parameter struct {
-	dataType     VariableType
-	identifier   string
-	defaultValue *Node
+	DataType     VariableType
+	Identifier   string
+	DefaultValue *Node
 }
 
 type FunctionCallNode struct {
-	identifier string
-	arguments  []*Node
-	returnType *VariableType
+	Identifier string
+	Arguments  []*Node
+	ReturnType *VariableType
 }
 
 type IfNode struct {
-	condition *Node
-	body      *Node
-	elseIfs   []*Node
-	elseBody  *Node
+	Condition *Node
+	Body      *Node
+	ElseIfs   []*Node
+	ElseBody  *Node
 }
 
 type ForNode struct {
-	initStatement *Node
-	condition     *Node
-	stepStatement *Node
-	body          *Node
+	InitStatement *Node
+	Condition     *Node
+	StepStatement *Node
+	Body          *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

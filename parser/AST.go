@@ -5,12 +5,12 @@ import (
 )
 
 func Visualize(tree *Node) {
-	moduleNode := tree.value.(*ModuleNode)
+	moduleNode := tree.Value.(*ModuleNode)
 
-	println(moduleNode.name)
+	println(moduleNode.Name)
 
-	for i, node := range moduleNode.statements.statements {
-		visualize(node, "", i == len(moduleNode.statements.statements)-1)
+	for i, node := range moduleNode.Statements.Statements {
+		visualize(node, "", i == len(moduleNode.Statements.Statements)-1)
 	}
 }
 
@@ -25,144 +25,144 @@ func visualize(node *Node, indent string, isLast bool) {
 		indent += "│  "
 	}
 
-	switch node.nodeType {
+	switch node.NodeType {
 
 	case NT_VariableDeclare:
-		declare := node.value.(*VariableDeclareNode)
+		declare := node.Value.(*VariableDeclareNode)
 
-		fmt.Printf("Declare %s", declare.variableType)
+		fmt.Printf("Declare %s", declare.VariableType)
 
-		if declare.variableType.canBeNone {
+		if declare.VariableType.canBeNone {
 			print("?:")
 		} else {
 			print(":")
 		}
 
-		for _, id := range declare.identifiers {
+		for _, id := range declare.Identifiers {
 			fmt.Printf(" %s", id)
 		}
 		println()
 
 	case NT_Assign:
-		assign := node.value.(*AssignNode)
+		assign := node.Value.(*AssignNode)
 
 		println("Assign")
-		fmt.Printf("%s├─ %s\n", indent, assign.identifier)
+		fmt.Printf("%s├─ %s\n", indent, assign.Identifier)
 
-		visualize(assign.expression, indent, true)
+		visualize(assign.Expression, indent, true)
 
 	case NT_Literal:
-		literal := node.value.(*LiteralNode)
-		fmt.Printf("%s %v\n", literal.dataType.String(), literal.value)
+		literal := node.Value.(*LiteralNode)
+		fmt.Printf("%s %v\n", literal.DataType.String(), literal.Value)
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
 		NT_And, NT_Or:
-		println(NodeTypeToString[node.nodeType])
-		binary := node.value.(*BinaryNode)
+		println(NodeTypeToString[node.NodeType])
+		binary := node.Value.(*BinaryNode)
 
-		if binary.left != nil {
-			visualize(binary.left, indent, false)
+		if binary.Left != nil {
+			visualize(binary.Left, indent, false)
 		}
 
-		visualize(binary.right, indent, true)
+		visualize(binary.Right, indent, true)
 
 	case NT_Not:
 		println("!")
-		visualize(node.value.(*BinaryNode).right, indent, true)
+		visualize(node.Value.(*BinaryNode).Right, indent, true)
 
 	case NT_Variable:
-		println(node.value.(*VariableNode).identifier)
+		println(node.Value.(*VariableNode).Identifier)
 
 	case NT_FunctionDeclare:
-		functionDeclareNode := node.value.(*FunctionDeclareNode)
+		functionDeclareNode := node.Value.(*FunctionDeclareNode)
 
-		fmt.Printf("fun %s(", functionDeclareNode.identifier)
+		fmt.Printf("fun %s(", functionDeclareNode.Identifier)
 
-		if len(functionDeclareNode.parameters) > 0 {
-			fmt.Printf("%s %s", functionDeclareNode.parameters[0].dataType, functionDeclareNode.parameters[0].identifier)
+		if len(functionDeclareNode.Parameters) > 0 {
+			fmt.Printf("%s %s", functionDeclareNode.Parameters[0].DataType, functionDeclareNode.Parameters[0].Identifier)
 		}
 
-		if len(functionDeclareNode.parameters) > 1 {
-			for _, parameter := range functionDeclareNode.parameters[1:] {
-				fmt.Printf(", %s %s", parameter.dataType, parameter.identifier)
+		if len(functionDeclareNode.Parameters) > 1 {
+			for _, parameter := range functionDeclareNode.Parameters[1:] {
+				fmt.Printf(", %s %s", parameter.DataType, parameter.Identifier)
 			}
 		}
 
 		print(") ")
 
-		if functionDeclareNode.returnType.dataType != DT_NoType {
-			fmt.Printf("-> %s", functionDeclareNode.returnType)
+		if functionDeclareNode.ReturnType.dataType != DT_NoType {
+			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 
 		println()
 
-		scopeNode := functionDeclareNode.body.value.(*ScopeNode)
+		scopeNode := functionDeclareNode.Body.Value.(*ScopeNode)
 
-		for i, statement := range scopeNode.statements {
-			visualize(statement, indent, i == len(scopeNode.statements)-1)
+		for i, statement := range scopeNode.Statements {
+			visualize(statement, indent, i == len(scopeNode.Statements)-1)
 		}
 
 	case NT_Scope:
 		println("Scope")
-		scopeNode := node.value.(*ScopeNode)
+		scopeNode := node.Value.(*ScopeNode)
 
-		for i, statement := range scopeNode.statements {
-			visualize(statement, indent, i == len(scopeNode.statements)-1)
+		for i, statement := range scopeNode.Statements {
+			visualize(statement, indent, i == len(scopeNode.Statements)-1)
 		}
 
 	case NT_FunctionCall:
-		functionCall := node.value.(*FunctionCallNode)
-		fmt.Printf("%s(...)\n", functionCall.identifier)
+		functionCall := node.Value.(*FunctionCallNode)
+		fmt.Printf("%s(...)\n", functionCall.Identifier)
 
-		for i, argument := range functionCall.arguments {
-			visualize(argument, indent, i == len(functionCall.arguments)-1)
+		for i, argument := range functionCall.Arguments {
+			visualize(argument, indent, i == len(functionCall.Arguments)-1)
 		}
 
 	case NT_Return:
 		println("return")
 
-		if node.value != nil {
-			visualize(node.value.(*Node), indent, true)
+		if node.Value != nil {
+			visualize(node.Value.(*Node), indent, true)
 		}
 
 	case NT_If:
 		println("if")
-		ifNode := node.value.(*IfNode)
-		visualize(ifNode.condition, indent, false)
-		visualize(ifNode.body, indent, len(ifNode.elseIfs) == 0 && ifNode.elseBody == nil)
+		ifNode := node.Value.(*IfNode)
+		visualize(ifNode.Condition, indent, false)
+		visualize(ifNode.Body, indent, len(ifNode.ElseIfs) == 0 && ifNode.ElseBody == nil)
 
-		if len(ifNode.elseIfs) == 0 {
-			if ifNode.elseBody != nil {
-				visualize(ifNode.elseBody, indent, true)
+		if len(ifNode.ElseIfs) == 0 {
+			if ifNode.ElseBody != nil {
+				visualize(ifNode.ElseBody, indent, true)
 			}
 		} else {
-			for i, elif := range ifNode.elseIfs {
-				visualize(elif, indent, i == len(ifNode.elseIfs)-1 && ifNode.elseBody == nil)
+			for i, elif := range ifNode.ElseIfs {
+				visualize(elif, indent, i == len(ifNode.ElseIfs)-1 && ifNode.ElseBody == nil)
 			}
-			if ifNode.elseBody != nil {
-				visualize(ifNode.elseBody, indent, true)
+			if ifNode.ElseBody != nil {
+				visualize(ifNode.ElseBody, indent, true)
 			}
 		}
 
 	case NT_Loop:
 		println("loop")
-		visualize(node.value.(*Node), indent, true)
+		visualize(node.Value.(*Node), indent, true)
 
 	case NT_For:
 		println("for")
 
-		forNode := node.value.(*ForNode)
+		forNode := node.Value.(*ForNode)
 
-		visualize(forNode.initStatement, indent, false)
-		visualize(forNode.condition, indent, false)
-		visualize(forNode.stepStatement, indent, false)
-		visualize(forNode.body, indent, true)
+		visualize(forNode.InitStatement, indent, false)
+		visualize(forNode.Condition, indent, false)
+		visualize(forNode.StepStatement, indent, false)
+		visualize(forNode.Body, indent, true)
 
 	case NT_Drop:
-		fmt.Printf("drop %d\n", node.value.(int))
+		fmt.Printf("drop %d\n", node.Value.(int))
 
 	default:
-		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.nodeType])
+		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.NodeType])
 	}
 }

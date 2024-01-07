@@ -134,9 +134,9 @@ func (p *Parser) parseArguments(parameters *[]Parameter, functionName string, fu
 			argumentType := p.getExpressionType(argument)
 
 			// Check type
-			if !argumentType.Equals((*parameters)[parameterIndex].dataType) {
+			if !argumentType.Equals((*parameters)[parameterIndex].DataType) {
 				argumentPosition := getExpressionPosition(argument, argument.position.StartChar, argument.position.EndChar)
-				p.newError(&argumentPosition, fmt.Sprintf("Function's %s argument \"%s\" has type %s, but it should be %s.", functionName, (*parameters)[parameterIndex].identifier, argumentType, (*parameters)[parameterIndex].dataType))
+				p.newError(&argumentPosition, fmt.Sprintf("Function's %s argument \"%s\" has type %s, but it should be %s.", functionName, (*parameters)[parameterIndex].Identifier, argumentType, (*parameters)[parameterIndex].DataType))
 			}
 
 			// Store argument
@@ -179,40 +179,40 @@ func (p *Parser) parseAnyArguments() int {
 }
 
 func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {
-	for _, statement := range statementList.value.(*ScopeNode).statements {
+	for _, statement := range statementList.Value.(*ScopeNode).Statements {
 		// Return
-		if statement.nodeType == NT_Return {
+		if statement.NodeType == NT_Return {
 			// No return value
-			if statement.value == nil {
+			if statement.Value == nil {
 				p.newError(statement.position, fmt.Sprintf("Return statement has no return value, but function has return type %s.", returnType))
 			} else {
 				// Incorrect return value data type
-				expressionType := p.getExpressionType(statement.value.(*Node))
+				expressionType := p.getExpressionType(statement.Value.(*Node))
 
 				if !returnType.Equals(expressionType) {
-					position := getExpressionPosition(statement.value.(*Node), statement.value.(*Node).position.StartChar, statement.value.(*Node).position.EndChar)
+					position := getExpressionPosition(statement.Value.(*Node), statement.Value.(*Node).position.StartChar, statement.Value.(*Node).position.EndChar)
 					p.newError(&position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
 				}
 			}
 
 			return true
 			// If statement
-		} else if statement.nodeType == NT_If {
-			ifNode := statement.value.(*IfNode)
+		} else if statement.NodeType == NT_If {
+			ifNode := statement.Value.(*IfNode)
 
 			// Check if body
-			if !p.verifyReturns(ifNode.body, returnType) {
+			if !p.verifyReturns(ifNode.Body, returnType) {
 				return false
 			}
 
 			// Check else body
-			if ifNode.elseBody != nil && !p.verifyReturns(ifNode.elseBody, returnType) {
+			if ifNode.ElseBody != nil && !p.verifyReturns(ifNode.ElseBody, returnType) {
 				return false
 			}
 
 			// Check else if bodies
-			for _, elif := range ifNode.elseIfs {
-				if !p.verifyReturns(elif.value.(*IfNode).body, returnType) {
+			for _, elif := range ifNode.ElseIfs {
+				if !p.verifyReturns(elif.Value.(*IfNode).Body, returnType) {
 					return false
 				}
 			}

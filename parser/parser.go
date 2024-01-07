@@ -54,7 +54,7 @@ func (p *Parser) consume() *lexer.Token {
 }
 
 func (p *Parser) appendScope(node *Node) {
-	p.scopeNodeStack.Top.Value.(*ScopeNode).statements = append(p.scopeNodeStack.Top.Value.(*ScopeNode).statements, node)
+	p.scopeNodeStack.Top.Value.(*ScopeNode).Statements = append(p.scopeNodeStack.Top.Value.(*ScopeNode).Statements, node)
 }
 
 func (p *Parser) newError(position *dataStructures.CodePos, message string) {
@@ -159,7 +159,7 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 			return scope
 		}
 
-		scope.statements = append(scope.statements, statement)
+		scope.Statements = append(scope.Statements, statement)
 	}
 
 	// Un-exited scope
@@ -397,13 +397,13 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 		// Change variable type if no was provided
 		if variableType.dataType == DT_NoType {
 			variableType = expressionType
-			node.value.(*VariableDeclareNode).variableType = expressionType
+			node.Value.(*VariableDeclareNode).VariableType = expressionType
 		}
 	}
 
 	// Insert symbols
 	for _, id := range identifiers {
-		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.nodeType == NT_Assign, constant}})
+		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.NodeType == NT_Assign, constant}})
 	}
 
 	return declareNode

@@ -7,11 +7,13 @@ import (
 
 	"github.com/fatih/color"
 
+	codeGen "neko/codeGenerator"
 	"neko/errors"
 	"neko/lexer"
 	"neko/logger"
 	"neko/parser"
 	"neko/syntaxAnalyzer"
+	VM "neko/virtualMachine"
 )
 
 func printTokens(tokens []*lexer.Token) {
@@ -36,11 +38,56 @@ func printTokens(tokens []*lexer.Token) {
 	color.Set(color.FgHiWhite)
 }
 
-func processArguments() (string, bool, bool, string) {
+func printInstructions(instructions *[]VM.Instruction) {
+	for _, instruction := range *instructions {
+		valueA := fmt.Sprintf("%v", instruction.ValueA)
+		valueB := fmt.Sprintf("%v", instruction.ValueB)
+		valueC := fmt.Sprintf("%v", instruction.ValueC)
+
+		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
+
+		i := len(fmt.Sprintf("%s", VM.InstructionTypeToString[instruction.InstructionType]))
+		for i < 25 {
+			print(" ")
+			i++
+		}
+
+		print(valueA)
+
+		i = len(valueA)
+		for i < 5 {
+			print(" ")
+			i++
+		}
+
+		print(valueB)
+
+		i = len(valueB)
+		for i < 5 {
+			print(" ")
+			i++
+		}
+
+		print(valueC)
+
+		i = len(valueC)
+		for i < 5 {
+			print(" ")
+			i++
+		}
+
+		println()
+	}
+}
+
+func processArguments() (string, bool, bool, bool, string) {
 	// Define and collect flags
 	tokens := flag.Bool("tokens", false, "Prints tokens when compiling.")
 	tree := flag.Bool("tree", false, "Displays AST when compiling.")
+	instructions := flag.Bool("instructions", false, "Displays compiled instructions.")
+
 	build := flag.String("build", "", "Builds specified source file.")
+	run := flag.String("run", "", "Runs specified NeCo program.")
 
 	flag.Parse()
 
@@ -52,13 +99,16 @@ func processArguments() (string, bool, bool, string) {
 		action = "build"
 		target = *build
 		// No action
+	} else if *run != "" {
+		action = "run"
+		target = *run
 	} else {
 		logger.Fatal(errors.ERROR_INVALID_USE, "No action specified.")
 	}
-	return action, *tokens, *tree, target
+	return action, *tokens, *tree, *instructions, target
 }
 
-func compile(path string, showTokens, showTree bool) {
+func compile(path string, showTokens, showTree, printInstruction bool) {
 	logger.Info(fmt.Sprintf("Compiling %s.", path))
 	startTime := time.Now()
 
@@ -82,7 +132,7 @@ func compile(path string, showTokens, showTree bool) {
 
 	if syntaxAnalyzer.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
-		
+
 		// Print tokens
 		if showTokens {
 			println()
@@ -92,9 +142,9 @@ func compile(path string, showTokens, showTree bool) {
 
 		// Exit with correct return code
 		if exitCode == 0 {
-			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		} else {
-			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount))
+			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		}
 	} else {
 		logger.Success("Passed syntax analysis.")
@@ -131,16 +181,40 @@ func compile(path string, showTokens, showTree bool) {
 	}
 
 	if exitCode != 0 {
-		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount + syntaxAnalyzer.ErrorCount + p.ErrorCount))
+		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
 	}
 
+	// Generate code
+	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5])
+	instructions := codeGenerator.Generate()
+
 	logger.Success(fmt.Sprintf("Compilation completed in %s.", time.Since(startTime)))
+
+	codeWriter := codeGen.NewCodeWriter(codeGenerator)
+	codeWriter.Write()
+
+	// Print generated instructions
+	if printInstruction {
+		println()
+		printInstructions(instructions)
+		println()
+	}
+
+	virtualMachine := VM.NewVirutalMachine()
+	virtualMachine.Instructions = *instructions
+
+	for _, node := range codeGenerator.Constants {
+		virtualMachine.Constants = append(virtualMachine.Constants, node.Value)
+	}
+
+	virtualMachine.Execute()
 }
 
 func main() {
-	action, showTokens, showTree, target := processArguments()
+	action, showTokens, showTree, printInstruction, target := processArguments()
 
 	if action == "build" {
-		compile(target, showTokens, showTree)
+		compile(target, showTokens, showTree, printInstruction)
+	} else if action == "run" {
 	}
 }

@@ -42,16 +42,16 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
 
 		// Combine - and int node
-		if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Int {
-			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(int64)
+		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DataType == DT_Int {
+			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(int64)
 			left = right
 			// Combine - and float node
-		} else if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.value.(*LiteralNode).dataType == DT_Float {
-			right.value.(*LiteralNode).value = -right.value.(*LiteralNode).value.(float64)
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DataType == DT_Float {
+			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(float64)
 			left = right
 			// Combine ! and bool node
-		} else if right.nodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.value.(*LiteralNode).dataType == DT_Bool {
-			right.value.(*LiteralNode).value = !right.value.(*LiteralNode).value.(bool)
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DataType == DT_Bool {
+			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
 			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
@@ -98,7 +98,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 
-		if left.nodeType == NT_Literal && right.nodeType == NT_Literal && left.value.(*LiteralNode).dataType == right.value.(*LiteralNode).dataType {
+		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DataType == right.Value.(*LiteralNode).DataType {
 			left = combineLiteralNodes(left, right, TokenTypeToNodeType[operator.TokenType], operator.Position)
 		} else {
 			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right}}
@@ -130,31 +130,31 @@ func operatorPrecedence(operator lexer.TokenType) int {
 }
 
 func (p *Parser) getExpressionType(expression *Node) VariableType {
-	if expression.nodeType.IsOperator() {
+	if expression.NodeType.IsOperator() {
 		// Unary operator
-		if expression.value.(*BinaryNode).left == nil {
-			return p.getExpressionType(expression.value.(*BinaryNode).right)
+		if expression.Value.(*BinaryNode).Left == nil {
+			return p.getExpressionType(expression.Value.(*BinaryNode).Right)
 		}
 
-		leftType := p.getExpressionType(expression.value.(*BinaryNode).left)
-		rightType := p.getExpressionType(expression.value.(*BinaryNode).right)
+		leftType := p.getExpressionType(expression.Value.(*BinaryNode).Left)
+		rightType := p.getExpressionType(expression.Value.(*BinaryNode).Right)
 
 		// Same type on both sides
 		if leftType.Equals(rightType) {
 			// Logic operators can be used only on booleans
-			if expression.nodeType.IsLogicOperator() && (leftType.dataType != DT_Bool || rightType.dataType != DT_Bool) {
-				p.newError(expression.position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.nodeType))
+			if expression.NodeType.IsLogicOperator() && (leftType.dataType != DT_Bool || rightType.dataType != DT_Bool) {
+				p.newError(expression.position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
 				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
 			}
 
 			// Only + can be used on strings
-			if leftType.dataType == DT_String && expression.nodeType != NT_Add {
-				p.newError(expression.position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.nodeType], leftType, rightType))
+			if leftType.dataType == DT_String && expression.NodeType != NT_Add {
+				p.newError(expression.position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
 			// Comparison operators return boolean
-			if expression.nodeType.IsComparisonOperator() {
+			if expression.NodeType.IsComparisonOperator() {
 				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
 			}
 
@@ -166,35 +166,35 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 			return VariableType{DT_NoType, false}
 		}
 
-		p.newError(expression.position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.nodeType, leftType, rightType))
+		p.newError(expression.position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
 		return VariableType{max(leftType.dataType, rightType.dataType), leftType.canBeNone || rightType.canBeNone}
 	}
 
-	switch expression.nodeType {
+	switch expression.NodeType {
 	case NT_Literal:
-		return VariableType{expression.value.(*LiteralNode).dataType, false}
+		return VariableType{expression.Value.(*LiteralNode).DataType, false}
 	case NT_Variable:
-		return expression.value.(*VariableNode).variableType
+		return expression.Value.(*VariableNode).VariableType
 	case NT_FunctionCall:
-		return *expression.value.(*FunctionCallNode).returnType
+		return *expression.Value.(*FunctionCallNode).ReturnType
 	}
 
-	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.nodeType]))
+	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
 }
 
 func getExpressionPosition(expression *Node, left, right uint) dataStructures.CodePos {
 	// Binary node
-	if expression.nodeType.IsOperator() {
-		binaryNode := expression.value.(*BinaryNode)
+	if expression.NodeType.IsOperator() {
+		binaryNode := expression.Value.(*BinaryNode)
 
-		if binaryNode.left != nil {
-			leftPosition := getExpressionPosition(binaryNode.left, left, right)
-			rightPosition := getExpressionPosition(binaryNode.right, left, right)
+		if binaryNode.Left != nil {
+			leftPosition := getExpressionPosition(binaryNode.Left, left, right)
+			rightPosition := getExpressionPosition(binaryNode.Right, left, right)
 
 			return dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
 		}
 
-		expression = binaryNode.left
+		expression = binaryNode.Left
 	}
 
 	// Check if node position is outside of bounds of max found position
@@ -212,21 +212,21 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 }
 
 func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *dataStructures.CodePos) *Node {
-	leftLiteral := left.value.(*LiteralNode)
-	rightLiteral := right.value.(*LiteralNode)
+	leftLiteral := left.Value.(*LiteralNode)
+	rightLiteral := right.Value.(*LiteralNode)
 
-	switch leftLiteral.dataType {
+	switch leftLiteral.DataType {
 	// Booleans
 	case DT_Bool:
 		switch parentNodeType {
 		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) == rightLiteral.value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
 		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) != rightLiteral.value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
 		case NT_And:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) && rightLiteral.value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
 		case NT_Or:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.value.(bool) || rightLiteral.value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
 		}
 	// Integers
 	case DT_Int:
@@ -235,17 +235,17 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		// Arithmetic operations
 		switch parentNodeType {
 		case NT_Add:
-			value = leftLiteral.value.(int64) + rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) + rightLiteral.Value.(int64)
 		case NT_Subtract:
-			value = leftLiteral.value.(int64) - rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) - rightLiteral.Value.(int64)
 		case NT_Multiply:
-			value = leftLiteral.value.(int64) * rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) * rightLiteral.Value.(int64)
 		case NT_Divide:
-			value = leftLiteral.value.(int64) / rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) / rightLiteral.Value.(int64)
 		case NT_Power:
-			value = powerInt64(leftLiteral.value.(int64), rightLiteral.value.(int64))
+			value = powerInt64(leftLiteral.Value.(int64), rightLiteral.Value.(int64))
 		case NT_Modulo:
-			value = leftLiteral.value.(int64) % rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) % rightLiteral.Value.(int64)
 		}
 
 		if value != nil {
@@ -255,17 +255,17 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		// Comparison operators
 		switch parentNodeType {
 		case NT_Equal:
-			value = leftLiteral.value.(int64) == rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) == rightLiteral.Value.(int64)
 		case NT_NotEqual:
-			value = leftLiteral.value.(int64) != rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) != rightLiteral.Value.(int64)
 		case NT_Lower:
-			value = leftLiteral.value.(int64) < rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) < rightLiteral.Value.(int64)
 		case NT_Greater:
-			value = leftLiteral.value.(int64) > rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) > rightLiteral.Value.(int64)
 		case NT_LowerEqual:
-			value = leftLiteral.value.(int64) <= rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) <= rightLiteral.Value.(int64)
 		case NT_GreaterEqual:
-			value = leftLiteral.value.(int64) >= rightLiteral.value.(int64)
+			value = leftLiteral.Value.(int64) >= rightLiteral.Value.(int64)
 		}
 
 		if value != nil {
@@ -279,17 +279,17 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		// Arithmetic operations
 		switch parentNodeType {
 		case NT_Add:
-			value = leftLiteral.value.(float64) + rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) + rightLiteral.Value.(float64)
 		case NT_Subtract:
-			value = leftLiteral.value.(float64) - rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) - rightLiteral.Value.(float64)
 		case NT_Multiply:
-			value = leftLiteral.value.(float64) * rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) * rightLiteral.Value.(float64)
 		case NT_Divide:
-			value = leftLiteral.value.(float64) / rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) / rightLiteral.Value.(float64)
 		case NT_Power:
-			value = math.Pow(leftLiteral.value.(float64), rightLiteral.value.(float64))
+			value = math.Pow(leftLiteral.Value.(float64), rightLiteral.Value.(float64))
 		case NT_Modulo:
-			value = math.Mod(leftLiteral.value.(float64), rightLiteral.value.(float64))
+			value = math.Mod(leftLiteral.Value.(float64), rightLiteral.Value.(float64))
 		}
 
 		if value != nil {
@@ -299,17 +299,17 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		// Comparison operators
 		switch parentNodeType {
 		case NT_Equal:
-			value = leftLiteral.value.(float64) == rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) == rightLiteral.Value.(float64)
 		case NT_NotEqual:
-			value = leftLiteral.value.(float64) != rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) != rightLiteral.Value.(float64)
 		case NT_Lower:
-			value = leftLiteral.value.(float64) < rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) < rightLiteral.Value.(float64)
 		case NT_Greater:
-			value = leftLiteral.value.(float64) > rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) > rightLiteral.Value.(float64)
 		case NT_LowerEqual:
-			value = leftLiteral.value.(float64) <= rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) <= rightLiteral.Value.(float64)
 		case NT_GreaterEqual:
-			value = leftLiteral.value.(float64) >= rightLiteral.value.(float64)
+			value = leftLiteral.Value.(float64) >= rightLiteral.Value.(float64)
 		}
 
 		if value != nil {
@@ -319,7 +319,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	// Strings
 	case DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.value, right.value)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.Value, right.Value)}}
 		}
 	}
 
