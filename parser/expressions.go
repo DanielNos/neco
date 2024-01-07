@@ -319,7 +319,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	// Strings
 	case DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.Value, right.Value)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
 		}
 	}
 
