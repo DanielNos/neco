@@ -54,7 +54,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, DT_NoType}}
 		}
 
 		// Identifiers
@@ -101,7 +101,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DataType == right.Value.(*LiteralNode).DataType {
 			left = combineLiteralNodes(left, right, TokenTypeToNodeType[operator.TokenType], operator.Position)
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right, DT_NoType}}
 		}
 	}
 
@@ -157,7 +157,7 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 			if expression.NodeType.IsComparisonOperator() {
 				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
 			}
-
+			expression.Value.(*BinaryNode).DataType = leftType.dataType
 			return leftType
 		}
 
@@ -324,7 +324,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	}
 
 	// Invalid operation, can't combine
-	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right}}
+	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, DT_NoType}}
 }
 
 func powerInt64(base, exponent int64) int64 {

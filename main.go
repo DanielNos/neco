@@ -40,10 +40,6 @@ func printTokens(tokens []*lexer.Token) {
 
 func printInstructions(instructions *[]VM.Instruction) {
 	for _, instruction := range *instructions {
-		valueA := fmt.Sprintf("%v", instruction.ValueA)
-		valueB := fmt.Sprintf("%v", instruction.ValueB)
-		valueC := fmt.Sprintf("%v", instruction.ValueC)
-
 		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
 
 		i := len(fmt.Sprintf("%s", VM.InstructionTypeToString[instruction.InstructionType]))
@@ -52,39 +48,26 @@ func printInstructions(instructions *[]VM.Instruction) {
 			i++
 		}
 
-		print(valueA)
+		for i := 0; i < len(instruction.InstructionValue); i++ {
+			fmt.Printf("%d", instruction.InstructionValue[i])
 
-		i = len(valueA)
-		for i < 5 {
-			print(" ")
-			i++
-		}
-
-		print(valueB)
-
-		i = len(valueB)
-		for i < 5 {
-			print(" ")
-			i++
-		}
-
-		print(valueC)
-
-		i = len(valueC)
-		for i < 5 {
-			print(" ")
-			i++
+			j := len(fmt.Sprintf("%d", instruction.InstructionValue[i]))
+			for j < 5 {
+				print(" ")
+				j++
+			}
 		}
 
 		println()
 	}
 }
 
-func processArguments() (string, bool, bool, bool, string) {
+func processArguments() (string, bool, bool, bool, bool, string) {
 	// Define and collect flags
 	tokens := flag.Bool("tokens", false, "Prints tokens when compiling.")
 	tree := flag.Bool("tree", false, "Displays AST when compiling.")
 	instructions := flag.Bool("instructions", false, "Displays compiled instructions.")
+	time := flag.Bool("time", false, "Shows execution time of program.")
 
 	build := flag.String("build", "", "Builds specified source file.")
 	run := flag.String("run", "", "Runs specified NeCo program.")
@@ -105,7 +88,7 @@ func processArguments() (string, bool, bool, bool, string) {
 	} else {
 		logger.Fatal(errors.ERROR_INVALID_USE, "No action specified.")
 	}
-	return action, *tokens, *tree, *instructions, target
+	return action, *tokens, *tree, *instructions, *time, target
 }
 
 func compile(path string, showTokens, showTree, printInstruction bool) {
@@ -199,22 +182,21 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 		printInstructions(instructions)
 		println()
 	}
-
-	virtualMachine := VM.NewVirutalMachine()
-	virtualMachine.Instructions = *instructions
-
-	for _, node := range codeGenerator.Constants {
-		virtualMachine.Constants = append(virtualMachine.Constants, node.Value)
-	}
-
-	virtualMachine.Execute()
 }
 
 func main() {
-	action, showTokens, showTree, printInstruction, target := processArguments()
+	action, showTokens, showTree, printInstruction, measureTime, target := processArguments()
 
 	if action == "build" {
 		compile(target, showTokens, showTree, printInstruction)
 	} else if action == "run" {
+		startTime := time.Now()
+
+		virtualMachine := VM.NewVirutalMachine()
+		virtualMachine.Execute(target)
+
+		if measureTime {
+			fmt.Printf("Execution time: %v\n", time.Since(startTime))
+		}
 	}
 }

@@ -2,6 +2,7 @@ package codegenerator
 
 import (
 	"encoding/binary"
+	"math"
 	"os"
 )
 
@@ -21,12 +22,6 @@ func NewCodeWriter(codeGenerator *CodeGenerator) *CodeWriter {
 	return &CodeWriter{codeGenerator, nil}
 }
 
-func Int32ToByte3(value int) []byte {
-	intBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(intBytes, uint32(value))
-	return intBytes[1:4]
-}
-
 func (cw *CodeWriter) Write() {
 	file, _ := os.Create(cw.codeGenerator.filePath)
 	cw.file = file
@@ -40,34 +35,79 @@ func (cw *CodeWriter) Write() {
 	file.Close()
 }
 
-func (cw *CodeWriter) writeSegment(segmentCode byte, segmentData *[]byte) {
-	cw.file.Write([]byte{segmentCode})
+func int64ToByte3(value int64) []byte {
+	intBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(intBytes, uint64(value))
+	return intBytes[5:8]
+}
 
-	cw.file.Write(Int32ToByte3(len(*segmentData)))
-	cw.file.Write(*segmentData)
+func (cw *CodeWriter) getFilePosition() int64 {
+	info, _ := cw.file.Stat()
+	return info.Size()
 }
 
 func (cw *CodeWriter) writeConstantsSegment() {
+	startPos := cw.getFilePosition()
 	cw.file.WriteString("CNST")
 
 	cw.writeStringsSegment()
+	cw.writeIntsSegment()
+	cw.writeFloatsSegment()
+
+	cw.file.WriteAt([]byte{CONSTANTS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
 func (cw *CodeWriter) writeCodeSegment() {
+	startPos := cw.getFilePosition()
 	cw.file.WriteString("CODE")
 
 	for _, instruction := range cw.codeGenerator.instructions {
-		cw.file.Write([]byte{instruction.InstructionType, instruction.ValueA.(byte), instruction.ValueB.(byte), instruction.ValueC.(byte)})
+		cw.file.Write([]byte{instruction.InstructionType})
+		cw.file.Write(instruction.InstructionValue)
 	}
+
+	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
 func (cw *CodeWriter) writeStringsSegment() {
-	stringsSegment := []byte{}
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("STRS")
 
 	for _, index := range cw.codeGenerator.stringConstants {
-		stringsSegment = append(stringsSegment, []byte(cw.codeGenerator.Constants[index].Value.(string))...)
-		stringsSegment = append(stringsSegment, 0)
+		cw.file.WriteString(cw.codeGenerator.Constants[index].Value.(string))
+		cw.file.Write([]byte{0})
 	}
 
-	cw.writeSegment(0, &stringsSegment)
+	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeIntsSegment() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("INTS")
+
+	byteSlice := make([]byte, 8)
+	for _, index := range cw.codeGenerator.intConstants {
+		binary.BigEndian.PutUint64(byteSlice, uint64(cw.codeGenerator.Constants[index].Value.(int64)))
+		cw.file.Write(byteSlice)
+	}
+
+	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeFloatsSegment() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("FLTS")
+
+	byteSlice := make([]byte, 8)
+	for _, index := range cw.codeGenerator.intConstants {
+		binary.BigEndian.PutUint64(byteSlice, math.Float64bits(cw.codeGenerator.Constants[index].Value.(float64)))
+		cw.file.Write(byteSlice)
+	}
+
+	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }

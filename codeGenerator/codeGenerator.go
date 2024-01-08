@@ -1,7 +1,6 @@
 package codegenerator
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math"
 	"neko/logger"
@@ -46,9 +45,9 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateArguments(functionCall.Arguments)
 
 		if functionCall.Identifier == "print" {
-			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, ValueA: VM.BIF_Print, ValueB: EMPTY, ValueC: EMPTY})
+			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{VM.BIF_Print}})
 		} else if functionCall.Identifier == "printLine" {
-			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, ValueA: VM.BIF_PrintLine, ValueB: EMPTY, ValueC: EMPTY})
+			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{VM.BIF_PrintLine}})
 		}
 	}
 }
@@ -58,7 +57,7 @@ func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) 
 		cg.generateNode(node)
 	}
 
-	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, ValueA: byte(0), ValueB: EMPTY, ValueC: EMPTY})
+	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{0}})
 }
 
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
@@ -71,6 +70,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	switch node.NodeType {
 	case parser.NT_Literal:
 		cg.generateLiteral(node)
+	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
+		binaryNode := node.Value.(*parser.BinaryNode)
+
+		cg.generateExpression(binaryNode.Left)
+		cg.generateExpression(binaryNode.Right)
+
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: nodeTypeToInstructionTypeInt[node.NodeType], InstructionValue: []byte{}})
 	default:
 		panic("Invalid node in generator expression!")
 	}
@@ -93,8 +99,6 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		bytes := make([]byte, 2)
-		binary.BigEndian.PutUint16(bytes, uint16(stringIndex))
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, ValueA: bytes[0], ValueB: bytes[1], ValueC: VM.Stack_Argument})
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, InstructionValue: []byte{uint8(stringIndex), VM.Stack_Argument}})
 	}
 }

@@ -438,11 +438,11 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
 		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
 			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
-			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}})
+			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, DT_NoType}}}})
 		}
 
 		variableNode := &Node{identifierTokens[len(identifierTokens)-1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens)-1].Value, expressionType}}
-		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression}}}}, expressionType
+		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, DT_NoType}}}}, expressionType
 	}
 
 	// Assign nodes
