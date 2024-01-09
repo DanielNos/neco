@@ -1,4 +1,4 @@
-package codegenerator
+package codeGenerator
 
 import (
 	"fmt"
@@ -41,14 +41,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 			cg.generateBody(node.Value.(*parser.FunctionDeclareNode))
 		}
 	case parser.NT_FunctionCall:
-		functionCall := node.Value.(*parser.FunctionCallNode)
-		cg.generateArguments(functionCall.Arguments)
-
-		if functionCall.Identifier == "print" {
-			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{VM.BIF_Print}})
-		} else if functionCall.Identifier == "printLine" {
-			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{VM.BIF_PrintLine}})
-		}
+		cg.generateFunctionCall(node)
 	}
 }
 
@@ -60,9 +53,23 @@ func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) 
 	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{0}})
 }
 
+func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
+	functionCall := node.Value.(*parser.FunctionCallNode)
+	cg.generateArguments(functionCall.Arguments)
+
+	builtInFunction, exists := builtInFunctions[functionCall.Identifier]
+
+	if exists {
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{builtInFunction}})
+	}
+}
+
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
 		cg.generateExpression(argument)
+		if cg.instructions[len(cg.instructions)-1].InstructionType != VM.IT_LoadConstant {
+			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Push, InstructionValue: []byte{VM.Reg_GenericA, VM.Stack_Argument}})
+		}
 	}
 }
 
@@ -70,6 +77,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	switch node.NodeType {
 	case parser.NT_Literal:
 		cg.generateLiteral(node)
+
+	case parser.NT_FunctionCall:
+		cg.generateFunctionCall(node)
+
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
 		binaryNode := node.Value.(*parser.BinaryNode)
 
@@ -77,6 +88,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(binaryNode.Right)
 
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: nodeTypeToInstructionTypeInt[node.NodeType], InstructionValue: []byte{}})
+
 	default:
 		panic("Invalid node in generator expression!")
 	}
@@ -87,18 +99,51 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 
 	switch literalNode.DataType {
 	case parser.DT_String:
-		stringIndex, exists := cg.stringConstants[literalNode.Value.(string)]
+		constantIndex, exists := cg.stringConstants[literalNode.Value.(string)]
 
 		if !exists {
 			cg.Constants = append(cg.Constants, literalNode)
-			stringIndex = len(cg.Constants) - 1
-			cg.stringConstants[literalNode.Value.(string)] = stringIndex
+			constantIndex = len(cg.Constants) - 1
+			cg.stringConstants[literalNode.Value.(string)] = constantIndex
 
-			if stringIndex == math.MaxUint16 {
-				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint16))
+			if constantIndex == math.MaxUint8 {
+				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, InstructionValue: []byte{uint8(stringIndex), VM.Stack_Argument}})
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, InstructionValue: []byte{uint8(constantIndex), VM.Stack_Argument}})
+
+	case parser.DT_Int:
+
+		constantIndex, exists := cg.intConstants[literalNode.Value.(int64)]
+
+		if !exists {
+			cg.Constants = append(cg.Constants, literalNode)
+			constantIndex = len(cg.Constants) - 1
+			cg.intConstants[literalNode.Value.(int64)] = constantIndex
+
+			if constantIndex == math.MaxUint8 {
+				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
+			}
+		}
+
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, InstructionValue: []byte{uint8(constantIndex), VM.Stack_Argument}})
+
+	case parser.DT_Float:
+
+		constantIndex, exists := cg.floatConstants[literalNode.Value.(float64)]
+
+		if !exists {
+			cg.Constants = append(cg.Constants, literalNode)
+			constantIndex = len(cg.Constants) - 1
+			cg.floatConstants[literalNode.Value.(float64)] = constantIndex
+
+			if constantIndex == math.MaxUint8 {
+				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
+			}
+		}
+
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_LoadConstant, InstructionValue: []byte{uint8(constantIndex), VM.Stack_Argument}})
+
 	}
 }

@@ -90,20 +90,13 @@ func (ir *InstructionReader) readIntConstants() {
 	segmentSize := byte3ToInt(ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1], ir.bytes[ir.byteIndex+2])
 	ir.byteIndex += 3
 
-	integerBytes := []byte{}
-
 	segmentEnd := ir.byteIndex + segmentSize
 
 	for ir.byteIndex < segmentEnd {
-		if ir.bytes[ir.byteIndex] == 0 {
-			var integer int64
-			binary.Read(bytes.NewReader(integerBytes), binary.BigEndian, &integer)
-			*ir.constants = append(*ir.constants, integer)
-			integerBytes = []byte{}
-		} else {
-			integerBytes = append(integerBytes, ir.bytes[ir.byteIndex])
-		}
-		ir.byteIndex++
+		var integer int64
+		binary.Read(bytes.NewReader(ir.bytes[ir.byteIndex:ir.byteIndex+8]), binary.BigEndian, &integer)
+		*ir.constants = append(*ir.constants, integer)
+		ir.byteIndex += 8
 	}
 }
 
@@ -113,19 +106,13 @@ func (ir *InstructionReader) readFloatConstants() {
 	segmentSize := byte3ToInt(ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1], ir.bytes[ir.byteIndex+2])
 	ir.byteIndex += 3
 
-	integerBytes := []byte{}
-
 	segmentEnd := ir.byteIndex + segmentSize
 
 	for ir.byteIndex < segmentEnd {
-		if ir.bytes[ir.byteIndex] == 0 {
-			floatBits := binary.BigEndian.Uint64(integerBytes)
-			*ir.constants = append(*ir.constants, math.Float64frombits(floatBits))
-			integerBytes = []byte{}
-		} else {
-			integerBytes = append(integerBytes, ir.bytes[ir.byteIndex])
-		}
-		ir.byteIndex++
+		floatBits := binary.BigEndian.Uint64(ir.bytes[ir.byteIndex : ir.byteIndex+8])
+		*ir.constants = append(*ir.constants, math.Float64frombits(floatBits))
+
+		ir.byteIndex += 8
 	}
 }
 
@@ -149,6 +136,10 @@ func (ir *InstructionReader) readInstructions() {
 		case IT_Halt:
 			ir.byteIndex++
 			*ir.instructions = append(*ir.instructions, Instruction{IT_Halt, []byte{ir.bytes[ir.byteIndex]}})
+		case IT_Push:
+			ir.byteIndex++
+			*ir.instructions = append(*ir.instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
+			ir.byteIndex++
 		}
 
 		ir.byteIndex++

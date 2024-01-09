@@ -1,4 +1,4 @@
-package codegenerator
+package codeGenerator
 
 import (
 	"neko/parser"

@@ -9,10 +9,8 @@ const (
 )
 
 const (
-	Reg_IntegerA byte = iota
-	Reg_IntegerB
-	Reg_FloatA
-	Reg_FloatB
+	Reg_GenericA byte = iota
+	Reg_GenericB
 	Stack_Argument
 )
 
@@ -22,11 +20,8 @@ type VirtualMachine struct {
 	Constants    []interface{}
 	Instructions []Instruction
 
-	Reg_IntegerA int64
-	Reg_IntegerB int64
-
-	Reg_FloatA float64
-	Reg_FloatB float64
+	Reg_GenericA interface{}
+	Reg_GenericB interface{}
 
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
@@ -45,20 +40,33 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Load Constant
 		case IT_LoadConstant:
 			switch instruction.InstructionValue[1] {
-			case Reg_IntegerA:
-				vm.Reg_IntegerA = vm.Constants[instruction.InstructionValue[0]].(int64)
-			case Reg_IntegerB:
-				vm.Reg_IntegerB = vm.Constants[instruction.InstructionValue[0]].(int64)
+			case Reg_GenericA:
+				vm.Reg_GenericA = vm.Constants[instruction.InstructionValue[0]]
 
-			case Reg_FloatA:
-				vm.Reg_FloatA = vm.Constants[instruction.InstructionValue[0]].(float64)
-			case Reg_FloatB:
-				vm.Reg_FloatB = vm.Constants[instruction.InstructionValue[0]].(float64)
+			case Reg_GenericB:
+				vm.Reg_GenericB = vm.Constants[instruction.InstructionValue[0]]
 
 			case Stack_Argument:
 				vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Constants[instruction.InstructionValue[0]]
 				vm.Reg_ArgumentPointer++
 			}
+
+		// Push
+		case IT_Push:
+			var data interface{}
+			switch instruction.InstructionValue[0] {
+			case Reg_GenericA:
+				data = vm.Reg_GenericA
+			case Reg_GenericB:
+				data = vm.Reg_GenericB
+			}
+
+			switch instruction.InstructionValue[1] {
+			case Stack_Argument:
+				vm.Stack_Argument[vm.Reg_ArgumentPointer] = data
+				vm.Reg_ArgumentPointer++
+			}
+
 		// Add operator
 		case IT_IntAdd:
 
@@ -76,6 +84,15 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 		vm.Reg_ArgumentPointer--
 	case BIF_PrintLine:
 		fmt.Printf("%v\n", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
+		vm.Reg_ArgumentPointer--
+	case BIF_Bool2String:
+		vm.Reg_GenericA = fmt.Sprintf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(bool))
+		vm.Reg_ArgumentPointer--
+	case BIF_Int2String:
+		vm.Reg_GenericA = fmt.Sprintf("%d", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64))
+		vm.Reg_ArgumentPointer--
+	case BIF_Float2String:
+		vm.Reg_GenericA = fmt.Sprintf("%f", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(float64))
 		vm.Reg_ArgumentPointer--
 	}
 }

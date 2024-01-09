@@ -119,6 +119,9 @@ func (p *Parser) parseModule() *Node {
 	// Insert built-in functions
 	p.symbolTableStack.Top.Value.(symbolTable)["print"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
 	p.symbolTableStack.Top.Value.(symbolTable)["printLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["bool2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["int2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["flt2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false}}}
 
 	// Parse module
 	scope := p.parseScope(false)

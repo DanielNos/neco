@@ -10,6 +10,7 @@ const (
 	IT_IntDivide
 	IT_IntPower
 	IT_IntModulo
+	IT_Push
 )
 
 var InstructionTypeToString = map[byte]string{
@@ -22,6 +23,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_IntDivide:           "INT_DIVIDE",
 	IT_IntPower:            "INT_POWER",
 	IT_IntModulo:           "INT_MODULO",
+	IT_Push:                "PUSH",
 }
 
 type Instruction struct {

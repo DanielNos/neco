@@ -1,4 +1,4 @@
-package codegenerator
+package codeGenerator
 
 import (
 	"encoding/binary"
@@ -103,7 +103,7 @@ func (cw *CodeWriter) writeFloatsSegment() {
 	cw.file.WriteString("FLTS")
 
 	byteSlice := make([]byte, 8)
-	for _, index := range cw.codeGenerator.intConstants {
+	for _, index := range cw.codeGenerator.floatConstants {
 		binary.BigEndian.PutUint64(byteSlice, math.Float64bits(cw.codeGenerator.Constants[index].Value.(float64)))
 		cw.file.Write(byteSlice)
 	}

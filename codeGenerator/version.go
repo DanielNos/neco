@@ -1,4 +1,4 @@
-package codegenerator
+package codeGenerator
 
 const VERSION_MAJOR = 0
 const VERSION_MINOR = 1
