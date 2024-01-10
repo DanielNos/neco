@@ -92,7 +92,7 @@ func processArguments() (string, bool, bool, bool, bool, string) {
 }
 
 func compile(path string, showTokens, showTree, printInstruction bool) {
-	logger.Info(fmt.Sprintf("Compiling %s.", path))
+	logger.Info(fmt.Sprintf("🐱 Compiling %s", path))
 	startTime := time.Now()
 
 	// Tokenize
@@ -125,9 +125,9 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 
 		// Exit with correct return code
 		if exitCode == 0 {
-			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		} else {
-			logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+			logger.Fatal(exitCode, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		}
 	} else {
 		logger.Success("Passed syntax analysis.")
@@ -164,14 +164,14 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 	}
 
 	if exitCode != 0 {
-		logger.Fatal(exitCode, fmt.Sprintf("Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
+		logger.Fatal(exitCode, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
 	}
 
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5])
 	instructions := codeGenerator.Generate()
 
-	logger.Success(fmt.Sprintf("Compilation completed in %s.", time.Since(startTime)))
+	logger.Success(fmt.Sprintf("😺 Compilation completed in %s.", time.Since(startTime)))
 
 	codeWriter := codeGen.NewCodeWriter(codeGenerator)
 	codeWriter.Write()
