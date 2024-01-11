@@ -67,6 +67,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				vm.Reg_ArgumentPointer++
 			}
 
+		// Swap Generic
+		case IT_SwapGeneric:
+			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
+
 		// Add operator
 		case IT_IntAdd:
 
