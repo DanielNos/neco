@@ -8,7 +8,7 @@ import (
 type NodeValue interface{}
 
 type Node struct {
-	position *dataStructures.CodePos
+	Position *dataStructures.CodePos
 	NodeType NodeType
 	Value    NodeValue
 }

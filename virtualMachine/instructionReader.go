@@ -15,12 +15,11 @@ type InstructionReader struct {
 	bytes     []byte
 	byteIndex int
 
-	instructions *[]Instruction
-	constants    *[]interface{}
+	virtualMachine *VirtualMachine
 }
 
-func NewInstructionReader(filePath string, instructions *[]Instruction, constants *[]interface{}) *InstructionReader {
-	return &InstructionReader{filePath, nil, 0, instructions, constants}
+func NewInstructionReader(filePath string, virtualMachine *VirtualMachine) *InstructionReader {
+	return &InstructionReader{filePath, nil, 0, virtualMachine}
 }
 
 func byte3ToInt(byte1, byte2, byte3 byte) int {
@@ -80,7 +79,7 @@ func (ir *InstructionReader) readStringConstants() {
 
 	for ir.byteIndex < segmentEnd {
 		if ir.bytes[ir.byteIndex] == 0 {
-			*ir.constants = append(*ir.constants, string(str))
+			ir.virtualMachine.Constants = append(ir.virtualMachine.Constants, string(str))
 			str = []byte{}
 		} else {
 			str = append(str, ir.bytes[ir.byteIndex])
@@ -100,7 +99,7 @@ func (ir *InstructionReader) readIntConstants() {
 	for ir.byteIndex < segmentEnd {
 		var integer int64
 		binary.Read(bytes.NewReader(ir.bytes[ir.byteIndex:ir.byteIndex+8]), binary.BigEndian, &integer)
-		*ir.constants = append(*ir.constants, integer)
+		ir.virtualMachine.Constants = append(ir.virtualMachine.Constants, integer)
 		ir.byteIndex += 8
 	}
 }
@@ -115,7 +114,7 @@ func (ir *InstructionReader) readFloatConstants() {
 
 	for ir.byteIndex < segmentEnd {
 		floatBits := binary.BigEndian.Uint64(ir.bytes[ir.byteIndex : ir.byteIndex+8])
-		*ir.constants = append(*ir.constants, math.Float64frombits(floatBits))
+		ir.virtualMachine.Constants = append(ir.virtualMachine.Constants, math.Float64frombits(floatBits))
 
 		ir.byteIndex += 8
 	}
@@ -129,22 +128,31 @@ func (ir *InstructionReader) readInstructions() {
 
 	endIndex := ir.byteIndex + codeSize
 
+	// Collect first line number
+	ir.virtualMachine.Line = uint(ir.bytes[ir.byteIndex]) - 128
+	ir.byteIndex++
+
+	offsetByteMask := byte(0b0111_1111)
+
 	for ir.byteIndex < endIndex {
 		switch ir.bytes[ir.byteIndex] {
 		case IT_LoadConstant:
 			ir.byteIndex++
-			*ir.instructions = append(*ir.instructions, Instruction{IT_LoadConstant, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LoadConstant, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
 			ir.byteIndex++
 		case IT_CallBuiltInFunction:
 			ir.byteIndex++
-			*ir.instructions = append(*ir.instructions, Instruction{IT_CallBuiltInFunction, []byte{ir.bytes[ir.byteIndex]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_CallBuiltInFunction, []byte{ir.bytes[ir.byteIndex]}})
 		case IT_Halt:
 			ir.byteIndex++
-			*ir.instructions = append(*ir.instructions, Instruction{IT_Halt, []byte{ir.bytes[ir.byteIndex]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Halt, []byte{ir.bytes[ir.byteIndex]}})
 		case IT_Push:
 			ir.byteIndex++
-			*ir.instructions = append(*ir.instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
 			ir.byteIndex++
+
+		default:
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{ir.bytes[ir.byteIndex] & offsetByteMask}})
 		}
 
 		ir.byteIndex++

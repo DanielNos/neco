@@ -143,13 +143,13 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 		if leftType.Equals(rightType) {
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.dataType != DT_Bool || rightType.dataType != DT_Bool) {
-				p.newError(expression.position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
+				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
 				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
 			}
 
 			// Only + can be used on strings
 			if leftType.dataType == DT_String && expression.NodeType != NT_Add {
-				p.newError(expression.position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
+				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
@@ -166,7 +166,7 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 			return VariableType{DT_NoType, false}
 		}
 
-		p.newError(expression.position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
+		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
 		return VariableType{max(leftType.dataType, rightType.dataType), leftType.canBeNone || rightType.canBeNone}
 	}
 
@@ -198,14 +198,14 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 	}
 
 	// Check if node position is outside of bounds of max found position
-	position := dataStructures.CodePos{File: expression.position.File, Line: expression.position.Line, StartChar: left, EndChar: right}
+	position := dataStructures.CodePos{File: expression.Position.File, Line: expression.Position.Line, StartChar: left, EndChar: right}
 
-	if expression.position.StartChar < left {
-		position.StartChar = expression.position.StartChar
+	if expression.Position.StartChar < left {
+		position.StartChar = expression.Position.StartChar
 	}
 
-	if expression.position.EndChar > right {
-		position.EndChar = expression.position.EndChar
+	if expression.Position.EndChar > right {
+		position.EndChar = expression.Position.EndChar
 	}
 
 	return position

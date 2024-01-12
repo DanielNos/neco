@@ -13,3 +13,7 @@ var nodeTypeToInstructionTypeInt = map[parser.NodeType]byte{
 	parser.NT_Power:    VM.IT_IntPower,
 	parser.NT_Modulo:   VM.IT_IntModulo,
 }
+
+func toByte(line uint) byte {
+	return byte(line) | 1<<7
+}

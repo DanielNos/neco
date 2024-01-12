@@ -25,6 +25,8 @@ type VirtualMachine struct {
 
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
+
+	Line uint
 }
 
 func NewVirutalMachine() *VirtualMachine {
@@ -32,7 +34,7 @@ func NewVirutalMachine() *VirtualMachine {
 }
 
 func (vm *VirtualMachine) Execute(filePath string) {
-	reader := NewInstructionReader(filePath, &vm.Instructions, &vm.Constants)
+	reader := NewInstructionReader(filePath, vm)
 	reader.Read()
 
 	for _, instruction := range vm.Instructions {
@@ -67,16 +69,20 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				vm.Reg_ArgumentPointer++
 			}
 
-		// Swap Generic
+		// Swap generic registers
 		case IT_SwapGeneric:
 			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
 
 		// Add operator
 		case IT_IntAdd:
 
-		// Cal Built-In Function
+		// Cal built-in function
 		case IT_CallBuiltInFunction:
 			vm.callBuiltInFunction(instruction.InstructionValue[0])
+
+		// Move line
+		case IT_LineOffset:
+			vm.Line += uint(instruction.InstructionValue[0])
 		}
 	}
 }

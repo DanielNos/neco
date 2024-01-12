@@ -28,13 +28,13 @@ func (p *Parser) parseWhile() *Node {
 	p.enterScope()
 
 	// Construct condition using if node
-	breakNode := &Node{condition.position, NT_Drop, 1}
+	breakNode := &Node{condition.Position, NT_Drop, 1}
 
-	ifBlock := &Node{condition.position, NT_Scope, &ScopeNode{p.scopeCounter, []*Node{breakNode}}}
+	ifBlock := &Node{condition.Position, NT_Scope, &ScopeNode{p.scopeCounter, []*Node{breakNode}}}
 	p.scopeCounter++
 
 	// Create and insert if node into loop body
-	ifStatement := &Node{condition.position, NT_If, &IfNode{condition, ifBlock, nil, nil}}
+	ifStatement := &Node{condition.Position, NT_If, &IfNode{condition, ifBlock, nil, nil}}
 	p.appendScope(ifStatement)
 
 	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false)}

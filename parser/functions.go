@@ -135,7 +135,7 @@ func (p *Parser) parseArguments(parameters *[]Parameter, functionName string, fu
 
 			// Check type
 			if !argumentType.Equals((*parameters)[parameterIndex].DataType) {
-				argumentPosition := getExpressionPosition(argument, argument.position.StartChar, argument.position.EndChar)
+				argumentPosition := getExpressionPosition(argument, argument.Position.StartChar, argument.Position.EndChar)
 				p.newError(&argumentPosition, fmt.Sprintf("Function's %s argument \"%s\" has type %s, but it should be %s.", functionName, (*parameters)[parameterIndex].Identifier, argumentType, (*parameters)[parameterIndex].DataType))
 			}
 
@@ -184,13 +184,13 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 		if statement.NodeType == NT_Return {
 			// No return value
 			if statement.Value == nil {
-				p.newError(statement.position, fmt.Sprintf("Return statement has no return value, but function has return type %s.", returnType))
+				p.newError(statement.Position, fmt.Sprintf("Return statement has no return value, but function has return type %s.", returnType))
 			} else {
 				// Incorrect return value data type
 				expressionType := p.getExpressionType(statement.Value.(*Node))
 
 				if !returnType.Equals(expressionType) {
-					position := getExpressionPosition(statement.Value.(*Node), statement.Value.(*Node).position.StartChar, statement.Value.(*Node).position.EndChar)
+					position := getExpressionPosition(statement.Value.(*Node), statement.Value.(*Node).Position.StartChar, statement.Value.(*Node).Position.EndChar)
 					p.newError(&position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
 				}
 			}

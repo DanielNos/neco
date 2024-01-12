@@ -20,14 +20,21 @@ type CodeGenerator struct {
 	stringConstants map[string]int
 
 	instructions []VM.Instruction
+
+	line uint
 }
 
 func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
-	return &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}}
+	return &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, 0}
 }
 
 func (cg *CodeGenerator) Generate() *[]VM.Instruction {
-	for _, node := range cg.tree.Value.(*parser.ModuleNode).Statements.Statements {
+	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
+
+	cg.line = statements[0].Position.Line
+	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: toByte(cg.line), InstructionValue: []byte{}})
+
+	for _, node := range statements {
 		cg.generateNode(node)
 	}
 
@@ -35,6 +42,11 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 }
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
+	if node.Position.Line > cg.line {
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: toByte(node.Position.Line - cg.line), InstructionValue: []byte{}})
+		cg.line = node.Position.Line
+	}
+
 	switch node.NodeType {
 	case parser.NT_FunctionDeclare:
 		if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
