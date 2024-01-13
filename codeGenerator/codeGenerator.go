@@ -3,6 +3,7 @@ package codeGenerator
 import (
 	"fmt"
 	"math"
+	"neko/errors"
 	"neko/logger"
 	"neko/parser"
 	VM "neko/virtualMachine"
@@ -22,17 +23,19 @@ type CodeGenerator struct {
 	instructions []VM.Instruction
 
 	line uint
+
+	ErrorCount int
 }
 
 func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
-	return &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, 0}
+	return &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, 0, 0}
 }
 
 func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
 
 	cg.line = statements[0].Position.Line
-	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: toByte(cg.line), InstructionValue: []byte{}})
+	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: cg.toByte(cg.line), InstructionValue: []byte{}})
 
 	for _, node := range statements {
 		cg.generateNode(node)
@@ -41,9 +44,18 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	return &cg.instructions
 }
 
+func (cg *CodeGenerator) newError(message string) {
+	logger.Error(message)
+	cg.ErrorCount++
+
+	if cg.ErrorCount > errors.MAX_ERROR_COUNT {
+		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d errors.", cg.ErrorCount))
+	}
+}
+
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	if node.Position.Line > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: toByte(node.Position.Line - cg.line), InstructionValue: []byte{}})
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: cg.toByte(node.Position.Line - cg.line), InstructionValue: []byte{}})
 		cg.line = node.Position.Line
 	}
 

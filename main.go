@@ -178,6 +178,11 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5])
 	instructions := codeGenerator.Generate()
 
+	// Generation failed
+	if codeGenerator.ErrorCount != 0 {
+		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d error/s.", codeGenerator.ErrorCount))
+	}
+
 	logger.Success(fmt.Sprintf("😺 Compilation completed in %s.", time.Since(startTime)))
 
 	codeWriter := codeGen.NewCodeWriter(codeGenerator)
