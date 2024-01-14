@@ -124,10 +124,10 @@ func (p *Parser) parseModule() *Node {
 	p.symbolTableStack.Top.Value.(symbolTable)["flt2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false}}}
 
 	// Parse module
-	scope := p.parseScope(false)
+	scopeNode := p.parseScope(false, false)
 
 	// Create node
-	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scope}
+	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scopeNode.(*ScopeNode)}
 	module := &Node{p.peek().Position, NT_Module, moduleNode}
 
 	// No entry function
@@ -138,7 +138,7 @@ func (p *Parser) parseModule() *Node {
 	return module
 }
 
-func (p *Parser) parseScope(enterScope bool) *ScopeNode {
+func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {
 	// Consume opening brace
 	opening := p.peek().Position
 
@@ -159,7 +159,11 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		statement := p.parseStatement(enterScope)
 
 		if statement == nil {
-			return scope
+			if packInNode {
+				return &Node{opening, NT_Scope, scope}
+			} else {
+				return scope
+			}
 		}
 
 		scope.Statements = append(scope.Statements, statement)
@@ -171,7 +175,11 @@ func (p *Parser) parseScope(enterScope bool) *ScopeNode {
 		p.newError(opening, "Scope is missing a closing brace.")
 	}
 
-	return scope
+	if packInNode {
+		return &Node{opening, NT_Scope, scope}
+	} else {
+		return scope
+	}
 }
 
 func (p *Parser) parseStatement(enteredScope bool) *Node {
@@ -243,6 +251,10 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	case lexer.TT_EndOfFile:
 		return nil
+
+	// Scope
+	case lexer.TT_DL_BraceOpen:
+		return p.parseScope(true, true).(*Node)
 
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
