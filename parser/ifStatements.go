@@ -15,7 +15,7 @@ func (p *Parser) parseIfStatement() *Node {
 		p.consume()
 	}
 
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(true, false)}
+	body := p.parseScope(true, true).(*Node)
 
 	// Collec else ifs
 	elseIfs := []*Node{}
@@ -47,7 +47,7 @@ func (p *Parser) parseIfStatement() *Node {
 				p.consume()
 			}
 
-			elifBody := &Node{p.peek().Position, NT_Scope, p.parseScope(true, false)}
+			elifBody := p.parseScope(true, true).(*Node)
 
 			elseIfs = append(elseIfs, &Node{elifPosition, NT_If, &IfNode{elifCondition, elifBody, nil, nil}})
 
@@ -67,7 +67,8 @@ func (p *Parser) parseIfStatement() *Node {
 		if p.peek().TokenType == lexer.TT_EndOfCommand {
 			p.consume()
 		}
-		elseBody = &Node{elsePosition, NT_Scope, p.parseScope(true, false)}
+		elseBody = p.parseScope(true, true).(*Node)
+		elseBody.Position = elsePosition
 	}
 
 	return &Node{ifPosition, NT_If, &IfNode{condition, body, elseIfs, elseBody}}

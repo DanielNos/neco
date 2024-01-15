@@ -9,7 +9,7 @@ func (p *Parser) parseLoop() *Node {
 		p.consume()
 	}
 
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(true, false)}
+	body := p.parseScope(true, true).(*Node)
 
 	return &Node{loopPosition, NT_Loop, body}
 }
@@ -37,7 +37,7 @@ func (p *Parser) parseWhile() *Node {
 	ifStatement := &Node{condition.Position, NT_If, &IfNode{condition, ifBlock, nil, nil}}
 	p.appendScope(ifStatement)
 
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false, false)}
+	body := p.parseScope(false, true).(*Node)
 
 	return body
 }
@@ -62,7 +62,7 @@ func (p *Parser) parseFor() *Node {
 		p.consume()
 	}
 
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false, false)}
+	body := p.parseScope(false, true).(*Node)
 
 	p.leaveScope()
 

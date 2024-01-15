@@ -43,7 +43,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
 	}
-	body := &Node{p.peek().Position, NT_Scope, p.parseScope(false, false)}
+	body := p.parseScope(false, true).(*Node)
 
 	// Check if function has return statements in all paths
 	if returnType.dataType != DT_NoType {
