@@ -5,8 +5,12 @@ PACKAGE=$(BIN_NAME)_$(VERSION)-amd64
 
 build:
 	GOOS=linux GOARCH=amd64 go build -o bin/$(BIN_NAME)_linux_amd64 .
+	GOOS=linux GOARCH=386 go build -o bin/$(BIN_NAME)_linux_386 .
 	GOOS=linux GOARCH=arm go build -o bin/$(BIN_NAME)_linux_arm .
+	GOOS=linux GOARCH=arm64 go build -o bin/$(BIN_NAME)_linux_arm64 .
 	GOOS=windows GOARCH=amd64 go build -o bin/$(BIN_NAME)_windows_amd64.exe .
+	GOOS=windows GOARCH=arm go build -o bin/$(BIN_NAME)_windows_arm.exe .
+	GOOS=darwin GOARCH=amd64 go build -o bin/$(BIN_NAME)_macos_amd64 .
 	GOOS=darwin GOARCH=arm64 go build -o bin/$(BIN_NAME)_macos_arm64 .
 package: clean build
 	mkdir -p $(PACKAGE)/usr/bin
