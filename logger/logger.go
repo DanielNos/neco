@@ -43,7 +43,7 @@ func Success(message string) {
 
 func Info(message string) {
 	color.Set(color.FgHiWhite)
-	fmt.Print("[INFO] ")
+	fmt.Print("[INFO]    ")
 
 	fmt.Println(message)
 }
@@ -58,7 +58,7 @@ func Warning(message string) {
 
 func Error(message string) {
 	color.Set(color.FgHiRed)
-	fmt.Fprint(os.Stderr, "[ERROR] ")
+	fmt.Fprint(os.Stderr, "[ERROR]   ")
 	color.Set(color.FgHiWhite)
 
 	fmt.Fprintln(os.Stderr, message)
@@ -97,7 +97,7 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 
 	// Print message
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR] ")
+	fmt.Fprintf(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
@@ -155,7 +155,7 @@ func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
 	}
 
 	// Print message
-	fmt.Fprintf(os.Stderr, "[ERROR] ")
+	fmt.Fprintf(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.Line, codePos1.StartChar)
@@ -167,7 +167,7 @@ func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
 func Fatal(error_code int, message string) {
 	color.Set(color.FgHiRed)
 	color.Set(color.Bold)
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n", message)
+	fmt.Fprintf(os.Stderr, "[FATAL]   %s\n", message)
 	color.Set(color.Reset)
 
 	os.Exit(error_code)
