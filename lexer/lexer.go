@@ -532,7 +532,7 @@ func (l *Lexer) lexFloat(startLine, startChar uint) {
 }
 
 func (l *Lexer) skipComment() {
-	for l.currRune != '\n' && l.currRune != 'r' {
+	for l.currRune != '\n' && l.currRune != '\r' {
 		l.advance()
 	}
 }
