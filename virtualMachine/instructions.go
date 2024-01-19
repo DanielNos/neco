@@ -11,12 +11,18 @@ const (
 
 	// 0 arguments
 	IT_SwapGeneric
+
 	IT_IntAdd
 	IT_IntSubtract
 	IT_IntMultiply
 	IT_IntDivide
 	IT_IntPower
 	IT_IntModulo
+
+	IT_DeclareBool
+	IT_DeclareInt
+	IT_DeclareFloat
+	IT_DeclareString
 
 	IT_LineOffset
 )
@@ -35,6 +41,11 @@ var InstructionTypeToString = map[byte]string{
 	IT_IntDivide:   "INT_DIVIDE",
 	IT_IntPower:    "INT_POWER",
 	IT_IntModulo:   "INT_MODULO",
+
+	IT_DeclareBool:   "DECLARE_BOOL",
+	IT_DeclareInt:    "DECLARE_INT",
+	IT_DeclareFloat:  "DECLARE_FLOAT",
+	IT_DeclareString: "DECLARE_STRING",
 
 	IT_LineOffset: "LINE_OFFSET",
 }

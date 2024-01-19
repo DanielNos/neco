@@ -32,7 +32,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		fmt.Printf("Declare %s", declare.VariableType)
 
-		if declare.VariableType.canBeNone {
+		if declare.VariableType.CanBeNone {
 			print("?:")
 		} else {
 			print(":")
@@ -91,7 +91,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		print(") ")
 
-		if functionDeclareNode.ReturnType.dataType != DT_NoType {
+		if functionDeclareNode.ReturnType.DataType != DT_NoType {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 

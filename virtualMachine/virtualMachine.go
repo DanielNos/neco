@@ -1,6 +1,10 @@
 package virtualMachine
 
-import "fmt"
+import (
+	"fmt"
+	"neko/dataStructures"
+	"neko/parser"
+)
 
 const (
 	VERSION_MAJOR byte = 0
@@ -26,11 +30,17 @@ type VirtualMachine struct {
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
 
+	SymbolTables *dataStructures.Stack
+
 	Line uint
 }
 
 func NewVirutalMachine() *VirtualMachine {
-	return &VirtualMachine{Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE)}
+	virtualMachine := &VirtualMachine{Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE), SymbolTables: dataStructures.NewStack()}
+
+	virtualMachine.SymbolTables.Push([]Symbol{})
+
+	return virtualMachine
 }
 
 func (vm *VirtualMachine) Execute(filePath string) {
@@ -76,9 +86,21 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Add operator
 		case IT_IntAdd:
 
-		// Cal built-in function
+		// Call built-in function
 		case IT_CallBuiltInFunction:
 			vm.callBuiltInFunction(instruction.InstructionValue[0])
+
+		case IT_DeclareBool:
+			vm.declareVariable(parser.DT_Bool)
+
+		case IT_DeclareInt:
+			vm.declareVariable(parser.DT_Int)
+
+		case IT_DeclareFloat:
+			vm.declareVariable(parser.DT_Float)
+
+		case IT_DeclareString:
+			vm.declareVariable(parser.DT_String)
 
 		// Move line
 		case IT_LineOffset:
@@ -105,4 +127,8 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 		vm.Reg_GenericA = fmt.Sprintf("%f", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(float64))
 		vm.Reg_ArgumentPointer--
 	}
+}
+
+func (vm *VirtualMachine) declareVariable(dataType parser.DataType) {
+	vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{dataType, nil}})
 }

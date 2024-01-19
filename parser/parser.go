@@ -394,7 +394,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		// var has to be assigned to
-		if variableType.dataType == DT_NoType {
+		if variableType.DataType == DT_NoType {
 			startPosition.EndChar = p.peekPrevious().Position.EndChar
 			p.newError(startPosition, "Variables declared using keyword var have to have an expression assigned to them, so a data type can be derived from it.")
 		}
@@ -410,7 +410,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 		declareNode, expressionType = p.parseAssign(identifierTokens, variableTypes)
 
 		// Change variable type if no was provided
-		if variableType.dataType == DT_NoType {
+		if variableType.DataType == DT_NoType {
 			variableType = expressionType
 			node.Value.(*VariableDeclareNode).VariableType = expressionType
 		}
@@ -438,10 +438,10 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 	expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
 
 	// Print errors
-	if expressionType.dataType != DT_NoType {
+	if expressionType.DataType != DT_NoType {
 		for i, identifier := range identifierTokens {
 			// Variable has a type and it's incompatible with expression
-			if variableTypes[i].dataType != DT_NoType && !expressionType.Equals(variableTypes[i]) {
+			if variableTypes[i].DataType != DT_NoType && !expressionType.Equals(variableTypes[i]) {
 				p.newErrorNoMessage(&expressionPosition)
 				logger.Error2CodePos(identifierTokens[i].Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable %s of type %s.", expressionType, identifier, variableTypes[i]))
 			}

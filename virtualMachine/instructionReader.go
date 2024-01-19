@@ -151,6 +151,15 @@ func (ir *InstructionReader) readInstructions() {
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
 			ir.byteIndex++
 
+		case IT_DeclareBool:
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareBool, []byte{}})
+		case IT_DeclareInt:
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareInt, []byte{}})
+		case IT_DeclareFloat:
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareFloat, []byte{}})
+		case IT_DeclareString:
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareString, []byte{}})
+
 		default:
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{ir.bytes[ir.byteIndex] & offsetByteMask}})
 		}

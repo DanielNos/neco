@@ -54,17 +54,17 @@ var TokenTypeToDataType = map[lexer.TokenType]DataType{
 }
 
 type VariableType struct {
-	dataType  DataType
-	canBeNone bool
+	DataType  DataType
+	CanBeNone bool
 }
 
 func (vt VariableType) Equals(other VariableType) bool {
-	return vt.dataType == other.dataType && vt.canBeNone == other.canBeNone
+	return vt.DataType == other.DataType && vt.CanBeNone == other.CanBeNone
 }
 
 func (v VariableType) String() string {
-	if v.canBeNone {
-		return fmt.Sprintf("%s?", v.dataType)
+	if v.CanBeNone {
+		return fmt.Sprintf("%s?", v.DataType)
 	}
-	return v.dataType.String()
+	return v.DataType.String()
 }

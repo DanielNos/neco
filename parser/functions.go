@@ -35,7 +35,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
 		returnPosition = p.consume().Position
-		returnType.dataType = TokenTypeToDataType[p.consume().TokenType]
+		returnType.DataType = TokenTypeToDataType[p.consume().TokenType]
 		returnPosition.EndChar = p.peekPrevious().Position.EndChar
 	}
 
@@ -46,7 +46,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	body := p.parseScope(false, true).(*Node)
 
 	// Check if function has return statements in all paths
-	if returnType.dataType != DT_NoType {
+	if returnType.DataType != DT_NoType {
 		if !p.verifyReturns(body, returnType) {
 			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifier, returnType))
 		}

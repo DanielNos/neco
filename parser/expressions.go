@@ -142,32 +142,32 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 		// Same type on both sides
 		if leftType.Equals(rightType) {
 			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.dataType != DT_Bool || rightType.dataType != DT_Bool) {
+			if expression.NodeType.IsLogicOperator() && (leftType.DataType != DT_Bool || rightType.DataType != DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
+				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
 			}
 
 			// Only + can be used on strings
-			if leftType.dataType == DT_String && expression.NodeType != NT_Add {
+			if leftType.DataType == DT_String && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
-				return VariableType{DT_Bool, leftType.canBeNone || rightType.canBeNone}
+				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
 			}
-			expression.Value.(*BinaryNode).DataType = leftType.dataType
+			expression.Value.(*BinaryNode).DataType = leftType.DataType
 			return leftType
 		}
 
 		// Failed to get data type
-		if leftType.dataType == DT_NoType || rightType.dataType == DT_NoType {
+		if leftType.DataType == DT_NoType || rightType.DataType == DT_NoType {
 			return VariableType{DT_NoType, false}
 		}
 
 		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-		return VariableType{max(leftType.dataType, rightType.dataType), leftType.canBeNone || rightType.canBeNone}
+		return VariableType{max(leftType.DataType, rightType.DataType), leftType.CanBeNone || rightType.CanBeNone}
 	}
 
 	switch expression.NodeType {

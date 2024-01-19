@@ -3,6 +3,7 @@ package codeGenerator
 import (
 	"fmt"
 	"math"
+	"neko/dataStructures"
 	"neko/errors"
 	"neko/logger"
 	"neko/parser"
@@ -22,13 +23,21 @@ type CodeGenerator struct {
 
 	instructions []VM.Instruction
 
+	variableIdentifierCounters *dataStructures.Stack
+	variableIdentifiers        *dataStructures.Stack
+
 	line uint
 
 	ErrorCount int
 }
 
 func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
-	return &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, 0, 0}
+	codeGenerator := &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 0, 0}
+
+	codeGenerator.variableIdentifierCounters.Push(uint8(0))
+	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
+
+	return codeGenerator
 }
 
 func (cg *CodeGenerator) Generate() *[]VM.Instruction {
@@ -60,12 +69,19 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	}
 
 	switch node.NodeType {
+	// Function declaration
 	case parser.NT_FunctionDeclare:
 		if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
 			cg.generateBody(node.Value.(*parser.FunctionDeclareNode))
 		}
+
+	// Function call
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)
+
+	// Variable declaration
+	case parser.NT_VariableDeclare:
+		cg.generateVariableDeclare(node)
 	}
 }
 
@@ -93,6 +109,26 @@ func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 		cg.generateExpression(argument)
 		if cg.instructions[len(cg.instructions)-1].InstructionType != VM.IT_LoadConstant {
 			cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Push, InstructionValue: []byte{VM.Reg_GenericA, VM.Stack_Argument}})
+		}
+	}
+}
+
+func (cg *CodeGenerator) generateVariableDeclare(node *parser.Node) {
+	variable := node.Value.(*parser.VariableDeclareNode)
+
+	for i := 0; i < len(variable.Identifiers); i++ {
+		cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
+		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
+
+		switch variable.VariableType.DataType {
+		case parser.DT_Bool:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, []byte{}})
+		case parser.DT_Int:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, []byte{}})
+		case parser.DT_Float:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, []byte{}})
+		case parser.DT_String:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, []byte{}})
 		}
 	}
 }
