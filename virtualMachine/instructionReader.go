@@ -140,16 +140,23 @@ func (ir *InstructionReader) readInstructions() {
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LoadConstant, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
 			ir.byteIndex++
+		case IT_Push:
+			ir.byteIndex++
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
+			ir.byteIndex++
+
 		case IT_CallBuiltInFunction:
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_CallBuiltInFunction, []byte{ir.bytes[ir.byteIndex]}})
 		case IT_Halt:
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Halt, []byte{ir.bytes[ir.byteIndex]}})
-		case IT_Push:
+		case IT_StoreRegisterA:
 			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_StoreRegisterA, []byte{ir.bytes[ir.byteIndex]}})
+		case IT_LoadRegisterA:
 			ir.byteIndex++
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LoadRegisterA, []byte{ir.bytes[ir.byteIndex]}})
 
 		case IT_DeclareBool:
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareBool, []byte{}})

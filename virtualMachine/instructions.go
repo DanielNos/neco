@@ -8,6 +8,8 @@ const (
 	// 1 argument
 	IT_CallBuiltInFunction
 	IT_Halt
+	IT_StoreRegisterA
+	IT_LoadRegisterA
 
 	// 0 arguments
 	IT_SwapGeneric
@@ -33,6 +35,8 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_CallBuiltInFunction: "CALL_BUILTIN_FUNCTION",
 	IT_Halt:                "HALT",
+	IT_StoreRegisterA:      "STORE_REGISTER_A",
+	IT_LoadRegisterA:       "LOAD_REGISTER_A",
 
 	IT_SwapGeneric: "SWAP_GENERIC",
 	IT_IntAdd:      "INT_ADD",

@@ -1,7 +1,6 @@
 package virtualMachine
 
 import (
-	"fmt"
 	"neko/dataStructures"
 	"neko/parser"
 )
@@ -90,45 +89,30 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_CallBuiltInFunction:
 			vm.callBuiltInFunction(instruction.InstructionValue[0])
 
+		// Declare variables
 		case IT_DeclareBool:
-			vm.declareVariable(parser.DT_Bool)
+			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
 
 		case IT_DeclareInt:
-			vm.declareVariable(parser.DT_Int)
+			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
 
 		case IT_DeclareFloat:
-			vm.declareVariable(parser.DT_Float)
+			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
 
 		case IT_DeclareString:
-			vm.declareVariable(parser.DT_String)
+			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
+
+		// Load variable
+		case IT_LoadRegisterA:
+			vm.Reg_GenericA = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+
+		// Store variable
+		case IT_StoreRegisterA:
+			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericA
 
 		// Move line
 		case IT_LineOffset:
 			vm.Line += uint(instruction.InstructionValue[0])
 		}
 	}
-}
-
-func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
-	switch functionCode {
-	case BIF_Print:
-		fmt.Printf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
-		vm.Reg_ArgumentPointer--
-	case BIF_PrintLine:
-		fmt.Printf("%v\n", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
-		vm.Reg_ArgumentPointer--
-	case BIF_Bool2String:
-		vm.Reg_GenericA = fmt.Sprintf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(bool))
-		vm.Reg_ArgumentPointer--
-	case BIF_Int2String:
-		vm.Reg_GenericA = fmt.Sprintf("%d", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64))
-		vm.Reg_ArgumentPointer--
-	case BIF_Float2String:
-		vm.Reg_GenericA = fmt.Sprintf("%f", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(float64))
-		vm.Reg_ArgumentPointer--
-	}
-}
-
-func (vm *VirtualMachine) declareVariable(dataType parser.DataType) {
-	vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{dataType, nil}})
 }
