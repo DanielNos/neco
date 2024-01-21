@@ -3,6 +3,7 @@ package virtualMachine
 import (
 	"neko/dataStructures"
 	"neko/parser"
+	"os"
 )
 
 const (
@@ -48,46 +49,52 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 	for _, instruction := range vm.Instructions {
 		switch instruction.InstructionType {
-		// Load Constant
-		case IT_LoadConstant:
-			switch instruction.InstructionValue[1] {
-			case Reg_GenericA:
-				vm.Reg_GenericA = vm.Constants[instruction.InstructionValue[0]]
+		// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
+		// Call built-in function
+		case IT_CallBuiltInFunction:
+			vm.callBuiltInFunction(instruction.InstructionValue[0])
 
-			case Reg_GenericB:
-				vm.Reg_GenericB = vm.Constants[instruction.InstructionValue[0]]
+		// Halt
+		case IT_Halt:
+			os.Exit(int(instruction.InstructionValue[0]))
 
-			case Stack_Argument:
-				vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Constants[instruction.InstructionValue[0]]
-				vm.Reg_ArgumentPointer++
-			}
+		// Store register to a variable
+		case IT_StoreRegisterA:
+			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericA
 
-		// Push
-		case IT_Push:
-			var data interface{}
-			switch instruction.InstructionValue[0] {
-			case Reg_GenericA:
-				data = vm.Reg_GenericA
-			case Reg_GenericB:
-				data = vm.Reg_GenericB
-			}
+		case IT_StoreRegisterB:
+			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericB
 
-			switch instruction.InstructionValue[1] {
-			case Stack_Argument:
-				vm.Stack_Argument[vm.Reg_ArgumentPointer] = data
-				vm.Reg_ArgumentPointer++
-			}
+		// Load constant to register
+		case IT_LoadConstantRegisterA:
+			vm.Reg_GenericA = vm.Constants[instruction.InstructionValue[0]]
+
+		case IT_LoadConstantRegisterB:
+			vm.Reg_GenericB = vm.Constants[instruction.InstructionValue[0]]
+
+		// Load variable to a register
+		case IT_LoadRegisterA:
+			vm.Reg_GenericA = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+
+		case IT_LoadRegisterB:
+			vm.Reg_GenericB = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+
+		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
 		// Swap generic registers
 		case IT_SwapGeneric:
 			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
 
-		// Add operator
-		case IT_IntAdd:
+		// Push register to stack
+		case IT_PushRegisterAArgStack:
+			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericA
+			vm.Reg_ArgumentPointer++
 
-		// Call built-in function
-		case IT_CallBuiltInFunction:
-			vm.callBuiltInFunction(instruction.InstructionValue[0])
+		case IT_PushRegisterBArgStack:
+			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericB
+			vm.Reg_ArgumentPointer++
+
+		// TODO: Operators
 
 		// Declare variables
 		case IT_DeclareBool:
@@ -101,14 +108,6 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_DeclareString:
 			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
-
-		// Load variable
-		case IT_LoadRegisterA:
-			vm.Reg_GenericA = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
-
-		// Store variable
-		case IT_StoreRegisterA:
-			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericA
 
 		// Move line
 		case IT_LineOffset:

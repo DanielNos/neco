@@ -14,7 +14,7 @@ var nodeTypeToInstructionTypeInt = map[parser.NodeType]byte{
 	parser.NT_Modulo:   VM.IT_IntModulo,
 }
 
-func (cg *CodeGenerator) toByte(line uint) byte {
+func (cg *CodeGenerator) lineToByte(line uint) byte {
 	if line > 128 {
 		cg.newError("There can't be more that 128 empty lines in succession.")
 	}

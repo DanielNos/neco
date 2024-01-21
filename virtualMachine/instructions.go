@@ -1,18 +1,24 @@
 package virtualMachine
 
 const (
-	// 2 arguments
-	IT_LoadConstant byte = iota
-	IT_Push
-
 	// 1 argument
-	IT_CallBuiltInFunction
+	IT_CallBuiltInFunction byte = iota
 	IT_Halt
+
 	IT_StoreRegisterA
+	IT_StoreRegisterB
+
+	IT_LoadConstantRegisterA
+	IT_LoadConstantRegisterB
+
 	IT_LoadRegisterA
+	IT_LoadRegisterB
 
 	// 0 arguments
 	IT_SwapGeneric
+
+	IT_PushRegisterAArgStack
+	IT_PushRegisterBArgStack
 
 	IT_IntAdd
 	IT_IntSubtract
@@ -30,15 +36,25 @@ const (
 )
 
 var InstructionTypeToString = map[byte]string{
-	IT_LoadConstant: "LOAD_CONSTANT",
-	IT_Push:         "PUSH",
-
+	// 1 argument
 	IT_CallBuiltInFunction: "CALL_BUILTIN_FUNCTION",
 	IT_Halt:                "HALT",
-	IT_StoreRegisterA:      "STORE_REGISTER_A",
-	IT_LoadRegisterA:       "LOAD_REGISTER_A",
 
+	IT_StoreRegisterA: "STORE_REGISTER_A",
+	IT_StoreRegisterB: "STORE_REGISTER_B",
+
+	IT_LoadConstantRegisterA: "LOAD_CONSTANT_REGISTER_A",
+	IT_LoadConstantRegisterB: "LOAD_CONSTANT_REGISTER_B",
+
+	IT_LoadRegisterA: "LOAD_REGISTER_A",
+	IT_LoadRegisterB: "LOAD_REGISTER_B",
+
+	// 0 arguments
 	IT_SwapGeneric: "SWAP_GENERIC",
+
+	IT_PushRegisterAArgStack: "PUSH_REGISTER_A_ARG_STACK",
+	IT_PushRegisterBArgStack: "PUSH_REGISTER_B_ARG_STACK",
+
 	IT_IntAdd:      "INT_ADD",
 	IT_IntSubtract: "INT_SUBTRACT",
 	IT_IntMultiply: "INT_MULTIPLY",

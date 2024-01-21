@@ -18,6 +18,10 @@ type InstructionReader struct {
 	virtualMachine *VirtualMachine
 }
 
+var NO_ARGS = []byte{}
+
+const OFFSET_BYTE_MASK = byte(0b0111_1111)
+
 func NewInstructionReader(filePath string, virtualMachine *VirtualMachine) *InstructionReader {
 	return &InstructionReader{filePath, nil, 0, virtualMachine}
 }
@@ -129,46 +133,22 @@ func (ir *InstructionReader) readInstructions() {
 	endIndex := ir.byteIndex + codeSize
 
 	// Collect first line number
-	ir.virtualMachine.Line = uint(ir.bytes[ir.byteIndex]) - 128
+	ir.virtualMachine.Line = 1 + uint(ir.bytes[ir.byteIndex]) - 128
 	ir.byteIndex++
 
-	offsetByteMask := byte(0b0111_1111)
-
 	for ir.byteIndex < endIndex {
-		switch ir.bytes[ir.byteIndex] {
-		case IT_LoadConstant:
-			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LoadConstant, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
-			ir.byteIndex++
-		case IT_Push:
-			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Push, []byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}})
-			ir.byteIndex++
+		instructionType := ir.bytes[ir.byteIndex]
 
-		case IT_CallBuiltInFunction:
+		// 1 argument instruction
+		if instructionType <= IT_LoadRegisterB {
 			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_CallBuiltInFunction, []byte{ir.bytes[ir.byteIndex]}})
-		case IT_Halt:
-			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_Halt, []byte{ir.bytes[ir.byteIndex]}})
-		case IT_StoreRegisterA:
-			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_StoreRegisterA, []byte{ir.bytes[ir.byteIndex]}})
-		case IT_LoadRegisterA:
-			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LoadRegisterA, []byte{ir.bytes[ir.byteIndex]}})
-
-		case IT_DeclareBool:
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareBool, []byte{}})
-		case IT_DeclareInt:
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareInt, []byte{}})
-		case IT_DeclareFloat:
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareFloat, []byte{}})
-		case IT_DeclareString:
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_DeclareString, []byte{}})
-
-		default:
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{ir.bytes[ir.byteIndex] & offsetByteMask}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, []byte{ir.bytes[ir.byteIndex]}})
+			// 0 argument instruction
+		} else if instructionType < IT_LineOffset {
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, NO_ARGS})
+			// Line offset
+		} else {
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK}})
 		}
 
 		ir.byteIndex++

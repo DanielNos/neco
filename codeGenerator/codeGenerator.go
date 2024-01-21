@@ -32,7 +32,7 @@ type CodeGenerator struct {
 }
 
 func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
-	codeGenerator := &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 0, 0}
+	codeGenerator := &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 1, 0}
 
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
@@ -44,7 +44,6 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
 
 	cg.line = statements[0].Position.Line
-	cg.instructions = append(cg.instructions, VM.Instruction{cg.toByte(cg.line), NO_ARGS})
 
 	for _, node := range statements {
 		cg.generateNode(node)
@@ -64,7 +63,7 @@ func (cg *CodeGenerator) newError(message string) {
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	if node.Position.Line > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{cg.toByte(node.Position.Line - cg.line), NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{cg.lineToByte(node.Position.Line - cg.line), NO_ARGS})
 		cg.line = node.Position.Line
 	}
 
@@ -105,7 +104,6 @@ func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) 
 func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	functionCall := node.Value.(*parser.FunctionCallNode)
 	cg.generateArguments(functionCall.Arguments)
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Push, []byte{VM.Reg_GenericA, VM.Stack_Argument}})
 
 	builtInFunction, exists := builtInFunctions[functionCall.Identifier]
 
@@ -117,9 +115,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
 		cg.generateExpression(argument)
-		if cg.instructions[len(cg.instructions)-1].InstructionType != VM.IT_LoadConstant {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Push, []byte{VM.Reg_GenericA, VM.Stack_Argument}})
-		}
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegisterAArgStack, NO_ARGS})
 	}
 }
 
@@ -189,7 +185,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstant, []byte{uint8(constantIndex), VM.Reg_GenericA}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
 
 	case parser.DT_Int:
 
@@ -205,7 +201,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstant, []byte{uint8(constantIndex), VM.Reg_GenericA}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
 
 	case parser.DT_Float:
 
@@ -221,7 +217,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstant, []byte{uint8(constantIndex), VM.Reg_GenericA}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
 
 	}
 }
