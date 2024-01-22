@@ -86,7 +86,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Assign:
 		assignNode := node.Value.(*parser.AssignNode)
 
-		cg.generateExpression(assignNode.Expression)
+		cg.generateExpression(assignNode.Expression, true)
 
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegA, []byte{identifier}})
@@ -114,7 +114,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
-		cg.generateExpression(argument)
+		cg.generateExpression(argument, true)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegAToArgStack, NO_ARGS})
 	}
 }
@@ -139,11 +139,11 @@ func (cg *CodeGenerator) generateVariableDeclare(node *parser.Node) {
 	}
 }
 
-func (cg *CodeGenerator) generateExpression(node *parser.Node) {
+func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	switch node.NodeType {
 	// Literal
 	case parser.NT_Literal:
-		cg.generateLiteral(node)
+		cg.generateLiteral(node, loadLeft)
 
 	// Function call
 	case parser.NT_FunctionCall:
@@ -153,25 +153,48 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
 		binaryNode := node.Value.(*parser.BinaryNode)
 
-		cg.generateExpression(binaryNode.Left)
-		cg.generateExpression(binaryNode.Right)
+		if !binaryNode.Left.NodeType.IsOperator() && !binaryNode.Right.NodeType.IsOperator() {
+			cg.generateExpression(binaryNode.Left, true)
+			cg.generateExpression(binaryNode.Right, false)
+		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{nodeTypeToInstructionTypeInt[node.NodeType], NO_ARGS})
-
+		// Add strings
+		if binaryNode.DataType == parser.DT_String {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
+			// Add ints
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{nodeTypeToInstructionTypeInt[node.NodeType], NO_ARGS})
+		}
 	// Variable
 	case parser.NT_Variable:
-		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[node.Value.(*parser.VariableNode).Identifier]
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
+		cg.generateVariable(node, loadLeft)
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
 	}
 }
 
-func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
+func (cg *CodeGenerator) generateVariable(node *parser.Node, loadLeft bool) {
+	identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[node.Value.(*parser.VariableNode).Identifier]
+
+	if loadLeft {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
+	} else {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegB, []byte{identifier}})
+	}
+}
+
+func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 	literalNode := node.Value.(*parser.LiteralNode)
 
+	instruction := VM.IT_LoadConstRegA
+	if !loadLeft {
+		instruction = VM.IT_LoadConstRegB
+	}
+
 	switch literalNode.DataType {
+
+	// String
 	case parser.DT_String:
 		constantIndex, exists := cg.stringConstants[literalNode.Value.(string)]
 
@@ -185,10 +208,10 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 
+	// Int
 	case parser.DT_Int:
-
 		constantIndex, exists := cg.intConstants[literalNode.Value.(int64)]
 
 		if !exists {
@@ -201,10 +224,10 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 
+	// Float
 	case parser.DT_Float:
-
 		constantIndex, exists := cg.floatConstants[literalNode.Value.(float64)]
 
 		if !exists {
@@ -217,7 +240,6 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
-
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 	}
 }

@@ -1,7 +1,10 @@
 package virtualMachine
 
 import (
+	"fmt"
 	"neko/dataStructures"
+	"neko/errors"
+	"neko/logger"
 	"neko/parser"
 	"os"
 )
@@ -12,8 +15,10 @@ const (
 	VERSION_PATCH      = 0
 )
 
+type RegisterOrStack byte
+
 const (
-	Reg_GenericA byte = iota
+	Reg_GenericA RegisterOrStack = iota
 	Reg_GenericB
 	Stack_Argument
 )
@@ -96,7 +101,35 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericB
 			vm.Reg_ArgumentPointer++
 
-		// TODO: Operators
+		// Integer operations
+		case IT_IntAdd:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) + vm.Reg_GenericB.(int64)
+
+		case IT_IntSubtract:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) - vm.Reg_GenericB.(int64)
+
+		case IT_IntMultiply:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) * vm.Reg_GenericB.(int64)
+
+		case IT_IntDivide:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) / vm.Reg_GenericB.(int64)
+
+		case IT_IntPower:
+
+			// Can't be done with negative exponent
+			if vm.Reg_GenericB.(int64) < 0 {
+				vm.Reg_GenericA = int64(0)
+			} else {
+				fmt.Printf("%d ^ %d\n", vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
+				vm.Reg_GenericA = intPow(vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
+			}
+
+		case IT_IntModulo:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) % vm.Reg_GenericB.(int64)
+
+		// String operations
+		case IT_StringConcat:
+			vm.Reg_GenericA = fmt.Sprintf("%s%s", vm.Reg_GenericA, vm.Reg_GenericB)
 
 		// Declare variables
 		case IT_DeclareBool:
@@ -114,6 +147,27 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Move line
 		case IT_LineOffset:
 			vm.Line += uint(instruction.InstructionValue[0])
+
+		// Unknown instruction
+		default:
+			logger.Fatal(errors.ERROR_UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
 		}
 	}
+}
+
+func intPow(x, n int64) int64 {
+	if n == 0 {
+		return 1
+	}
+
+	if n == 1 {
+		return x
+	}
+
+	y := intPow(x, n/2)
+	if n%2 == 0 {
+		return y * y
+	}
+
+	return x * y * y
 }

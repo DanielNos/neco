@@ -16,6 +16,10 @@ const (
 
 	// 0 arguments
 	IT_SwapGeneric
+	IT_CopyRegAToC
+	IT_CopyRegBToC
+	IT_CopyRegCToA
+	IT_CopyRegCToB
 
 	IT_PushRegAToArgStack
 	IT_PushRegBToArgStack
@@ -26,6 +30,8 @@ const (
 	IT_IntDivide
 	IT_IntPower
 	IT_IntModulo
+
+	IT_StringConcat
 
 	IT_DeclareBool
 	IT_DeclareInt
@@ -51,6 +57,10 @@ var InstructionTypeToString = map[byte]string{
 
 	// 0 arguments
 	IT_SwapGeneric: "SWAP_GENERIC",
+	IT_CopyRegAToC: "COPY_REG_A_TO_C",
+	IT_CopyRegBToC: "COPY_REG_B_TO_C",
+	IT_CopyRegCToA: "COPY_REG_C_TO_A",
+	IT_CopyRegCToB: "COPY_REG_C_TO_B",
 
 	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
 	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
@@ -61,6 +71,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_IntDivide:   "INT_DIV",
 	IT_IntPower:    "INT_POW",
 	IT_IntModulo:   "INT_MOD",
+
+	IT_StringConcat: "STRING_CONCAT",
 
 	IT_DeclareBool:   "DECLARE_BOOL",
 	IT_DeclareInt:    "DECLARE_INT",
