@@ -23,13 +23,13 @@ type Parser struct {
 	ErrorCount      uint
 	totalErrorCount uint
 
-	intConstants    map[int64]struct{}
-	floatConstants  map[float64]struct{}
-	stringConstants map[string]struct{}
+	IntConstants    map[int64]int
+	FloatConstants  map[float64]int
+	StringConstants map[string]int
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors, map[int64]struct{}{}, map[float64]struct{}{}, map[string]struct{}{}}
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
 }
 
 func (p *Parser) peek() *lexer.Token {
@@ -231,7 +231,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 		// Return value
 		if p.peek().TokenType != lexer.TT_EndOfCommand {
-			return &Node{returnPosition, NT_Return, p.parseExpression(MINIMAL_PRECEDENCE)}
+			return &Node{returnPosition, NT_Return, p.parseExpressionRoot()}
 			// Return
 		} else {
 			return &Node{returnPosition, NT_Return, nil}
@@ -433,7 +433,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 	expressionStart := p.peek().Position
 
 	// Collect expression
-	expression := p.parseExpression(MINIMAL_PRECEDENCE)
+	expression := p.parseExpressionRoot()
 
 	// Get expression type
 	expressionType := p.getExpressionType(expression)

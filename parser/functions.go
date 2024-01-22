@@ -130,7 +130,7 @@ func (p *Parser) parseArguments(parameters *[]Parameter, functionName string, fu
 		// Check if arguments have same type as parameters
 		for parameterIndex := 0; parameterIndex < len(*parameters); parameterIndex++ {
 			// Collect argument
-			argument := p.parseExpression(MINIMAL_PRECEDENCE)
+			argument := p.parseExpressionRoot()
 			argumentType := p.getExpressionType(argument)
 
 			// Check type
@@ -166,7 +166,7 @@ func (p *Parser) parseAnyArguments() int {
 	argumentCount := 0
 
 	for {
-		p.parseExpression(MINIMAL_PRECEDENCE)
+		p.parseExpressionRoot()
 		argumentCount++
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {

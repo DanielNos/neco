@@ -175,7 +175,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 	}
 
 	// Generate code
-	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5])
+	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants)
 	instructions := codeGenerator.Generate()
 
 	// Generation failed

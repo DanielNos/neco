@@ -16,10 +16,10 @@ type CodeGenerator struct {
 	filePath string
 	tree     *parser.Node
 
-	Constants       []*parser.LiteralNode
 	intConstants    map[int64]int
 	floatConstants  map[float64]int
 	stringConstants map[string]int
+	constants       []interface{}
 
 	instructions []VM.Instruction
 
@@ -31,8 +31,8 @@ type CodeGenerator struct {
 	ErrorCount int
 }
 
-func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
-	codeGenerator := &CodeGenerator{outputFile, tree, []*parser.LiteralNode{}, map[int64]int{}, map[float64]int{}, map[string]int{}, []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 1, 0}
+func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int) *CodeGenerator {
+	codeGenerator := &CodeGenerator{outputFile, tree, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 1, 0}
 
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
@@ -41,10 +41,14 @@ func NewGenerator(tree *parser.Node, outputFile string) *CodeGenerator {
 }
 
 func (cg *CodeGenerator) Generate() *[]VM.Instruction {
-	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
+	// Generate constant IDs
+	cg.generateConstantIDs()
 
+	// Get first line
+	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
 	cg.line = statements[0].Position.Line
 
+	// Generate instructions
 	for _, node := range statements {
 		cg.generateNode(node)
 	}
@@ -58,6 +62,39 @@ func (cg *CodeGenerator) newError(message string) {
 
 	if cg.ErrorCount > errors.MAX_ERROR_COUNT {
 		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d errors.", cg.ErrorCount))
+	}
+}
+
+func (cg *CodeGenerator) generateConstantIDs() {
+	// Map constant values to their index in global constant table.
+	// This table is sorted by type, in order: strings, ints, floats.
+
+	id := 0
+
+	// Strings
+	for key := range cg.stringConstants {
+		cg.constants[id] = key
+		cg.stringConstants[key] = id
+		id++
+	}
+
+	// Integers
+	for key := range cg.intConstants {
+		cg.constants[id] = key
+		cg.intConstants[key] = id
+		id++
+	}
+
+	// Floats
+	for key := range cg.floatConstants {
+		cg.constants[id] = key
+		cg.floatConstants[key] = id
+		id++
+	}
+
+	// More than 255 constants
+	if id >= math.MaxUint8 {
+		logger.Error(fmt.Sprintf("Constant pool overflow with %d constants. Constant pool can only contain maximum of %d constants.", id, math.MaxUint8))
 	}
 }
 
@@ -196,50 +233,17 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 
 	// String
 	case parser.DT_String:
-		constantIndex, exists := cg.stringConstants[literalNode.Value.(string)]
-
-		if !exists {
-			cg.Constants = append(cg.Constants, literalNode)
-			constantIndex = len(cg.Constants) - 1
-			cg.stringConstants[literalNode.Value.(string)] = constantIndex
-
-			if constantIndex == math.MaxUint8 {
-				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
-			}
-		}
-
+		constantIndex, _ := cg.stringConstants[literalNode.Value.(string)]
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 
 	// Int
 	case parser.DT_Int:
-		constantIndex, exists := cg.intConstants[literalNode.Value.(int64)]
-
-		if !exists {
-			cg.Constants = append(cg.Constants, literalNode)
-			constantIndex = len(cg.Constants) - 1
-			cg.intConstants[literalNode.Value.(int64)] = constantIndex
-
-			if constantIndex == math.MaxUint8 {
-				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
-			}
-		}
-
+		constantIndex, _ := cg.intConstants[literalNode.Value.(int64)]
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 
 	// Float
 	case parser.DT_Float:
-		constantIndex, exists := cg.floatConstants[literalNode.Value.(float64)]
-
-		if !exists {
-			cg.Constants = append(cg.Constants, literalNode)
-			constantIndex = len(cg.Constants) - 1
-			cg.floatConstants[literalNode.Value.(float64)] = constantIndex
-
-			if constantIndex == math.MaxUint8 {
-				logger.Error(fmt.Sprintf("Constant pool overflow. There are more than %d constants.", math.MaxUint8))
-			}
-		}
-
+		constantIndex, _ := cg.floatConstants[literalNode.Value.(float64)]
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
 	}
 }

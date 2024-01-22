@@ -11,6 +11,14 @@ import (
 
 const MINIMAL_PRECEDENCE = -100
 
+func (p *Parser) parseExpressionRoot() *Node {
+	expression := p.parseExpression(MINIMAL_PRECEDENCE)
+
+	p.collectConstants(expression)
+
+	return expression
+}
+
 func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	var left *Node
 
@@ -181,6 +189,26 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
+}
+
+func (p *Parser) collectConstants(expression *Node) {
+	// Check operator children
+	if expression.NodeType.IsOperator() {
+		p.collectConstants(expression.Value.(*BinaryNode).Left)
+		p.collectConstants(expression.Value.(*BinaryNode).Right)
+		// Collect literal
+	} else if expression.NodeType == NT_Literal {
+		literalNode := expression.Value.(*LiteralNode)
+
+		switch literalNode.DataType {
+		case DT_Int:
+			p.IntConstants[literalNode.Value.(int64)] = -1
+		case DT_Float:
+			p.FloatConstants[literalNode.Value.(float64)] = -1
+		case DT_String:
+			p.StringConstants[literalNode.Value.(string)] = -1
+		}
+	}
 }
 
 func getExpressionPosition(expression *Node, left, right uint) dataStructures.CodePos {

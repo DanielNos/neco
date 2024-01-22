@@ -31,7 +31,7 @@ func (p *Parser) parseIfStatement() *Node {
 
 			// Collect condition
 			p.consume()
-			elifCondition := p.parseExpression(MINIMAL_PRECEDENCE)
+			elifCondition := p.parseExpressionRoot()
 			p.consume()
 
 			// Check condition type
@@ -79,10 +79,10 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	var condition *Node
 	if removeParenthesis {
 		p.consume()
-		condition = p.parseExpression(MINIMAL_PRECEDENCE)
+		condition = p.parseExpressionRoot()
 		p.consume()
 	} else {
-		condition = p.parseExpression(MINIMAL_PRECEDENCE)
+		condition = p.parseExpressionRoot()
 	}
 
 	// Check condition type
