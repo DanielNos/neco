@@ -1,4 +1,4 @@
-module neko
+module neco
 
 go 1.21.3
 

@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"neko/dataStructures"
-	"neko/lexer"
+	"neco/dataStructures"
+	"neco/lexer"
 )
 
 type NodeValue interface{}

@@ -3,7 +3,7 @@ package logger
 import (
 	"bufio"
 	"fmt"
-	"neko/dataStructures"
+	"neco/dataStructures"
 	"os"
 
 	color "github.com/fatih/color"

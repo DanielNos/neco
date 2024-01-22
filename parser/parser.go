@@ -2,10 +2,10 @@ package parser
 
 import (
 	"fmt"
-	"neko/dataStructures"
-	"neko/errors"
-	"neko/lexer"
-	"neko/logger"
+	"neco/dataStructures"
+	"neco/errors"
+	"neco/lexer"
+	"neco/logger"
 	"os"
 	"strings"
 )
@@ -22,10 +22,14 @@ type Parser struct {
 
 	ErrorCount      uint
 	totalErrorCount uint
+
+	intConstants    map[int64]struct{}
+	floatConstants  map[float64]struct{}
+	stringConstants map[string]struct{}
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors}
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors, map[int64]struct{}{}, map[float64]struct{}{}, map[string]struct{}{}}
 }
 
 func (p *Parser) peek() *lexer.Token {

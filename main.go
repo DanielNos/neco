@@ -7,13 +7,13 @@ import (
 
 	"github.com/fatih/color"
 
-	codeGen "neko/codeGenerator"
-	"neko/errors"
-	"neko/lexer"
-	"neko/logger"
-	"neko/parser"
-	"neko/syntaxAnalyzer"
-	VM "neko/virtualMachine"
+	codeGen "neco/codeGenerator"
+	"neco/errors"
+	"neco/lexer"
+	"neco/logger"
+	"neco/parser"
+	"neco/syntaxAnalyzer"
+	VM "neco/virtualMachine"
 )
 
 func printTokens(tokens []*lexer.Token) {

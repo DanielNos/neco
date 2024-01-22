@@ -1,6 +1,6 @@
 package codeGenerator
 
-import VM "neko/virtualMachine"
+import VM "neco/virtualMachine"
 
 var builtInFunctions = map[string]byte{
 	"print":     VM.BIF_Print,

@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"neko/dataStructures"
-	"neko/lexer"
+	"neco/dataStructures"
+	"neco/lexer"
 )
 
 func (p *Parser) parseFunctionDeclare() *Node {

@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"neko/lexer"
+	"neco/lexer"
 )
 
 func (p *Parser) parseIfStatement() *Node {

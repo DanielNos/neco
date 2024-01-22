@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"neko/lexer"
+	"neco/lexer"
 )
 
 type DataType uint8

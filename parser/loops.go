@@ -1,6 +1,6 @@
 package parser
 
-import "neko/lexer"
+import "neco/lexer"
 
 func (p *Parser) parseLoop() *Node {
 	loopPosition := p.consume().Position

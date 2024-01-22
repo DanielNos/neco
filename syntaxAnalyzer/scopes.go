@@ -1,6 +1,6 @@
 package syntaxAnalyzer
 
-import "neko/lexer"
+import "neco/lexer"
 
 func (sn *SyntaxAnalyzer) analyzeScope() {
 	sn.consume()

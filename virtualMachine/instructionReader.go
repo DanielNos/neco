@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"neko/errors"
-	"neko/logger"
+	"neco/errors"
+	"neco/logger"
 	"os"
 )
 

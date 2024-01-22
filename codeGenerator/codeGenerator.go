@@ -3,11 +3,11 @@ package codeGenerator
 import (
 	"fmt"
 	"math"
-	"neko/dataStructures"
-	"neko/errors"
-	"neko/logger"
-	"neko/parser"
-	VM "neko/virtualMachine"
+	"neco/dataStructures"
+	"neco/errors"
+	"neco/logger"
+	"neco/parser"
+	VM "neco/virtualMachine"
 )
 
 var NO_ARGS = []byte{}

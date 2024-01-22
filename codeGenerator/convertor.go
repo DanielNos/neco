@@ -1,8 +1,8 @@
 package codeGenerator
 
 import (
-	"neko/parser"
-	VM "neko/virtualMachine"
+	"neco/parser"
+	VM "neco/virtualMachine"
 )
 
 var nodeTypeToInstructionTypeInt = map[parser.NodeType]byte{

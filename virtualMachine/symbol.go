@@ -1,6 +1,6 @@
 package virtualMachine
 
-import "neko/parser"
+import "neco/parser"
 
 type SymbolType uint8
 

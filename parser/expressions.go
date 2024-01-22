@@ -3,8 +3,9 @@ package parser
 import (
 	"fmt"
 	"math"
-	"neko/dataStructures"
-	"neko/lexer"
+	"neco/dataStructures"
+	"neco/lexer"
+	"neco/necoMath"
 	"strconv"
 )
 
@@ -243,7 +244,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_Divide:
 			value = leftLiteral.Value.(int64) / rightLiteral.Value.(int64)
 		case NT_Power:
-			value = powerInt64(leftLiteral.Value.(int64), rightLiteral.Value.(int64))
+			value = necoMath.PowerInt64(leftLiteral.Value.(int64), rightLiteral.Value.(int64))
 		case NT_Modulo:
 			value = leftLiteral.Value.(int64) % rightLiteral.Value.(int64)
 		}
@@ -325,18 +326,4 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 
 	// Invalid operation, can't combine
 	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, DT_NoType}}
-}
-
-func powerInt64(base, exponent int64) int64 {
-	var result int64 = 1
-
-	for exponent > 0 {
-		if exponent%2 == 1 {
-			result *= base
-		}
-		base *= base
-		exponent /= 2
-	}
-
-	return result
 }

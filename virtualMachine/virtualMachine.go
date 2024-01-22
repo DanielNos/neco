@@ -2,10 +2,10 @@ package virtualMachine
 
 import (
 	"fmt"
-	"neko/dataStructures"
-	"neko/errors"
-	"neko/logger"
-	"neko/parser"
+	"neco/dataStructures"
+	"neco/errors"
+	"neco/logger"
+	"neco/parser"
 	"os"
 )
 

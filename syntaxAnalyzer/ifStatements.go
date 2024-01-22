@@ -2,7 +2,7 @@ package syntaxAnalyzer
 
 import (
 	"fmt"
-	"neko/lexer"
+	"neco/lexer"
 )
 
 func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
