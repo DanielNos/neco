@@ -16,23 +16,23 @@ import (
 
 const EOF rune = 0x04
 
-var TOKEN_BREAKERS = map[rune]bool{
-	'+': true,
-	'-': true,
-	'*': true,
-	'/': true,
-	'^': true,
-	'%': true,
+var TOKEN_BREAKERS = map[rune]struct{}{
+	'+': {},
+	'-': {},
+	'*': {},
+	'/': {},
+	'^': {},
+	'%': {},
 
-	'=': true,
-	'<': true,
-	'>': true,
+	'=': {},
+	'<': {},
+	'>': {},
 
-	'!': true,
-	'&': true,
-	'|': true,
+	'!': {},
+	'&': {},
+	'|': {},
 
-	';': true,
+	';': {},
 }
 
 var DIGIT_VALUE = map[rune]int{
@@ -54,10 +54,10 @@ var DIGIT_VALUE = map[rune]int{
 }
 
 func isTokenBreaker(char rune) bool {
-	_, breaker := TOKEN_BREAKERS[char]
-	_, delimiter := DELIMITERS[char]
+	_, isBreaker := TOKEN_BREAKERS[char]
+	_, isDelimiter := DELIMITERS[char]
 
-	return unicode.IsSpace(char) || breaker || delimiter
+	return unicode.IsSpace(char) || isBreaker || isDelimiter
 }
 
 type Lexer struct {
