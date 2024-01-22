@@ -2,23 +2,23 @@ package virtualMachine
 
 const (
 	// 1 argument
-	IT_CallBuiltInFunction byte = iota
+	IT_CallBuiltInFunc byte = iota
 	IT_Halt
 
-	IT_StoreRegisterA
-	IT_StoreRegisterB
+	IT_StoreRegA
+	IT_StoreRegB
 
-	IT_LoadConstantRegisterA
-	IT_LoadConstantRegisterB
+	IT_LoadConstRegA
+	IT_LoadConstRegB
 
-	IT_LoadRegisterA
-	IT_LoadRegisterB
+	IT_LoadRegA
+	IT_LoadRegB
 
 	// 0 arguments
 	IT_SwapGeneric
 
-	IT_PushRegisterAArgStack
-	IT_PushRegisterBArgStack
+	IT_PushRegAToArgStack
+	IT_PushRegBToArgStack
 
 	IT_IntAdd
 	IT_IntSubtract
@@ -37,30 +37,30 @@ const (
 
 var InstructionTypeToString = map[byte]string{
 	// 1 argument
-	IT_CallBuiltInFunction: "CALL_BUILTIN_FUNCTION",
-	IT_Halt:                "HALT",
+	IT_CallBuiltInFunc: "CALL_BUILTIN_FUNC",
+	IT_Halt:            "HALT",
 
-	IT_StoreRegisterA: "STORE_REGISTER_A",
-	IT_StoreRegisterB: "STORE_REGISTER_B",
+	IT_StoreRegA: "STORE_REG_A",
+	IT_StoreRegB: "STORE_REG_B",
 
-	IT_LoadConstantRegisterA: "LOAD_CONSTANT_REGISTER_A",
-	IT_LoadConstantRegisterB: "LOAD_CONSTANT_REGISTER_B",
+	IT_LoadConstRegA: "LOAD_CONST_REG_A",
+	IT_LoadConstRegB: "LOAD_CONST_REG_B",
 
-	IT_LoadRegisterA: "LOAD_REGISTER_A",
-	IT_LoadRegisterB: "LOAD_REGISTER_B",
+	IT_LoadRegA: "LOAD_REG_A",
+	IT_LoadRegB: "LOAD_REG_B",
 
 	// 0 arguments
 	IT_SwapGeneric: "SWAP_GENERIC",
 
-	IT_PushRegisterAArgStack: "PUSH_REGISTER_A_ARG_STACK",
-	IT_PushRegisterBArgStack: "PUSH_REGISTER_B_ARG_STACK",
+	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
+	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
 
 	IT_IntAdd:      "INT_ADD",
-	IT_IntSubtract: "INT_SUBTRACT",
-	IT_IntMultiply: "INT_MULTIPLY",
-	IT_IntDivide:   "INT_DIVIDE",
-	IT_IntPower:    "INT_POWER",
-	IT_IntModulo:   "INT_MODULO",
+	IT_IntSubtract: "INT_SUB",
+	IT_IntMultiply: "INT_MUL",
+	IT_IntDivide:   "INT_DIV",
+	IT_IntPower:    "INT_POW",
+	IT_IntModulo:   "INT_MOD",
 
 	IT_DeclareBool:   "DECLARE_BOOL",
 	IT_DeclareInt:    "DECLARE_INT",

@@ -63,7 +63,7 @@ func (cg *CodeGenerator) newError(message string) {
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	if node.Position.Line > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{cg.lineToByte(node.Position.Line - cg.line), NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{cg.lineToByte(node.Position.Line - cg.line - 1), NO_ARGS})
 		cg.line = node.Position.Line
 	}
 
@@ -89,7 +89,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateExpression(assignNode.Expression)
 
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegisterA, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegA, []byte{identifier}})
 	}
 }
 
@@ -108,14 +108,14 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	builtInFunction, exists := builtInFunctions[functionCall.Identifier]
 
 	if exists {
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunction, InstructionValue: []byte{builtInFunction}})
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
 	}
 }
 
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
 		cg.generateExpression(argument)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegisterAArgStack, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegAToArgStack, NO_ARGS})
 	}
 }
 
@@ -161,7 +161,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// Variable
 	case parser.NT_Variable:
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[node.Value.(*parser.VariableNode).Identifier]
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegisterA, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
@@ -185,7 +185,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
 
 	case parser.DT_Int:
 
@@ -201,7 +201,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
 
 	case parser.DT_Float:
 
@@ -217,7 +217,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			}
 		}
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstantRegisterA, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConstRegA, []byte{uint8(constantIndex)}})
 
 	}
 }

@@ -41,7 +41,7 @@ func printTokens(tokens []*lexer.Token) {
 func printInstructions(instructions *[]VM.Instruction) {
 	for _, instruction := range *instructions {
 		if instruction.InstructionType >= 128 {
-			fmt.Printf("LINE_OFFSET                   %d\n", instruction.InstructionType-128)
+			fmt.Printf("LINE_OFFSET              %d\n", instruction.InstructionType-128+1)
 			continue
 		}
 
@@ -49,7 +49,7 @@ func printInstructions(instructions *[]VM.Instruction) {
 		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
 
 		i := len(fmt.Sprintf("%s", VM.InstructionTypeToString[instruction.InstructionType]))
-		for i < 30 {
+		for i < 25 {
 			print(" ")
 			i++
 		}

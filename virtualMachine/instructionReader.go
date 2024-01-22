@@ -140,7 +140,7 @@ func (ir *InstructionReader) readInstructions() {
 		instructionType := ir.bytes[ir.byteIndex]
 
 		// 1 argument instruction
-		if instructionType <= IT_LoadRegisterB {
+		if instructionType <= IT_LoadRegB {
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, []byte{ir.bytes[ir.byteIndex]}})
 			// 0 argument instruction
@@ -148,7 +148,7 @@ func (ir *InstructionReader) readInstructions() {
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, NO_ARGS})
 			// Line offset
 		} else {
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{(ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK) + 1}})
 		}
 
 		ir.byteIndex++

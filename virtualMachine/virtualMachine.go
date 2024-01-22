@@ -49,9 +49,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 	for _, instruction := range vm.Instructions {
 		switch instruction.InstructionType {
+
 		// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
+
 		// Call built-in function
-		case IT_CallBuiltInFunction:
+		case IT_CallBuiltInFunc:
 			vm.callBuiltInFunction(instruction.InstructionValue[0])
 
 		// Halt
@@ -59,24 +61,24 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			os.Exit(int(instruction.InstructionValue[0]))
 
 		// Store register to a variable
-		case IT_StoreRegisterA:
+		case IT_StoreRegA:
 			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericA
 
-		case IT_StoreRegisterB:
+		case IT_StoreRegB:
 			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericB
 
 		// Load constant to register
-		case IT_LoadConstantRegisterA:
+		case IT_LoadConstRegA:
 			vm.Reg_GenericA = vm.Constants[instruction.InstructionValue[0]]
 
-		case IT_LoadConstantRegisterB:
+		case IT_LoadConstRegB:
 			vm.Reg_GenericB = vm.Constants[instruction.InstructionValue[0]]
 
 		// Load variable to a register
-		case IT_LoadRegisterA:
+		case IT_LoadRegA:
 			vm.Reg_GenericA = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
 
-		case IT_LoadRegisterB:
+		case IT_LoadRegB:
 			vm.Reg_GenericB = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
@@ -86,11 +88,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
 
 		// Push register to stack
-		case IT_PushRegisterAArgStack:
+		case IT_PushRegAToArgStack:
 			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericA
 			vm.Reg_ArgumentPointer++
 
-		case IT_PushRegisterBArgStack:
+		case IT_PushRegBToArgStack:
 			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericB
 			vm.Reg_ArgumentPointer++
 
