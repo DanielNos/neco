@@ -5,6 +5,7 @@ import (
 	"neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
+	"neco/necoMath"
 	"neco/parser"
 	"os"
 )
@@ -115,14 +116,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.Reg_GenericA = vm.Reg_GenericA.(int64) / vm.Reg_GenericB.(int64)
 
 		case IT_IntPower:
-
-			// Can't be done with negative exponent
-			if vm.Reg_GenericB.(int64) < 0 {
-				vm.Reg_GenericA = int64(0)
-			} else {
-				fmt.Printf("%d ^ %d\n", vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
-				vm.Reg_GenericA = intPow(vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
-			}
+			vm.Reg_GenericA = necoMath.PowerInt64(vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
 
 		case IT_IntModulo:
 			vm.Reg_GenericA = vm.Reg_GenericA.(int64) % vm.Reg_GenericB.(int64)
@@ -153,21 +147,4 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			logger.Fatal(errors.ERROR_UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
 		}
 	}
-}
-
-func intPow(x, n int64) int64 {
-	if n == 0 {
-		return 1
-	}
-
-	if n == 1 {
-		return x
-	}
-
-	y := intPow(x, n/2)
-	if n%2 == 0 {
-		return y * y
-	}
-
-	return x * y * y
 }
