@@ -183,6 +183,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d error/s.", codeGenerator.ErrorCount))
 	}
 
+	logger.Info(fmt.Sprintf("Generated %d instructions.", len(*instructions)))
 	logger.Success(fmt.Sprintf("😺 Compilation completed in %s.", time.Since(startTime)))
 
 	codeWriter := codeGen.NewCodeWriter(codeGenerator)
