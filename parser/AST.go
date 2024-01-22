@@ -59,7 +59,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
 		NT_And, NT_Or:
 		binary := node.Value.(*BinaryNode)
-		fmt.Printf("%s %s", NodeTypeToString[node.NodeType], binary.DataType)
+		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DataType)
 
 		if binary.Left != nil {
 			visualize(binary.Left, indent, false)
