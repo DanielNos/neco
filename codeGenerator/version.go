@@ -1,5 +1,7 @@
 package codeGenerator
 
-const VERSION_MAJOR = 0
-const VERSION_MINOR = 1
-const VERSION_PATCH = 0
+const (
+	VERSION_MAJOR = 0
+	VERSION_MINOR = 1
+	VERSION_PATCH = 0
+)
