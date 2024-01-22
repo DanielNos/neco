@@ -3,7 +3,7 @@ VERSION=1.0
 
 PACKAGE=$(BIN_NAME)_$(VERSION)-amd64
 
-build:
+build: *.go
 	GOOS=linux GOARCH=amd64 go build -o bin/$(BIN_NAME)_linux_amd64 .
 	GOOS=linux GOARCH=386 go build -o bin/$(BIN_NAME)_linux_386 .
 	GOOS=linux GOARCH=arm go build -o bin/$(BIN_NAME)_linux_arm .
