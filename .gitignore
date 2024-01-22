@@ -1,8 +1,13 @@
+# Editor configuration
 .vscode
-*.neco
-bin
 
-// Debugging scripts
+# Source files
+*.neco
+
+# Debugging scripts
 build
 run
+
+# Build files
+bin
 main
