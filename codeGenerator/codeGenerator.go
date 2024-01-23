@@ -199,9 +199,12 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		// Add strings
 		if binaryNode.DataType == parser.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
-			// Add ints
+			// Operation on ints
+		} else if binaryNode.DataType == parser.DT_Int {
+			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
+			// Operation on floats
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{nodeTypeToInstructionTypeInt[node.NodeType], NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{floatOperatorToInstruction[node.NodeType], NO_ARGS})
 		}
 	// Variable
 	case parser.NT_Variable:
