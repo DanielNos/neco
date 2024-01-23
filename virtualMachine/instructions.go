@@ -31,6 +31,13 @@ const (
 	IT_IntPower
 	IT_IntModulo
 
+	IT_FloatAdd
+	IT_FloatSubtract
+	IT_FloatMultiply
+	IT_FloatDivide
+	IT_FloatPower
+	IT_FloatModulo
+
 	IT_StringConcat
 
 	IT_DeclareBool
@@ -71,6 +78,13 @@ var InstructionTypeToString = map[byte]string{
 	IT_IntDivide:   "INT_DIV",
 	IT_IntPower:    "INT_POW",
 	IT_IntModulo:   "INT_MOD",
+
+	IT_FloatAdd:      "FLT_ADD",
+	IT_FloatSubtract: "FLT_SUB",
+	IT_FloatMultiply: "FLT_MUL",
+	IT_FloatDivide:   "FLT_DIV",
+	IT_FloatPower:    "FLT_POW",
+	IT_FloatModulo:   "FLT_MOD",
 
 	IT_StringConcat: "STRING_CONCAT",
 

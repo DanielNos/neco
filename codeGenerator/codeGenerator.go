@@ -99,6 +99,7 @@ func (cg *CodeGenerator) generateConstantIDs() {
 }
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
+	// If node line has changed, insert line offset instruction
 	if node.Position.Line > cg.line {
 		cg.instructions = append(cg.instructions, VM.Instruction{cg.lineToByte(node.Position.Line - cg.line - 1), NO_ARGS})
 		cg.line = node.Position.Line

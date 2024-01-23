@@ -2,6 +2,7 @@ package virtualMachine
 
 import (
 	"fmt"
+	"math"
 	"neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
@@ -120,6 +121,25 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_IntModulo:
 			vm.Reg_GenericA = vm.Reg_GenericA.(int64) % vm.Reg_GenericB.(int64)
+
+		// Float operations
+		case IT_FloatAdd:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) + vm.Reg_GenericB.(float64)
+
+		case IT_FloatSubtract:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) - vm.Reg_GenericB.(float64)
+
+		case IT_FloatMultiply:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) * vm.Reg_GenericB.(float64)
+
+		case IT_FloatDivide:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) / vm.Reg_GenericB.(float64)
+
+		case IT_FloatPower:
+			vm.Reg_GenericA = math.Pow(vm.Reg_GenericA.(float64), vm.Reg_GenericB.(float64))
+
+		case IT_FloatModulo:
+			vm.Reg_GenericA = math.Mod(vm.Reg_GenericA.(float64), vm.Reg_GenericB.(float64))
 
 		// String operations
 		case IT_StringConcat:
