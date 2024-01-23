@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/fatih/color"
@@ -15,6 +15,21 @@ import (
 	"neco/syntaxAnalyzer"
 	VM "neco/virtualMachine"
 )
+
+func printHelp() {
+	color.Set(color.Bold)
+	color.Set(color.FgHiYellow)
+	color.Set(color.ResetUnderline)
+	println("Action           Flags")
+
+	color.Set(color.Reset)
+	println("build [target]")
+	println("                 -tokens        Prints lexed tokens.")
+	println("                 -tree          Draws abstract syntax tree.")
+	println("                 -instructions  Prints generated instructions.")
+	println("\nrun [target]     -time          Measures execution time.")
+	println("\nanalyze [target]")
+}
 
 func printTokens(tokens []*lexer.Token) {
 	for _, token := range tokens {
@@ -69,33 +84,74 @@ func printInstructions(instructions *[]VM.Instruction) {
 	}
 }
 
-func processArguments() (string, bool, bool, bool, bool, string) {
-	// Define and collect flags
-	tokens := flag.Bool("tokens", false, "Prints tokens when compiling.")
-	tree := flag.Bool("tree", false, "Displays AST when compiling.")
-	instructions := flag.Bool("instructions", false, "Displays compiled instructions.")
-	time := flag.Bool("time", false, "Shows execution time of program.")
+func processArguments() (string, string, []bool) {
+	args := os.Args[1:]
 
-	build := flag.String("build", "", "Builds specified source file.")
-	run := flag.String("run", "", "Runs specified NeCo program.")
-
-	flag.Parse()
-
-	// Select action and target
-	action := ""
-	target := ""
-	// Build
-	if *build != "" {
-		action = "build"
-		target = *build
-		// No action
-	} else if *run != "" {
-		action = "run"
-		target = *run
-	} else {
-		logger.Fatal(errors.ERROR_INVALID_USE, "No action specified.")
+	// No action
+	if len(args) == 0 {
+		logger.Fatal(errors.ERROR_INVALID_FLAGS, "No action specified. Use neco help for more info.")
 	}
-	return action, *tokens, *tree, *instructions, *time, target
+
+	action := args[0]
+
+	// Collect target
+	target := ""
+
+	switch action {
+	case "build", "run", "analyze":
+		if len(args) == 1 {
+			logger.Fatal(errors.ERROR_INVALID_FLAGS, "No target specified.")
+		}
+		target = args[1]
+	case "help":
+		printHelp()
+		os.Exit(0)
+	default:
+		logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid action %s. Use neco help for more info.", args[1]))
+	}
+
+	// Collect flags
+	var flags []bool
+
+	switch action {
+	// Build flags
+	case "build":
+		flags = []bool{false, false, false}
+		for _, flag := range args[2:] {
+			switch flag {
+			case "-tokens":
+				flags[0] = true
+			case "-tree":
+				flags[1] = true
+			case "-instructions":
+				flags[2] = true
+			default:
+				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
+			}
+		}
+	// Run flags
+	case "run":
+		flags = []bool{false}
+		for _, flag := range args[2:] {
+			switch flag {
+			case "-time":
+				flags[0] = true
+			default:
+				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
+			}
+		}
+	// Analyze flags
+	case "analyze":
+		flags = []bool{}
+		for _, flag := range args[2:] {
+			switch flag {
+			default:
+				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
+			}
+		}
+	}
+
+	return action, target, flags
 }
 
 func compile(path string, showTokens, showTree, printInstruction bool) {
@@ -198,18 +254,23 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 }
 
 func main() {
-	action, showTokens, showTree, printInstruction, measureTime, target := processArguments()
+	action, target, flags := processArguments()
 
+	// Build target
 	if action == "build" {
-		compile(target, showTokens, showTree, printInstruction)
+		compile(target, flags[0], flags[1], flags[2])
+		// Run target
 	} else if action == "run" {
 		startTime := time.Now()
 
 		virtualMachine := VM.NewVirutalMachine()
 		virtualMachine.Execute(target)
 
-		if measureTime {
+		if flags[0] {
 			fmt.Printf("Execution time: %v\n", time.Since(startTime))
 		}
+		// Analyze target
+	} else if action == "analyze" {
+
 	}
 }
