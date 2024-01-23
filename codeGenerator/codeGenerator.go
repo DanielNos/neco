@@ -61,7 +61,7 @@ func (cg *CodeGenerator) newError(message string) {
 	cg.ErrorCount++
 
 	if cg.ErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d errors.", cg.ErrorCount))
+		logger.Fatal(errors.CODE_GENERATION, fmt.Sprintf("Failed code generation with %d errors.", cg.ErrorCount))
 	}
 }
 

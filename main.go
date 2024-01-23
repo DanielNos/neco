@@ -89,7 +89,7 @@ func processArguments() (string, string, []bool) {
 
 	// No action
 	if len(args) == 0 {
-		logger.Fatal(errors.ERROR_INVALID_FLAGS, "No action specified. Use neco help for more info.")
+		logger.Fatal(errors.INVALID_FLAGS, "No action specified. Use neco help for more info.")
 	}
 
 	action := args[0]
@@ -100,14 +100,14 @@ func processArguments() (string, string, []bool) {
 	switch action {
 	case "build", "run", "analyze":
 		if len(args) == 1 {
-			logger.Fatal(errors.ERROR_INVALID_FLAGS, "No target specified.")
+			logger.Fatal(errors.INVALID_FLAGS, "No target specified.")
 		}
 		target = args[1]
 	case "help":
 		printHelp()
 		os.Exit(0)
 	default:
-		logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid action %s. Use neco help for more info.", args[1]))
+		logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid action %s. Use neco help for more info.", args[1]))
 	}
 
 	// Collect flags
@@ -126,7 +126,7 @@ func processArguments() (string, string, []bool) {
 			case "-instructions":
 				flags[2] = true
 			default:
-				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
 			}
 		}
 	// Run flags
@@ -137,7 +137,7 @@ func processArguments() (string, string, []bool) {
 			case "-time":
 				flags[0] = true
 			default:
-				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
 			}
 		}
 	// Analyze flags
@@ -146,7 +146,7 @@ func processArguments() (string, string, []bool) {
 		for _, flag := range args[2:] {
 			switch flag {
 			default:
-				logger.Fatal(errors.ERROR_INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
 			}
 		}
 	}
@@ -165,7 +165,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 	exitCode := 0
 	if lexer.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Lexical analysis failed with %d error/s.", lexer.ErrorCount))
-		exitCode = errors.ERROR_LEXICAL
+		exitCode = errors.LEXICAL
 	} else {
 		logger.Success("Passed lexical analysis.")
 	}
@@ -188,7 +188,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 
 		// Exit with correct return code
 		if exitCode == 0 {
-			logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+			logger.Fatal(errors.SYNTAX, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		} else {
 			logger.Fatal(exitCode, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		}
@@ -204,7 +204,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 	if p.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Semantic analysis failed with %d error/s.", p.ErrorCount))
 		if exitCode == 0 {
-			exitCode = errors.ERROR_SEMANTIC
+			exitCode = errors.SEMANTIC
 		}
 	} else {
 		logger.Success("Passed semantic analysis.")
@@ -236,7 +236,7 @@ func compile(path string, showTokens, showTree, printInstruction bool) {
 
 	// Generation failed
 	if codeGenerator.ErrorCount != 0 {
-		logger.Fatal(errors.ERROR_CODE_GENERATION, fmt.Sprintf("Failed code generation with %d error/s.", codeGenerator.ErrorCount))
+		logger.Fatal(errors.CODE_GENERATION, fmt.Sprintf("Failed code generation with %d error/s.", codeGenerator.ErrorCount))
 	}
 
 	logger.Info(fmt.Sprintf("Generated %d instructions.", len(*instructions)))

@@ -71,7 +71,7 @@ func (p *Parser) newError(position *dataStructures.CodePos, message string) {
 
 	// Too many errors
 	if p.ErrorCount+p.totalErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
+		logger.Fatal(errors.SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }
 
@@ -84,7 +84,7 @@ func (p *Parser) newErrorNoMessage(position *dataStructures.CodePos) {
 
 	// Too many errors
 	if p.ErrorCount+p.totalErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
+		logger.Fatal(errors.SYNTAX, fmt.Sprintf("Semantic analysis has aborted due to too many errors. It has failed with %d errors.", p.ErrorCount))
 	}
 }
 

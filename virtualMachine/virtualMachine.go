@@ -144,7 +144,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Unknown instruction
 		default:
-			logger.Fatal(errors.ERROR_UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
+			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
 		}
 	}
 }

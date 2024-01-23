@@ -33,7 +33,7 @@ func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
 
 	// Too many errors
 	if sn.ErrorCount+sn.totalErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
+		logger.Fatal(errors.SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
 
@@ -47,7 +47,7 @@ func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message 
 
 	// Too many errors
 	if sn.ErrorCount+sn.totalErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
+		logger.Fatal(errors.SYNTAX, fmt.Sprintf("Syntax analysis has aborted due to too many errors. It has failed with %d errors.", sn.ErrorCount))
 	}
 }
 

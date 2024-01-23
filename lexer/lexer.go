@@ -71,7 +71,7 @@ func (l *Lexer) Lex() []*Token {
 
 	if err != nil {
 		reason := strings.Split(err.Error(), ": ")[1]
-		logger.Fatal(errors.ERROR_LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
+		logger.Fatal(errors.LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
 	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
@@ -109,7 +109,7 @@ func (l *Lexer) newError(line, char uint, useTokenLength bool, message string) {
 
 	// Too many errors
 	if l.ErrorCount > errors.MAX_ERROR_COUNT {
-		logger.Fatal(errors.ERROR_SYNTAX, fmt.Sprintf("Lexical analysis has aborted due to too many errors. It has failed with %d errors.", l.ErrorCount))
+		logger.Fatal(errors.SYNTAX, fmt.Sprintf("Lexical analysis has aborted due to too many errors. It has failed with %d errors.", l.ErrorCount))
 	}
 }
 

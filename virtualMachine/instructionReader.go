@@ -43,17 +43,17 @@ func (ir *InstructionReader) Read() {
 
 	// Couldn't read file
 	if err != nil {
-		logger.Fatal(errors.ERROR_READ_PROGRAM, "Can't read file.")
+		logger.Fatal(errors.READ_PROGRAM, "Can't read file.")
 	}
 
 	// Invalid magic number
 	if ir.bytes[0] != 'N' || ir.bytes[1] != 'E' || ir.bytes[2] != 'C' || ir.bytes[3] != 'O' {
-		logger.Fatal(errors.ERROR_READ_PROGRAM, "File isn't a NeCo binary.")
+		logger.Fatal(errors.READ_PROGRAM, "File isn't a NeCo binary.")
 	}
 
 	// Incompatible version
 	if ir.bytes[5] > VERSION_MAJOR || ir.bytes[6] > VERSION_MINOR || ir.bytes[7] > VERSION_PATCH {
-		logger.Fatal(errors.ERROR_INCOMPATIBLE_VERSION, fmt.Sprintf("Incompatible version. Binary version is %d.%d.%d, your NeCo version is %d.%d.%d.", ir.bytes[5], ir.bytes[6], ir.bytes[7], VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH))
+		logger.Fatal(errors.INCOMPATIBLE_VERSION, fmt.Sprintf("Incompatible version. Binary version is %d.%d.%d, your NeCo version is %d.%d.%d.", ir.bytes[5], ir.bytes[6], ir.bytes[7], VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH))
 	}
 
 	ir.byteIndex = 8
