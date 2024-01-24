@@ -22,4 +22,8 @@ var builtInFunctions = map[string]byte{
 
 	"readLine": VM.BIF_ReadLine,
 	"readChar": VM.BIF_ReadChar,
+
+	"length":  VM.BIF_Length,
+	"toLower": VM.BIF_ToLower,
+	"toUpper": VM.BIF_ToUpper,
 }

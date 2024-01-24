@@ -3,6 +3,7 @@ package virtualMachine
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 const (
@@ -25,6 +26,10 @@ const (
 
 	BIF_ReadLine
 	BIF_ReadChar
+
+	BIF_Length
+	BIF_ToLower
+	BIF_ToUpper
 )
 
 const INT_0 = int64(0)
@@ -107,5 +112,18 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 	case BIF_ReadChar:
 		char, _, _ := vm.reader.ReadRune()
 		vm.Reg_GenericA = fmt.Sprintf("%c", char)
+
+	// String functions
+	case BIF_Length:
+		vm.Reg_GenericA = len(vm.Reg_GenericA.(string))
+		vm.Reg_ArgumentPointer--
+
+	case BIF_ToLower:
+		vm.Reg_GenericA = strings.ToLower(vm.Reg_GenericA.(string))
+		vm.Reg_ArgumentPointer--
+
+	case BIF_ToUpper:
+		vm.Reg_GenericA = strings.ToUpper(vm.Reg_GenericA.(string))
+		vm.Reg_ArgumentPointer--
 	}
 }

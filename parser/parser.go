@@ -159,6 +159,10 @@ func (p *Parser) insertBuiltInFunctions() {
 
 	p.symbolTableStack.Top.Value.(symbolTable)["readLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{}, VariableType{DT_String, false}}}
 	p.symbolTableStack.Top.Value.(symbolTable)["readChar"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{}, VariableType{DT_String, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["length"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "string", nil}}, VariableType{DT_Int, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["toLower"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "string", nil}}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["toUpper"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "string", nil}}, VariableType{DT_String, false}}}
 }
 
 func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {
