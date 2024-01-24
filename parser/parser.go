@@ -121,13 +121,7 @@ func (p *Parser) parseModule() *Node {
 	p.enterScope()
 
 	// Insert built-in functions
-	p.symbolTableStack.Top.Value.(symbolTable)["print"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["printLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["bool2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["int2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["flt2str"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["bool2int"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Bool, false}, "bool", nil}}, VariableType{DT_Int, false}}}
-	p.symbolTableStack.Top.Value.(symbolTable)["int2flt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Int, false}, "int", nil}}, VariableType{DT_Float, false}}}
+	p.insertBuiltInFunctions()
 
 	// Parse module
 	scopeNode := p.parseScope(false, false)
@@ -142,6 +136,26 @@ func (p *Parser) parseModule() *Node {
 	}
 
 	return module
+}
+
+func (p *Parser) insertBuiltInFunctions() {
+	p.symbolTableStack.Top.Value.(symbolTable)["print"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["printLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["boolToStr"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["intToStr"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["fltToStr"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["boolToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_Int, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["intToFlt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_Float, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["floor"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Float, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["ceil"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Float, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["round"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Float, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["floorToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["ceilToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["roundToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
 }
 
 func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {

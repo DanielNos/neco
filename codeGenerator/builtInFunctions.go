@@ -5,9 +5,18 @@ import VM "neco/virtualMachine"
 var builtInFunctions = map[string]byte{
 	"print":     VM.BIF_Print,
 	"printLine": VM.BIF_PrintLine,
-	"bool2str":  VM.BIF_Bool2String,
-	"int2str":   VM.BIF_Int2String,
-	"flt2str":   VM.BIF_Float2String,
-	"bool2int":  VM.BIF_Bool2Int,
-	"int2flt":   VM.BIF_Int2Float,
+
+	"boolToStr": VM.BIF_BoolToString,
+	"intToStr":  VM.BIF_IntToString,
+	"fltToStr":  VM.BIF_FloatToString,
+
+	"boolToInt": VM.BIF_BoolToInt,
+	"intToFlt":  VM.BIF_IntToFloat,
+
+	"floor":      VM.BIF_Floor,
+	"floorToInt": VM.BIF_FloorToInt,
+	"ceil":       VM.BIF_Ceil,
+	"ceilToInt":  VM.BIF_CeilToInt,
+	"round":      VM.BIF_Round,
+	"roundToInt": VM.BIF_RoundToInt,
 }

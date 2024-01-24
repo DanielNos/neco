@@ -1,0 +1,20 @@
+# Built-In Functions
+
+| Function Header                          | Description                               |
+|------------------------------------------|-------------------------------------------|
+| print(str text)                          | Prints text.                              |
+| printLine(str text )                     | Prints text and a new line.               |
+|                                          |                                           |
+| boolToStr(bool boolean) -> str           | Converts a boolean to a string.           |
+| intToStr(int integer) -> str             | Converts an integer to a string.          |
+| fltToStr(flt float) -> str               | Converts a float to a string.             |
+|                                          |                                           |
+| boolToInt(bool boolean) -> int           | Converts a boolean to an integer.         |
+| intToFlt(int integer) -> flt             | Converts an integer to a float.           |
+|                                          |                                           |
+| floor(flt float) -> flt                  | Floors a float.                           |
+| floorToInt(flt float) -> int             | Floors a float and converts it to an int. |
+| ceil(flt float) -> flt                   | Ceils a float.                            |
+| ceilToInt(flt float) -> int              | Ceils a float and converts it to an int.  |
+| round(flt float) -> flt                  | Rounds a float.                           |
+| roundToInt(flt float) -> int             | Rounds a float and converts it to an int. |
