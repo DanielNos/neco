@@ -28,7 +28,8 @@ func printHelp() {
 	println("                 -tree          Draws abstract syntax tree.")
 	println("                 -instructions  Prints generated instructions.")
 	println("\nrun [target]     -time          Measures execution time.")
-	println("\nanalyze [target]")
+	println("\nanalyze [target] -tokens        Prints lexed tokens.")
+	println("                 -tree          Draws abstract syntax tree.")
 }
 
 func printTokens(tokens []*lexer.Token) {
@@ -142,9 +143,13 @@ func processArguments() (string, string, []bool) {
 		}
 	// Analyze flags
 	case "analyze":
-		flags = []bool{}
+		flags = []bool{false, false}
 		for _, flag := range args[2:] {
 			switch flag {
+			case "-tokens":
+				flags[0] = true
+			case "-tree":
+				flags[1] = true
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
 			}
@@ -152,6 +157,85 @@ func processArguments() (string, string, []bool) {
 	}
 
 	return action, target, flags
+}
+
+func analyze(path string, showTokens, showTree bool) {
+	logger.Info(fmt.Sprintf("🐱 Analyzing %s", path))
+	startTime := time.Now()
+
+	// Tokenize
+	lexer := lexer.NewLexer(path)
+	tokens := lexer.Lex()
+
+	exitCode := 0
+	if lexer.ErrorCount != 0 {
+		logger.Error(fmt.Sprintf("Lexical analysis failed with %d error/s.", lexer.ErrorCount))
+		exitCode = errors.LEXICAL
+	} else {
+		logger.Success("Passed lexical analysis.")
+	}
+
+	logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
+
+	// Analyze syntax
+	syntaxAnalyzer := syntaxAnalyzer.NewSyntaxAnalyzer(tokens, lexer.ErrorCount)
+	syntaxAnalyzer.Analyze()
+
+	if syntaxAnalyzer.ErrorCount != 0 {
+		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
+
+		// Print tokens
+		if showTokens {
+			println()
+			printTokens(tokens)
+			println()
+		}
+
+		// Exit with correct return code
+		if exitCode == 0 {
+			logger.Fatal(errors.SYNTAX, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+		} else {
+			logger.Fatal(exitCode, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+		}
+	} else {
+		logger.Success("Passed syntax analysis.")
+	}
+
+	// Construct AST
+	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount)
+	tree := p.Parse()
+
+	// Print info
+	if p.ErrorCount != 0 {
+		logger.Error(fmt.Sprintf("Semantic analysis failed with %d error/s.", p.ErrorCount))
+		if exitCode == 0 {
+			exitCode = errors.SEMANTIC
+		}
+	} else {
+		logger.Success("Passed semantic analysis.")
+	}
+
+	// Print tokens
+	if showTokens {
+		println()
+		printTokens(tokens)
+		println()
+	}
+
+	// Visualize tree
+	if showTree {
+		if !showTokens {
+			println()
+		}
+		parser.Visualize(tree)
+		println()
+	}
+
+	if exitCode != 0 {
+		logger.Fatal(exitCode, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
+	}
+
+	logger.Success(fmt.Sprintf("😺 Analysis completed in %s.", time.Since(startTime)))
 }
 
 func compile(path string, showTokens, showTree, printInstruction bool) {
@@ -271,6 +355,6 @@ func main() {
 		}
 		// Analyze target
 	} else if action == "analyze" {
-
+		analyze(target, flags[0], flags[1])
 	}
 }
