@@ -8,4 +8,6 @@ var builtInFunctions = map[string]byte{
 	"bool2str":  VM.BIF_Bool2String,
 	"int2str":   VM.BIF_Int2String,
 	"flt2str":   VM.BIF_Float2String,
+	"bool2int":  VM.BIF_Bool2Int,
+	"int2flt":   VM.BIF_Int2Float,
 }

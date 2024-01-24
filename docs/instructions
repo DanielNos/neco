@@ -23,11 +23,17 @@
 |    18  | INT_DIV              |             | RegGenA / RegGenB -> RegGenA.                                 |
 |    19  | INT_POW              |             | RegGenA ^ RegGenB -> RegGenA.                                 |
 |    20  | INT_MOD              |             | RegGenA % RegGenB -> RegGenA.                                 |
-|    21  | STRING_CONCAT        |             | RegGenA + RegGenB -> RegGenA.                                 |
-|    22  | DECLARE_BOOL         |             | Declares a boolean.                                           |
-|    23  | DECLARE_INT          |             | Declares an integer.                                          |
-|    24  | DECLARE_FLOAT        |             | Declares a float.                                             |
-|    25  | DECLARE_STRING       |             | Declares a string.                                            |
+|    21  | FLT_ADD              |             | RegGenA + RegGenB -> RegGenA.                                 |
+|    22  | FLT_SUB              |             | RegGenA - RegGenB -> RegGenA.                                 |
+|    23  | FLT_MUL              |             | RegGenA * RegGenB -> RegGenA.                                 |
+|    24  | FLT_DIV              |             | RegGenA / RegGenB -> RegGenA.                                 |
+|    25  | FLT_POW              |             | RegGenA ^ RegGenB -> RegGenA.                                 |
+|    26  | FLT_MOD              |             | RegGenA % RegGenB -> RegGenA.                                 |
+|    27  | STRING_CONCAT        |             | RegGenA + RegGenB -> RegGenA.                                 |
+|    28  | DECLARE_BOOL         |             | Declares a boolean.                                           |
+|    29  | DECLARE_INT          |             | Declares an integer.                                          |
+|    30  | DECLARE_FLOAT        |             | Declares a float.                                             |
+|    31  | DECLARE_STRING       |             | Declares a string.                                            |
 |   ...  | undefined            |             |                                                               |
 | 127 >  | LINE_OFFSET          |             | Indicates a line offset to the VM. Requires special decoding. |
 
