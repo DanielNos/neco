@@ -33,6 +33,7 @@ type VirtualMachine struct {
 
 	Reg_GenericA interface{}
 	Reg_GenericB interface{}
+	Reg_GenericC interface{}
 
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
@@ -93,6 +94,19 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Swap generic registers
 		case IT_SwapGeneric:
 			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
+
+		// Copy registers to registers
+		case IT_CopyRegAToC:
+			vm.Reg_GenericC = vm.Reg_GenericA
+
+		case IT_CopyRegBToC:
+			vm.Reg_GenericC = vm.Reg_GenericB
+
+		case IT_CopyRegCToA:
+			vm.Reg_GenericA = vm.Reg_GenericC
+
+		case IT_CopyRegCToB:
+			vm.Reg_GenericB = vm.Reg_GenericC
 
 		// Push register to stack
 		case IT_PushRegAToArgStack:

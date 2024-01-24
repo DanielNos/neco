@@ -191,9 +191,20 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
 		binaryNode := node.Value.(*parser.BinaryNode)
 
+		// Opearator on two leaf nodes
 		if !binaryNode.Left.NodeType.IsOperator() && !binaryNode.Right.NodeType.IsOperator() {
 			cg.generateExpression(binaryNode.Left, true)
 			cg.generateExpression(binaryNode.Right, false)
+			// Operator on left and leaf on right
+		} else if !binaryNode.Right.NodeType.IsOperator() {
+			cg.generateExpression(binaryNode.Left, true)
+			cg.generateExpression(binaryNode.Right, false)
+			// Operator on right and anything on left
+		} else {
+			cg.generateExpression(binaryNode.Right, true)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
+			cg.generateExpression(binaryNode.Left, true)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
 		}
 
 		// Add strings
