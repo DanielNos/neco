@@ -19,4 +19,7 @@ var builtInFunctions = map[string]byte{
 	"ceilToInt":  VM.BIF_CeilToInt,
 	"round":      VM.BIF_Round,
 	"roundToInt": VM.BIF_RoundToInt,
+
+	"readLine": VM.BIF_ReadLine,
+	"readChar": VM.BIF_ReadChar,
 }

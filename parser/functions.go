@@ -123,7 +123,9 @@ func (p *Parser) parseArguments(parameters *[]Parameter, functionName string, fu
 	} else {
 		// No arguments
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-			p.newError(functionPosition, fmt.Sprintf("Function %s has %d parameters, but was called with no arguments.", functionName, len(*parameters)))
+			if len(*parameters) != 0 {
+				p.newError(functionPosition, fmt.Sprintf("Function %s has %d parameters, but was called with no arguments.", functionName, len(*parameters)))
+			}
 			return arguments
 		}
 

@@ -156,6 +156,9 @@ func (p *Parser) insertBuiltInFunctions() {
 	p.symbolTableStack.Top.Value.(symbolTable)["floorToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
 	p.symbolTableStack.Top.Value.(symbolTable)["ceilToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
 	p.symbolTableStack.Top.Value.(symbolTable)["roundToInt"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Int, false}}}
+
+	p.symbolTableStack.Top.Value.(symbolTable)["readLine"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{}, VariableType{DT_String, false}}}
+	p.symbolTableStack.Top.Value.(symbolTable)["readChar"] = &Symbol{ST_Function, &FunctionSymbol{[]Parameter{}, VariableType{DT_String, false}}}
 }
 
 func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {

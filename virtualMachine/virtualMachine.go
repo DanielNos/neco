@@ -1,6 +1,7 @@
 package virtualMachine
 
 import (
+	"bufio"
 	"fmt"
 	"math"
 	"neco/dataStructures"
@@ -40,11 +41,13 @@ type VirtualMachine struct {
 
 	SymbolTables *dataStructures.Stack
 
+	reader *bufio.Reader
+
 	Line uint
 }
 
 func NewVirutalMachine() *VirtualMachine {
-	virtualMachine := &VirtualMachine{Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE), SymbolTables: dataStructures.NewStack()}
+	virtualMachine := &VirtualMachine{Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE), SymbolTables: dataStructures.NewStack(), reader: bufio.NewReader(os.Stdin)}
 
 	virtualMachine.SymbolTables.Push([]Symbol{})
 

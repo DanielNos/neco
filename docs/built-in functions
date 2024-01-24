@@ -18,3 +18,6 @@
 | ceilToInt(flt float) -> int              | Ceils a float and converts it to an int.  |
 | round(flt float) -> flt                  | Rounds a float.                           |
 | roundToInt(flt float) -> int             | Rounds a float and converts it to an int. |
+|                                          |                                           |
+| readLine() -> str                        | Reads a line from terminal.               |
+| readChar() -> str                        | Reads a character from terminal.          |
