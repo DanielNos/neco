@@ -30,6 +30,5 @@
 |                                          |                                                   |
 | randomInt() -> int                       | Returns a random integer.                         |
 | randomFlt() -> flt                       | Returns a random float from range <0,1).          |
-| randomRangeInt(int min, max) -> int      | Returns a random integer from range <min, max>.   |
-|                                          | Absolute value of range has to be lower or equal  |
-|                                          | to the maximal value of int64.                    |
+| randomRangeInt(int min, max) -> int      | Returns a random integer from range <min, max>,   |
+|                                          | where |min| + |max| <= INT64_MAX / 2.             |
