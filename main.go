@@ -33,6 +33,7 @@ func printHelp() {
 }
 
 func printTokens(tokens []*lexer.Token) {
+	println()
 	for _, token := range tokens {
 		if token.TokenType >= lexer.TT_KW_const {
 			color.Set(color.FgHiCyan)
@@ -52,6 +53,7 @@ func printTokens(tokens []*lexer.Token) {
 		fmt.Printf("%v\n", token.TableString())
 	}
 	color.Set(color.FgHiWhite)
+	println()
 }
 
 func printInstructions(instructions *[]VM.Instruction) {
@@ -185,9 +187,7 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 
 		// Print tokens
 		if showTokens {
-			println()
 			printTokens(tokens)
-			println()
 		}
 
 		// Exit with correct return code
@@ -216,9 +216,7 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 
 	// Print tokens
 	if showTokens {
-		println()
 		printTokens(tokens)
-		println()
 	}
 
 	// Visualize tree
