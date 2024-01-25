@@ -156,9 +156,11 @@ func processArguments() (string, string, []bool) {
 	return action, target, flags
 }
 
-func analyze(path string, showTokens, showTree bool) {
-	logger.Info(fmt.Sprintf("🐱 Analyzing %s", path))
-	startTime := time.Now()
+func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node, *parser.Parser) {
+	action := "Analysis"
+	if isCompiling {
+		action = "Compilation"
+	}
 
 	// Tokenize
 	lexer := lexer.NewLexer(path)
@@ -190,9 +192,9 @@ func analyze(path string, showTokens, showTree bool) {
 
 		// Exit with correct return code
 		if exitCode == 0 {
-			logger.Fatal(errors.SYNTAX, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+			logger.Fatal(errors.SYNTAX, fmt.Sprintf("😿 %s failed with %d error/s.", action, lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		} else {
-			logger.Fatal(exitCode, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
+			logger.Fatal(exitCode, fmt.Sprintf("😿 %s failed with %d error/s.", action, lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
 		}
 	} else {
 		logger.Success("Passed syntax analysis.")
@@ -229,87 +231,16 @@ func analyze(path string, showTokens, showTree bool) {
 	}
 
 	if exitCode != 0 {
-		logger.Fatal(exitCode, fmt.Sprintf("😿 Analysis failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
+		logger.Fatal(exitCode, fmt.Sprintf("😿 %s failed with %d error/s.", action, lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
 	}
 
-	logger.Success(fmt.Sprintf("😺 Analysis completed in %s.", time.Since(startTime)))
+	return tree, &p
 }
 
 func compile(path string, showTokens, showTree, printInstruction bool) {
-	logger.Info(fmt.Sprintf("🐱 Compiling %s", path))
 	startTime := time.Now()
 
-	// Tokenize
-	lexer := lexer.NewLexer(path)
-	tokens := lexer.Lex()
-
-	exitCode := 0
-	if lexer.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Lexical analysis failed with %d error/s.", lexer.ErrorCount))
-		exitCode = errors.LEXICAL
-	} else {
-		logger.Success("Passed lexical analysis.")
-	}
-
-	logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
-
-	// Analyze syntax
-	syntaxAnalyzer := syntaxAnalyzer.NewSyntaxAnalyzer(tokens, lexer.ErrorCount)
-	syntaxAnalyzer.Analyze()
-
-	if syntaxAnalyzer.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
-
-		// Print tokens
-		if showTokens {
-			println()
-			printTokens(tokens)
-			println()
-		}
-
-		// Exit with correct return code
-		if exitCode == 0 {
-			logger.Fatal(errors.SYNTAX, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
-		} else {
-			logger.Fatal(exitCode, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount))
-		}
-	} else {
-		logger.Success("Passed syntax analysis.")
-	}
-
-	// Construct AST
-	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount)
-	tree := p.Parse()
-
-	// Print info
-	if p.ErrorCount != 0 {
-		logger.Error(fmt.Sprintf("Semantic analysis failed with %d error/s.", p.ErrorCount))
-		if exitCode == 0 {
-			exitCode = errors.SEMANTIC
-		}
-	} else {
-		logger.Success("Passed semantic analysis.")
-	}
-
-	// Print tokens
-	if showTokens {
-		println()
-		printTokens(tokens)
-		println()
-	}
-
-	// Visualize tree
-	if showTree {
-		if !showTokens {
-			println()
-		}
-		parser.Visualize(tree)
-		println()
-	}
-
-	if exitCode != 0 {
-		logger.Fatal(exitCode, fmt.Sprintf("😿 Compilation failed with %d error/s.", lexer.ErrorCount+syntaxAnalyzer.ErrorCount+p.ErrorCount))
-	}
+	tree, p := analyze(path, showTokens, showTree, true)
 
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants)
@@ -339,6 +270,7 @@ func main() {
 
 	// Build target
 	if action == "build" {
+		logger.Info(fmt.Sprintf("🐱 Compiling %s", target))
 		compile(target, flags[0], flags[1], flags[2])
 		// Run target
 	} else if action == "run" {
@@ -346,6 +278,11 @@ func main() {
 		virtualMachine.Execute(target)
 		// Analyze target
 	} else if action == "analyze" {
-		analyze(target, flags[0], flags[1])
+		logger.Info(fmt.Sprintf("🐱 Analyzing %s", target))
+		startTime := time.Now()
+
+		analyze(target, flags[0], flags[1], false)
+
+		logger.Success(fmt.Sprintf("😺 %s completed in %s.", action, time.Since(startTime)))
 	}
 }
