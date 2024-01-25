@@ -3,6 +3,7 @@ package virtualMachine
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
 )
 
@@ -23,6 +24,8 @@ const (
 	BIF_CeilToInt
 	BIF_Round
 	BIF_RoundToInt
+	BIF_AbsInt
+	BIF_AbsFloat
 
 	BIF_ReadLine
 	BIF_ReadChar
@@ -30,6 +33,10 @@ const (
 	BIF_Length
 	BIF_ToLower
 	BIF_ToUpper
+
+	BIF_RandomInt
+	BIF_RandomFloat
+	BIF_RandomRangeInt
 )
 
 const INT_0 = int64(0)
@@ -104,6 +111,15 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 		vm.Reg_GenericA = int64(math.Round(vm.Reg_GenericA.(float64)))
 		vm.Reg_ArgumentPointer--
 
+	// Absolute values
+	case BIF_AbsInt:
+		if vm.Reg_GenericA.(int64) < 0 {
+			vm.Reg_GenericA = -vm.Reg_GenericA.(int64)
+		}
+
+	case BIF_AbsFloat:
+		vm.Reg_GenericA = math.Abs(vm.Reg_GenericA.(float64))
+
 	// Reading from terminal
 	case BIF_ReadLine:
 		vm.Reg_GenericA, _ = vm.reader.ReadString('\n')
@@ -125,5 +141,16 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 	case BIF_ToUpper:
 		vm.Reg_GenericA = strings.ToUpper(vm.Reg_GenericA.(string))
 		vm.Reg_ArgumentPointer--
+
+	// Random numbers
+	case BIF_RandomInt:
+		vm.Reg_GenericA = int64(rand.Uint64())
+
+	case BIF_RandomFloat:
+		vm.Reg_GenericA = rand.Float64()
+
+	case BIF_RandomRangeInt:
+		vm.Reg_GenericA = rand.Int63n(vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64)-vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)+1) + vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)
+		vm.Reg_ArgumentPointer -= 2
 	}
 }

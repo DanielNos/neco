@@ -19,6 +19,8 @@ var builtInFunctions = map[string]byte{
 	"ceilToInt":  VM.BIF_CeilToInt,
 	"round":      VM.BIF_Round,
 	"roundToInt": VM.BIF_RoundToInt,
+	"absInt":     VM.BIF_AbsInt,
+	"absFlt":     VM.BIF_AbsFloat,
 
 	"readLine": VM.BIF_ReadLine,
 	"readChar": VM.BIF_ReadChar,
@@ -26,4 +28,8 @@ var builtInFunctions = map[string]byte{
 	"length":  VM.BIF_Length,
 	"toLower": VM.BIF_ToLower,
 	"toUpper": VM.BIF_ToUpper,
+
+	"randomInt":      VM.BIF_RandomInt,
+	"randomFlt":      VM.BIF_RandomFloat,
+	"randomRangeInt": VM.BIF_RandomRangeInt,
 }

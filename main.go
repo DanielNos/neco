@@ -64,7 +64,7 @@ func printInstructions(instructions *[]VM.Instruction) {
 		// Print instruction name
 		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
 
-		i := len(fmt.Sprintf("%s", VM.InstructionTypeToString[instruction.InstructionType]))
+		i := len(VM.InstructionTypeToString[instruction.InstructionType])
 		for i < 25 {
 			print(" ")
 			i++
@@ -132,11 +132,8 @@ func processArguments() (string, string, []bool) {
 		}
 	// Run flags
 	case "run":
-		flags = []bool{false}
 		for _, flag := range args[2:] {
 			switch flag {
-			case "-time":
-				flags[0] = true
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
 			}
@@ -345,14 +342,8 @@ func main() {
 		compile(target, flags[0], flags[1], flags[2])
 		// Run target
 	} else if action == "run" {
-		startTime := time.Now()
-
 		virtualMachine := VM.NewVirutalMachine()
 		virtualMachine.Execute(target)
-
-		if flags[0] {
-			fmt.Printf("Execution time: %v\n", time.Since(startTime))
-		}
 		// Analyze target
 	} else if action == "analyze" {
 		analyze(target, flags[0], flags[1])

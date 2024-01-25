@@ -13,11 +13,13 @@
 | intToFlt(int integer) -> flt             | Converts an integer to a float.                   |
 |                                          |                                                   |
 | floor(flt float) -> flt                  | Floors a float.                                   |
-| floorToInt(flt float) -> int             | Floors a float and converts it to an int.         |
+| floorToInt(flt float) -> int             | Floors a float and converts it to an integer.     |
 | ceil(flt float) -> flt                   | Ceils a float.                                    |
-| ceilToInt(flt float) -> int              | Ceils a float and converts it to an int.          |
+| ceilToInt(flt float) -> int              | Ceils a float and converts it to an integer.      |
 | round(flt float) -> flt                  | Rounds a float.                                   |
-| roundToInt(flt float) -> int             | Rounds a float and converts it to an int.         |
+| roundToInt(flt float) -> int             | Rounds a float and converts it to an integer.     |
+| absInt(int integer) -> int               | Returns the absolute value of an integer.         |
+| absFlt(flt float) -> flt                 | Returns the absolute value of a float.            |
 |                                          |                                                   |
 | readLine() -> str                        | Reads a line from terminal.                       |
 | readChar() -> str                        | Reads a character from terminal.                  |
@@ -25,3 +27,9 @@
 | length(str string) -> int                | Returns the length of a string.                   |
 | toLower(str string) -> str               | Converts characters of a string to lower case.    |
 | toUpper(str string) -> str               | Converts characters of a string to upper case.    |
+|                                          |                                                   |
+| randomInt() -> int                       | Returns a random integer.                         |
+| randomFlt() -> flt                       | Returns a random float from range <0,1).          |
+| randomRangeInt(int min, max) -> int      | Returns a random integer from range <min, max>.   |
+|                                          | Absolute value of range has to be lower or equal  |
+|                                          | to the maximal value of int64.                    |
