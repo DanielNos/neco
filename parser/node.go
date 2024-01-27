@@ -185,6 +185,10 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 	lexer.TT_KW_ModuloAssign:   NT_Modulo,
 }
 
+func (n *Node) IsBinaryNode() bool {
+	return n.NodeType >= NT_Add && n.NodeType <= NT_GreaterEqual && n.NodeType != NT_Not && n.Value.(*BinaryNode).Left != nil
+}
+
 func (nt NodeType) IsOperator() bool {
 	return nt >= NT_And && nt <= NT_GreaterEqual
 }
@@ -195,4 +199,24 @@ func (nt NodeType) IsComparisonOperator() bool {
 
 func (nt NodeType) IsLogicOperator() bool {
 	return nt == NT_And || nt == NT_Or
+}
+
+var operatorNodePrecedence = map[NodeType]int{
+	NT_And: 0,
+	NT_Or:  0,
+
+	NT_Equal:        1,
+	NT_NotEqual:     1,
+	NT_Lower:        1,
+	NT_Greater:      1,
+	NT_LowerEqual:   1,
+	NT_GreaterEqual: 1,
+
+	NT_Add:      2,
+	NT_Subtract: 2,
+
+	NT_Multiply: 3,
+	NT_Divide:   3,
+	NT_Power:    4,
+	NT_Modulo:   4,
 }

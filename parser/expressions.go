@@ -106,12 +106,27 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	for p.peek().TokenType.IsBinaryOperator() && operatorPrecedence(p.peek().TokenType) >= currentPrecedence {
 		operator := p.consume()
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
+		nodeType := TokenTypeToNodeType[operator.TokenType]
 
+		// Combine two literals into single node
 		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DataType == right.Value.(*LiteralNode).DataType {
-			left = combineLiteralNodes(left, right, TokenTypeToNodeType[operator.TokenType], operator.Position)
-		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{left, right, DT_NoType}}
+			left = combineLiteralNodes(left, right, nodeType, operator.Position)
+			continue
 		}
+
+		if right.IsBinaryNode() && operatorNodePrecedence[nodeType] == operatorNodePrecedence[right.NodeType] && nodeType != NT_Power {
+			oldLeft := left
+
+			// Rotate nodes
+			left = right.Value.(*BinaryNode).Right
+			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
+			right.Value.(*BinaryNode).Left = oldLeft
+
+			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, DT_NoType}}
+			continue
+		}
+
+		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, DT_NoType}}
 	}
 
 	return left
@@ -142,7 +157,9 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
-			return p.getExpressionType(expression.Value.(*BinaryNode).Right)
+			unaryType := p.getExpressionType(expression.Value.(*BinaryNode).Right)
+			expression.Value.(*BinaryNode).DataType = unaryType.DataType
+			return unaryType
 		}
 
 		leftType := p.getExpressionType(expression.Value.(*BinaryNode).Left)
@@ -193,7 +210,7 @@ func (p *Parser) getExpressionType(expression *Node) VariableType {
 
 func (p *Parser) collectConstants(expression *Node) {
 	// Check operator children
-	if expression.NodeType.IsOperator() {
+	if expression.IsBinaryNode() {
 		p.collectConstants(expression.Value.(*BinaryNode).Left)
 		p.collectConstants(expression.Value.(*BinaryNode).Right)
 		// Collect literal
