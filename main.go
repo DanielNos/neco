@@ -281,6 +281,6 @@ func main() {
 
 		analyze(target, flags[0], flags[1], false)
 
-		logger.Success(fmt.Sprintf("😺 %s completed in %s.", action, time.Since(startTime)))
+		logger.Success(fmt.Sprintf("😺 Analyze completed in %s.", time.Since(startTime)))
 	}
 }
