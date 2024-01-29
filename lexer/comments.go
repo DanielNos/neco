@@ -10,26 +10,30 @@ func (l *Lexer) skipMultiLineComment() {
 	for l.currRune != EOF {
 		switch l.currRune {
 
-		case '*': // End of comment
+		// End of comment
+		case '*':
 			l.advance()
 			if l.currRune == '/' {
 				l.advance()
 				return
 			}
 
-		case '/': // Start of new multiline comment
+		// Start of new multiline comment
+		case '/':
 			l.advance()
 			if l.currRune == '*' {
 				l.advance()
 				l.skipMultiLineComment()
 			}
 
-		case '\n': // New line
+		// New line
+		case '\n':
 			l.lineIndex++
 			l.charIndex = 1
 			l.advance()
 
-		case '\r': // Windows new line
+		// Windows new line
+		case '\r':
 			l.advance()
 			if l.currRune != '\n' {
 				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line ending.")

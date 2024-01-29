@@ -19,8 +19,7 @@ func readLine(filePath string, lineIndex uint) (string, error) {
 	scanner := bufio.NewScanner(file)
 	var currentLine uint = 0
 
-	for scanner.Scan() {
-		currentLine++
+	for currentLine = 0; currentLine < lineIndex && scanner.Scan(); currentLine++ {
 		if currentLine == lineIndex {
 			return scanner.Text(), nil
 		}
@@ -30,7 +29,7 @@ func readLine(filePath string, lineIndex uint) (string, error) {
 		return "", fmt.Errorf("error reading file: %s", err)
 	}
 
-	return "", fmt.Errorf("line number out of range")
+	return scanner.Text(), nil
 }
 
 func Success(message string) {

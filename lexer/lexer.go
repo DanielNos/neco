@@ -157,31 +157,37 @@ func (l *Lexer) collectRestOfToken() {
 }
 
 func (l *Lexer) lexRune() {
-	if unicode.IsLetter(l.currRune) { // Identifier/Keyword
+	// Identifier/Keyword
+	if unicode.IsLetter(l.currRune) {
 		l.lexLetter()
-	} else if unicode.IsDigit(l.currRune) { // Int/Float
+		// Int/Float
+	} else if unicode.IsDigit(l.currRune) {
 		l.lexNumber()
 	} else {
 		switch l.currRune {
 
-		case '_': // Identifier
+		// Identifier
+		case '_':
 			l.lexLetter()
 
-		case '"': // String
+		// String
+		case '"':
 			l.lexString()
 
-		case '\n': // New Line
+		// Line ending
+		case '\n':
 			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 			l.advance()
 
 			l.charIndex = 1
 			l.lineIndex++
 
-		case '\r': // Windows New Line
+		// Windows line ending
+		case '\r':
 			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 			l.advance()
 
-			// Invalid Windows line ending
+			// Invalid windows line ending
 			if l.currRune != '\n' {
 				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line ending.")
 			} else {
