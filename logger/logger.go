@@ -10,21 +10,23 @@ import (
 )
 
 func readLine(filePath string, lineIndex uint) (string, error) {
+	// Open file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", fmt.Errorf("error opening file: %s", err)
 	}
 	defer file.Close()
 
+	// Create scanner
 	scanner := bufio.NewScanner(file)
 	var currentLine uint = 0
 
-	for currentLine = 0; currentLine < lineIndex && scanner.Scan(); currentLine++ {
-		if currentLine == lineIndex {
-			return scanner.Text(), nil
-		}
+	// Read lines until correct line number
+	for currentLine < lineIndex && scanner.Scan() {
+		currentLine++
 	}
 
+	// Scanner stopped with an error
 	if err := scanner.Err(); err != nil {
 		return "", fmt.Errorf("error reading file: %s", err)
 	}
