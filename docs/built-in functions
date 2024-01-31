@@ -33,4 +33,4 @@
 | randomRangeInt(int min, max) -> int      | Returns a random integer from range <min, max>,   |
 |                                          | where |min| + |max| <= INT64_MAX / 2.             |
 |                                          |                                                   |
-| exit(int exitCode)                       | Exits program with exit code.                     |
+| exit(int exitCode)                       | Exits program with exit code in range <0, 255>.   |

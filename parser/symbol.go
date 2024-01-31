@@ -64,3 +64,7 @@ func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
 
 	return nil
 }
+
+func (p *Parser) insertFunction(name string, parameters []Parameter, returnType VariableType) {
+	p.symbolTableStack.Top.Value.(symbolTable)[name] = &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}}
+}

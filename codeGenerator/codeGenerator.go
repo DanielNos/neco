@@ -250,20 +250,16 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 	}
 
 	switch literalNode.DataType {
-
 	// String
 	case parser.DT_String:
-		constantIndex, _ := cg.stringConstants[literalNode.Value.(string)]
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
 
 	// Int
 	case parser.DT_Int:
-		constantIndex, _ := cg.intConstants[literalNode.Value.(int64)]
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.intConstants[literalNode.Value.(int64)])}})
 
 	// Float
 	case parser.DT_Float:
-		constantIndex, _ := cg.floatConstants[literalNode.Value.(float64)]
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(constantIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
 	}
 }
