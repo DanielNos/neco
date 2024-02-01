@@ -24,12 +24,12 @@ func printHelp() {
 
 	color.Set(color.Reset)
 	println("build [target]")
-	println("                 -tokens        Prints lexed tokens.")
-	println("                 -tree          Draws abstract syntax tree.")
-	println("                 -instructions  Prints generated instructions.")
-	println("\nrun [target]     -time          Measures execution time.")
-	println("\nanalyze [target] -tokens        Prints lexed tokens.")
-	println("                 -tree          Draws abstract syntax tree.")
+	println("                 -to --tokens       Prints lexed tokens.")
+	println("                 -tr --tree         Draws abstract syntax tree.")
+	println("                 -i --instructions  Prints generated instructions.")
+	println("\nrun [target]")
+	println("\nanalyze [target] -to --tokens   Prints lexed tokens.")
+	println("                 -tr --tree     Draws abstract syntax tree.")
 }
 
 func printTokens(tokens []*lexer.Token) {
@@ -122,11 +122,11 @@ func processArguments() (string, string, []bool) {
 		flags = []bool{false, false, false}
 		for _, flag := range args[2:] {
 			switch flag {
-			case "-tokens":
+			case "--tokens", "-to":
 				flags[0] = true
-			case "-tree":
+			case "--tree", "-tr":
 				flags[1] = true
-			case "-instructions":
+			case "--instructions", "-i":
 				flags[2] = true
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
@@ -145,9 +145,9 @@ func processArguments() (string, string, []bool) {
 		flags = []bool{false, false}
 		for _, flag := range args[2:] {
 			switch flag {
-			case "-tokens":
+			case "--tokens", "-to":
 				flags[0] = true
-			case "-tree":
+			case "--tree", "-tr":
 				flags[1] = true
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
