@@ -84,7 +84,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, VariableType{DT_NoType, false}}}
 			}
 			// Function call
-		} else if symbol.symbolType == ST_Function {
+		} else if symbol.symbolType == ST_FunctionBucket {
 			left = p.parseFunctionCall(symbol, p.consume())
 			// Variable
 		} else if symbol.symbolType == ST_Variable {

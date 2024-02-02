@@ -9,15 +9,9 @@ import (
 func (p *Parser) parseFunctionDeclare() *Node {
 	start := p.consume().Position
 
-	// Check for redeclaration
-	symbol := p.findSymbol(p.peek().Value)
-
-	if symbol != nil {
-		p.newError(p.peek().Position, fmt.Sprintf("Redeclaration of symbol %s.", p.peek().Value))
-	}
-
-	// Collect name
+	// Find bucket
 	identifier := p.consume().Value
+	symbol := p.findSymbol(identifier)
 
 	// Enter scope
 	p.enterScope()
@@ -26,6 +20,17 @@ func (p *Parser) parseFunctionDeclare() *Node {
 
 	// Collect parameters
 	parameters := p.parseParameters()
+
+	// Check for redeclaration
+	if symbol != nil {
+		// Create paramters id and look for a function using
+		if symbol.symbolType == ST_FunctionBucket {
+			id := createParametersIdentifier(parameters)
+			if symbol.value.(symbolTable)[id] != nil {
+				p.newError(p.peek().Position, fmt.Sprintf("Redeclaration of symbol %s.", p.peek().Value))
+			}
+		}
+	}
 
 	p.consume()
 
@@ -57,7 +62,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.symbolTableStack.Pop()
 
 	// Insert function symbol
-	p.insertSymbol(identifier, &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}})
+	p.insertFunction(identifier, parameters, returnType)
 
 	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{identifier, parameters, returnType, body}}
 }
@@ -96,80 +101,60 @@ func (p *Parser) parseParameters() []Parameter {
 	return paremeters
 }
 
-func (p *Parser) parseFunctionCall(functionSymbol *Symbol, identifier *lexer.Token) *Node {
+func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
-	var parameters *[]Parameter = nil
-	returnType := &VariableType{DT_NoType, false}
+	arguments := p.parseArguments()
 
-	if functionSymbol != nil {
-		parameters = &functionSymbol.value.(*FunctionSymbol).parameters
-		returnType = &functionSymbol.value.(*FunctionSymbol).returnType
+	// Check if arguments match any function
+	if functionBucketSymbol != nil {
+		p.matchArguments(functionBucketSymbol, arguments, identifier)
 	}
-
-	arguments := p.parseArguments(parameters, identifier.Value, identifier.Position)
 	p.consume()
 
-	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, returnType}}
+	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, &VariableType{DT_NoType, false}}}
 }
 
-func (p *Parser) parseArguments(parameters *[]Parameter, functionName string, functionPosition *dataStructures.CodePos) []*Node {
-	p.consume()
-	var arguments = []*Node{}
+func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierToken *lexer.Token) {
+	// Collect argument data types
+	argumentTypes := make([]VariableType, len(arguments))
 
-	// No parameters, collect arguments any arguments
-	if parameters == nil {
-		p.parseAnyArguments()
-		// Check arguments
-	} else {
-		// No arguments
-		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-			if len(*parameters) != 0 {
-				p.newError(functionPosition, fmt.Sprintf("Function %s has %d parameters, but was called with no arguments.", functionName, len(*parameters)))
-			}
-			return arguments
-		}
-
-		// Check if arguments have same type as parameters
-		for parameterIndex := 0; parameterIndex < len(*parameters); parameterIndex++ {
-			// Collect argument
-			argument := p.parseExpressionRoot()
-			argumentType := p.getExpressionType(argument)
-
-			// Check type
-			if !argumentType.Equals((*parameters)[parameterIndex].DataType) {
-				argumentPosition := getExpressionPosition(argument, argument.Position.StartChar, argument.Position.EndChar)
-				p.newError(&argumentPosition, fmt.Sprintf("Function's %s argument \"%s\" has type %s, but it should be %s.", functionName, (*parameters)[parameterIndex].Identifier, argumentType, (*parameters)[parameterIndex].DataType))
-			}
-
-			// Store argument
-			arguments = append(arguments, argument)
-
-			if parameterIndex != len(*parameters)-1 {
-				if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-					p.newError(functionPosition, fmt.Sprintf("Function %s has %d parameter/s, but was called with only %d argument/s.", functionName, len(*parameters), parameterIndex+1))
-					return arguments
-				}
-				p.consume()
-			}
-		}
-
-		// More arguments than parameters
-		if p.peek().TokenType == lexer.TT_DL_Comma {
-			p.consume()
-			argumentCount := p.parseAnyArguments()
-			p.newError(functionPosition, fmt.Sprintf("Function %s has %d parameter/s, but was called with %d argument/s.", functionName, len(*parameters), len(*parameters)+argumentCount))
-		}
+	for i, argument := range arguments {
+		argumentTypes[i] = p.getExpressionType(argument)
 	}
 
-	return arguments
+	for _, function := range bucket.value.(map[string]*Symbol) {
+		// Incorrect argument amount
+		if len(function.value.(*FunctionSymbol).parameters) != len(arguments) {
+			continue
+		}
+
+		// Try to match arguments to paramters
+		matched := true
+		for i, parameter := range function.value.(*FunctionSymbol).parameters {
+			if !parameter.DataType.Equals(argumentTypes[i]) {
+				matched = false
+				break
+			}
+		}
+
+		// Failed to match
+		if !matched {
+			continue
+		}
+
+		// Successfully matched
+		return
+	}
+
+	// Failed to match to all functions in a bucket
+	p.newError(identifierToken.Position, fmt.Sprintf("Failed to match function %s to any header.", identifierToken.Value))
 }
 
-func (p *Parser) parseAnyArguments() int {
-	argumentCount := 0
+func (p *Parser) parseArguments() []*Node {
+	arguments := []*Node{}
 
 	for {
-		p.parseExpressionRoot()
-		argumentCount++
+		arguments = append(arguments, p.parseExpressionRoot())
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			break
@@ -177,7 +162,7 @@ func (p *Parser) parseAnyArguments() int {
 		p.consume()
 	}
 
-	return argumentCount
+	return arguments
 }
 
 func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {

@@ -1,5 +1,7 @@
 package parser
 
+import "fmt"
+
 type Symbol struct {
 	symbolType SymbolType
 	value      SymbolValue
@@ -9,6 +11,7 @@ type SymbolType uint8
 
 const (
 	ST_Variable SymbolType = iota
+	ST_FunctionBucket
 	ST_Function
 	ST_Struct
 	ST_Enum
@@ -66,5 +69,24 @@ func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
 }
 
 func (p *Parser) insertFunction(name string, parameters []Parameter, returnType VariableType) {
-	p.symbolTableStack.Top.Value.(symbolTable)[name] = &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}}
+	// Find bucket
+	bucket, exists := p.symbolTableStack.Bottom.Value.(symbolTable)[name]
+
+	// Create bucket if it doesn't exist
+	if !exists {
+		bucket = &Symbol{ST_FunctionBucket, symbolTable{}}
+		p.symbolTableStack.Bottom.Value.(symbolTable)[name] = bucket
+	}
+
+	// Insert function in to bucket
+	bucket.value.(symbolTable)[createParametersIdentifier(parameters)] = &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}}
+}
+
+func createParametersIdentifier(parameters []Parameter) string {
+	id := ""
+	for _, parameter := range parameters {
+		id = fmt.Sprintf("%s.%s", id, parameter.DataType)
+	}
+
+	return id
 }
