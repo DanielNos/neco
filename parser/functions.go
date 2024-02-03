@@ -10,12 +10,11 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	start := p.consume().Position
 
 	// Find bucket
-	identifier := p.consume().Value
-	symbol := p.findSymbol(identifier)
+	identifierToken := p.consume()
+	symbol := p.findSymbol(identifierToken.Value)
 
 	// Enter scope
 	p.enterScope()
-
 	p.consume()
 
 	// Collect parameters
@@ -27,7 +26,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 		if symbol.symbolType == ST_FunctionBucket {
 			id := createParametersIdentifier(parameters)
 			if symbol.value.(symbolTable)[id] != nil {
-				p.newError(p.peek().Position, fmt.Sprintf("Redeclaration of symbol %s.", p.peek().Value))
+				p.newError(identifierToken.Position, fmt.Sprintf("Redeclaration of symbol %s.", identifierToken.Value))
 			}
 		}
 	}
@@ -53,7 +52,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	// Check if function has return statements in all paths
 	if returnType.DataType != DT_NoType {
 		if !p.verifyReturns(body, returnType) {
-			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifier, returnType))
+			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, returnType))
 		}
 	}
 
@@ -62,9 +61,9 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.symbolTableStack.Pop()
 
 	// Insert function symbol
-	p.insertFunction(identifier, parameters, returnType)
+	p.insertFunction(identifierToken.Value, parameters, returnType)
 
-	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{identifier, parameters, returnType, body}}
+	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{identifierToken.Value, parameters, returnType, body}}
 }
 
 func (p *Parser) parseParameters() []Parameter {
