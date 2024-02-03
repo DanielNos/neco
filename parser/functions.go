@@ -20,8 +20,19 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	// Collect parameters
 	parameters := p.parseParameters()
 
+	// Function entry() can't have paramters
+	if identifierToken.Value == "entry" && len(parameters) != 0 {
+		// TODO: Display position of parameters
+		p.newError(identifierToken.Position, "Function entry() can't have any parameters.")
+	}
+
 	// Check for redeclaration
 	if symbol != nil {
+		// Redeclaration of entry()
+		if identifierToken.Value == "entry" {
+			p.newError(identifierToken.Position, "Function entry() can't be overloaded.")
+		}
+
 		// Create paramters id and look for a function using
 		if symbol.symbolType == ST_FunctionBucket {
 			id := createParametersIdentifier(parameters)
@@ -41,6 +52,11 @@ func (p *Parser) parseFunctionDeclare() *Node {
 		returnPosition = p.consume().Position
 		returnType.DataType = TokenTypeToDataType[p.consume().TokenType]
 		returnPosition.EndChar = p.peekPrevious().Position.EndChar
+
+		// Function entry() can't have a return type
+		if identifierToken.Value == "entry" {
+			p.newError(returnPosition, "Function entry() can't have a return type.")
+		}
 	}
 
 	// Parse body
