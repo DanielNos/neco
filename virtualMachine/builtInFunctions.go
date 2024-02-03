@@ -37,6 +37,8 @@ const (
 	BIF_RandomInt
 	BIF_RandomFloat
 	BIF_RandomRangeInt
+
+	BIF_Line
 )
 
 const INT_0 = int64(0)
@@ -152,5 +154,9 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 	case BIF_RandomRangeInt:
 		vm.Reg_GenericA = rand.Int63n(vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64)-vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)+1) + vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)
 		vm.Reg_ArgumentPointer -= 2
+
+	// Debug
+	case BIF_Line:
+		fmt.Printf("%d\n", vm.Line)
 	}
 }

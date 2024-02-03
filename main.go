@@ -58,8 +58,8 @@ func printTokens(tokens []*lexer.Token) {
 
 func printInstructions(instructions *[]VM.Instruction) {
 	for _, instruction := range *instructions {
-		if instruction.InstructionType >= 128 {
-			fmt.Printf("LINE_OFFSET              %d\n", instruction.InstructionType-128+1)
+		// Skip removed instruction
+		if instruction.InstructionType == 255 {
 			continue
 		}
 
@@ -119,7 +119,7 @@ func processArguments() (string, string, []bool) {
 	switch action {
 	// Build flags
 	case "build":
-		flags = []bool{false, false, false}
+		flags = []bool{false, false, false, false}
 		for _, flag := range args[2:] {
 			switch flag {
 			case "--tokens", "-to":
@@ -128,6 +128,8 @@ func processArguments() (string, string, []bool) {
 				flags[1] = true
 			case "--instructions", "-i":
 				flags[2] = true
+			case "--dontOptimize", "-d":
+				flags[3] = true
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
 			}
@@ -235,13 +237,13 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 	return tree, &p
 }
 
-func compile(path string, showTokens, showTree, printInstruction bool) {
+func compile(path string, showTokens, showTree, printInstruction, optimize bool) {
 	startTime := time.Now()
 
 	tree, p := analyze(path, showTokens, showTree, true)
 
 	// Generate code
-	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants)
+	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, optimize)
 	instructions := codeGenerator.Generate()
 
 	// Generation failed
@@ -269,7 +271,7 @@ func main() {
 	// Build target
 	if action == "build" {
 		logger.Info(fmt.Sprintf("🐱 Compiling %s", target))
-		compile(target, flags[0], flags[1], flags[2])
+		compile(target, flags[0], flags[1], flags[2], flags[3])
 		// Run target
 	} else if action == "run" {
 		virtualMachine := VM.NewVirutalMachine()

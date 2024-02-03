@@ -34,4 +34,6 @@ func (p *Parser) insertBuiltInFunctions() {
 	p.insertFunction("randomRangeInt", []Parameter{{VariableType{DT_Int, false}, "min", nil}, {VariableType{DT_Int, false}, "max", nil}}, VariableType{DT_Int, false})
 
 	p.insertFunction("exit", []Parameter{{VariableType{DT_Int, false}, "exitCode", nil}}, VariableType{DT_NoType, false})
+
+	p.insertFunction("line", []Parameter{}, VariableType{DT_NoType, false})
 }

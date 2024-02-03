@@ -102,6 +102,7 @@ func (p *Parser) parseParameters() []Parameter {
 
 func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
+	p.consume()
 	arguments := p.parseArguments()
 
 	// Check if arguments match any function
@@ -121,7 +122,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 		argumentTypes[i] = p.getExpressionType(argument)
 	}
 
-	for _, function := range bucket.value.(map[string]*Symbol) {
+	for _, function := range bucket.value.(symbolTable) {
 		// Incorrect argument amount
 		if len(function.value.(*FunctionSymbol).parameters) != len(arguments) {
 			continue
@@ -151,6 +152,10 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 
 func (p *Parser) parseArguments() []*Node {
 	arguments := []*Node{}
+
+	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
+		return arguments
+	}
 
 	for {
 		arguments = append(arguments, p.parseExpressionRoot())

@@ -3,6 +3,7 @@ package codeGenerator
 import (
 	"fmt"
 	"math"
+	"neco/codeOptimizer"
 	"neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
@@ -15,6 +16,7 @@ var NO_ARGS = []byte{}
 type CodeGenerator struct {
 	filePath string
 	tree     *parser.Node
+	optimize bool
 
 	intConstants    map[int64]int
 	floatConstants  map[float64]int
@@ -31,8 +33,8 @@ type CodeGenerator struct {
 	ErrorCount int
 }
 
-func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int) *CodeGenerator {
-	codeGenerator := &CodeGenerator{outputFile, tree, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 1, 0}
+func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
+	codeGenerator := &CodeGenerator{outputFile, tree, optimize, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 0, 0}
 
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
@@ -46,11 +48,15 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	// Get first line
 	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
-	cg.line = statements[0].Position.Line
 
 	// Generate instructions
 	for _, node := range statements {
 		cg.generateNode(node)
+	}
+
+	// Optimize instructions
+	if !cg.optimize {
+		codeOptimizer.Optimize(cg.instructions)
 	}
 
 	return &cg.instructions
@@ -101,7 +107,7 @@ func (cg *CodeGenerator) generateConstantIDs() {
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// If node line has changed, insert line offset instruction
 	if node.Position.Line > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{cg.lineToByte(node.Position.Line - cg.line - 1), NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.Line - cg.line)}})
 		cg.line = node.Position.Line
 	}
 

@@ -3,6 +3,7 @@ package codeGenerator
 import (
 	"encoding/binary"
 	"math"
+	VM "neco/virtualMachine"
 	"os"
 )
 
@@ -50,9 +51,21 @@ func (cw *CodeWriter) writeCodeSegment() {
 	startPos := cw.getFilePosition()
 	cw.file.WriteString("CODE")
 
+	// Write instructions
 	for _, instruction := range cw.codeGenerator.instructions {
-		cw.file.Write([]byte{instruction.InstructionType})
-		cw.file.Write(instruction.InstructionValue)
+		// Skip instruction removed by code optimizer
+		if instruction.InstructionType == 255 {
+			continue
+		}
+
+		// Convert line offset instruction to single byte
+		if instruction.InstructionType == VM.IT_LineOffset {
+			cw.file.Write([]byte{cw.codeGenerator.lineToInstruction(instruction.InstructionValue[0])})
+			continue
+		}
+
+		cw.file.Write([]byte{instruction.InstructionType}) // Write instruction
+		cw.file.Write(instruction.InstructionValue)        // Write arguments
 	}
 
 	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)

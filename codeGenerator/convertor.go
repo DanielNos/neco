@@ -23,10 +23,10 @@ var floatOperatorToInstruction = map[parser.NodeType]byte{
 	parser.NT_Modulo:   VM.IT_FloatModulo,
 }
 
-func (cg *CodeGenerator) lineToByte(line uint) byte {
+func (cg *CodeGenerator) lineToInstruction(line byte) byte {
 	if line > 128 {
 		cg.newError("There can't be more that 128 empty lines in succession.")
 	}
 
-	return byte(line) | 1<<7
+	return line - 1 | 1<<7
 }

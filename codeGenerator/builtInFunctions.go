@@ -32,4 +32,6 @@ var builtInFunctions = map[string]byte{
 	"randomInt":      VM.BIF_RandomInt,
 	"randomFlt":      VM.BIF_RandomFloat,
 	"randomRangeInt": VM.BIF_RandomRangeInt,
+
+	"line": VM.BIF_Line,
 }
