@@ -159,15 +159,34 @@ func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) 
 }
 
 func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
+	// Generate arguments
 	functionCall := node.Value.(*parser.FunctionCallNode)
 	cg.generateArguments(functionCall.Arguments)
 
-	builtInFunction, exists := builtInFunctions[functionCall.Identifier]
+	identifier := functionCall.Identifier
 
+	// Check for overloaded function
+	_, overloaded := overloadedBuiltInFunctions[identifier]
+	if overloaded {
+		// Add parameter types to identifier so it can be matched to correct function
+		for _, argumentType := range functionCall.ArgumentTypes {
+			identifier = fmt.Sprintf("%s.%s", identifier, argumentType)
+		}
+	}
+
+	// Look up function
+	builtInFunction, exists := builtInFunctions[identifier]
+
+	// Function exists
 	if exists {
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
+		// Function is exit()
 	} else if functionCall.Identifier == "exit" {
+		// Rewrite is as halt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
+		// Unknown function
+	} else {
+		panic("Unkown built-in function.")
 	}
 }
 

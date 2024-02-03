@@ -153,17 +153,17 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	}
 }
 
-func (p *Parser) getExpressionType(expression *Node) VariableType {
+func (p *Parser) GetExpressionType(expression *Node) VariableType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
-			unaryType := p.getExpressionType(expression.Value.(*BinaryNode).Right)
+			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
 			expression.Value.(*BinaryNode).DataType = unaryType.DataType
 			return unaryType
 		}
 
-		leftType := p.getExpressionType(expression.Value.(*BinaryNode).Left)
-		rightType := p.getExpressionType(expression.Value.(*BinaryNode).Right)
+		leftType := p.GetExpressionType(expression.Value.(*BinaryNode).Left)
+		rightType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
 
 		// Same type on both sides
 		if leftType.Equals(rightType) {

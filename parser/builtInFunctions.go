@@ -4,12 +4,12 @@ func (p *Parser) insertBuiltInFunctions() {
 	p.insertFunction("print", []Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false})
 	p.insertFunction("printLine", []Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false})
 
-	p.insertFunction("boolToStr", []Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false})
-	p.insertFunction("intToStr", []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false})
-	p.insertFunction("fltToStr", []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false})
+	p.insertFunction("str", []Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false})
+	p.insertFunction("str", []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false})
+	p.insertFunction("str", []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_String, false})
 
-	p.insertFunction("boolToInt", []Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_Int, false})
-	p.insertFunction("intToFlt", []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_Float, false})
+	p.insertFunction("int", []Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_Int, false})
+	p.insertFunction("flt", []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_Float, false})
 
 	p.insertFunction("floor", []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Float, false})
 	p.insertFunction("ceil", []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_Float, false})

@@ -61,6 +61,22 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		}
 		return
 	}
+	// Function call of function with same name as keyword
+	if (sn.peek().TokenType == lexer.TT_KW_int || sn.peek().TokenType == lexer.TT_KW_flt || sn.peek().TokenType == lexer.TT_KW_str) && sn.peekNext().TokenType == lexer.TT_DL_ParenthesisOpen {
+		// Change token type to identifier
+		sn.tokens[sn.tokenIndex].Value = sn.tokens[sn.tokenIndex].TokenType.String()
+		sn.tokens[sn.tokenIndex].TokenType = lexer.TT_Identifier
+
+		sn.consume()
+		sn.analyzeFunctionCall()
+
+		// Not end of expression
+		if sn.peek().TokenType.IsBinaryOperator() {
+			sn.consume()
+			sn.analyzeExpression()
+		}
+		return
+	}
 
 	// Operator missing right side expression
 	if sn.peekPrevious().TokenType.IsOperator() {

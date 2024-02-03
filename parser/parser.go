@@ -432,7 +432,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Va
 	expression := p.parseExpressionRoot()
 
 	// Get expression type
-	expressionType := p.getExpressionType(expression)
+	expressionType := p.GetExpressionType(expression)
 
 	// Uncompatible data types
 	expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}

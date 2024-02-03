@@ -35,7 +35,7 @@ func (p *Parser) parseIfStatement() *Node {
 			p.consume()
 
 			// Check condition type
-			elifConditionType := p.getExpressionType(elifCondition)
+			elifConditionType := p.GetExpressionType(elifCondition)
 
 			if !elifConditionType.Equals(VariableType{DT_Bool, false}) {
 				conditionPosition := getExpressionPosition(elifCondition, elifCondition.Position.StartChar, elifCondition.Position.EndChar)
@@ -86,7 +86,7 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	}
 
 	// Check condition type
-	conditionType := p.getExpressionType(condition)
+	conditionType := p.GetExpressionType(condition)
 
 	if !conditionType.Equals(VariableType{DT_Bool, false}) {
 		conditionPosition := getExpressionPosition(condition, condition.Position.StartChar, condition.Position.EndChar)

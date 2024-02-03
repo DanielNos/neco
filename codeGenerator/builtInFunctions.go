@@ -6,12 +6,12 @@ var builtInFunctions = map[string]byte{
 	"print":     VM.BIF_Print,
 	"printLine": VM.BIF_PrintLine,
 
-	"boolToStr": VM.BIF_BoolToString,
-	"intToStr":  VM.BIF_IntToString,
-	"fltToStr":  VM.BIF_FloatToString,
+	"str.Bool":  VM.BIF_BoolToString,
+	"str.Int":   VM.BIF_IntToString,
+	"str.Float": VM.BIF_FloatToString,
 
-	"boolToInt": VM.BIF_BoolToInt,
-	"intToFlt":  VM.BIF_IntToFloat,
+	"int.Bool": VM.BIF_BoolToInt,
+	"flt.Int":  VM.BIF_IntToFloat,
 
 	"floor":      VM.BIF_Floor,
 	"floorToInt": VM.BIF_FloorToInt,
@@ -32,4 +32,10 @@ var builtInFunctions = map[string]byte{
 	"randomInt":      VM.BIF_RandomInt,
 	"randomFlt":      VM.BIF_RandomFloat,
 	"randomRangeInt": VM.BIF_RandomRangeInt,
+}
+
+var overloadedBuiltInFunctions = map[string]struct{}{
+	"int": {},
+	"flt": {},
+	"str": {},
 }

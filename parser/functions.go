@@ -20,7 +20,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	// Collect parameters
 	parameters := p.parseParameters()
 
-	// Function entry() can't have paramters
+	// Function entry() can't have parameters
 	if identifierToken.Value == "entry" && len(parameters) != 0 {
 		// TODO: Display position of parameters
 		p.newError(identifierToken.Position, "Function entry() can't have any parameters.")
@@ -33,7 +33,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 			p.newError(identifierToken.Position, "Function entry() can't be overloaded.")
 		}
 
-		// Create paramters id and look for a function using
+		// Create parameters id and look for a function using
 		if symbol.symbolType == ST_FunctionBucket {
 			id := createParametersIdentifier(parameters)
 			if symbol.value.(symbolTable)[id] != nil {
@@ -119,23 +119,24 @@ func (p *Parser) parseParameters() []Parameter {
 func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
 	p.consume()
-	arguments := p.parseArguments()
+	arguments, argumentTypes := p.parseArguments()
 
 	// Check if arguments match any function
+	returnType := &VariableType{DT_NoType, false}
 	if functionBucketSymbol != nil {
-		p.matchArguments(functionBucketSymbol, arguments, identifier)
+		returnType = &p.matchArguments(functionBucketSymbol, arguments, identifier).returnType
 	}
 	p.consume()
 
-	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, &VariableType{DT_NoType, false}}}
+	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, argumentTypes, returnType}}
 }
 
-func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierToken *lexer.Token) {
+func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierToken *lexer.Token) *FunctionSymbol {
 	// Collect argument data types
 	argumentTypes := make([]VariableType, len(arguments))
 
 	for i, argument := range arguments {
-		argumentTypes[i] = p.getExpressionType(argument)
+		argumentTypes[i] = p.GetExpressionType(argument)
 	}
 
 	for _, function := range bucket.value.(symbolTable) {
@@ -144,7 +145,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 			continue
 		}
 
-		// Try to match arguments to paramters
+		// Try to match arguments to parameters
 		matched := true
 		for i, parameter := range function.value.(*FunctionSymbol).parameters {
 			if !parameter.DataType.Equals(argumentTypes[i]) {
@@ -159,22 +160,29 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 		}
 
 		// Successfully matched
-		return
+		return function.value.(*FunctionSymbol)
 	}
 
 	// Failed to match to all functions in a bucket
 	p.newError(identifierToken.Position, fmt.Sprintf("Failed to match function %s to any header.", identifierToken.Value))
+	return nil
 }
 
-func (p *Parser) parseArguments() []*Node {
+func (p *Parser) parseArguments() ([]*Node, []VariableType) {
 	arguments := []*Node{}
+	argumentTypes := []VariableType{}
 
+	// No arguments
 	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-		return arguments
+		return arguments, argumentTypes
 	}
 
+	// Collect arguments
+	var argument *Node
 	for {
-		arguments = append(arguments, p.parseExpressionRoot())
+		argument = p.parseExpressionRoot()
+		argumentTypes = append(argumentTypes, p.GetExpressionType(argument))
+		arguments = append(arguments, argument)
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			break
@@ -182,7 +190,7 @@ func (p *Parser) parseArguments() []*Node {
 		p.consume()
 	}
 
-	return arguments
+	return arguments, argumentTypes
 }
 
 func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {
@@ -194,7 +202,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 				p.newError(statement.Position, fmt.Sprintf("Return statement has no return value, but function has return type %s.", returnType))
 			} else {
 				// Incorrect return value data type
-				expressionType := p.getExpressionType(statement.Value.(*Node))
+				expressionType := p.GetExpressionType(statement.Value.(*Node))
 
 				if !returnType.Equals(expressionType) {
 					position := getExpressionPosition(statement.Value.(*Node), statement.Value.(*Node).Position.StartChar, statement.Value.(*Node).Position.EndChar)

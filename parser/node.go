@@ -137,9 +137,10 @@ type Parameter struct {
 }
 
 type FunctionCallNode struct {
-	Identifier string
-	Arguments  []*Node
-	ReturnType *VariableType
+	Identifier    string
+	Arguments     []*Node
+	ArgumentTypes []VariableType
+	ReturnType    *VariableType
 }
 
 type IfNode struct {

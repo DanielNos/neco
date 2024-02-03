@@ -19,7 +19,6 @@ import (
 func printHelp() {
 	color.Set(color.Bold)
 	color.Set(color.FgHiYellow)
-	color.Set(color.ResetUnderline)
 	println("Action           Flags")
 
 	color.Set(color.Reset)
@@ -27,6 +26,7 @@ func printHelp() {
 	println("                 -to --tokens       Prints lexed tokens.")
 	println("                 -tr --tree         Draws abstract syntax tree.")
 	println("                 -i --instructions  Prints generated instructions.")
+	println("                 -d --dontOptimize  Compiler won't optimize byte code.")
 	println("\nrun [target]")
 	println("\nanalyze [target] -to --tokens   Prints lexed tokens.")
 	println("                 -tr --tree     Draws abstract syntax tree.")
