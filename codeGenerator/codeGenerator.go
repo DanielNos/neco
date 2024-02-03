@@ -49,6 +49,16 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	// Get first line
 	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
 
+	// No instructions, generate line offset and halt instruction
+	if len(statements) == 0 {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{0}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Halt, []byte{0}})
+
+		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
+
+		return &cg.instructions
+	}
+
 	// Generate instructions
 	for _, node := range statements {
 		cg.generateNode(node)
@@ -134,6 +144,9 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegA, []byte{identifier}})
+
+	default:
+		panic("Unkown node.")
 	}
 }
 
