@@ -26,11 +26,17 @@ const (
 	Stack_Argument
 )
 
-const STACK_ARGUMENT_SIZE = 100
+const (
+	STACK_ARGUMENT_SIZE     = 100
+	STACK_RETURN_INDEX_SIZE = 100
+	STACK_SCOPES_SIZE       = 100
+)
 
 type VirtualMachine struct {
-	Constants    []interface{}
-	Instructions []Instruction
+	Constants []interface{}
+
+	Instructions     []Instruction
+	instructionIndex int
 
 	Reg_GenericA interface{}
 	Reg_GenericB interface{}
@@ -38,6 +44,12 @@ type VirtualMachine struct {
 
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
+
+	Reg_ReturnIndex   int
+	Stack_ReturnIndex []int
+
+	Reg_ScopeIndex int
+	Stack_Scopes   []string
 
 	SymbolTables *dataStructures.Stack
 
@@ -47,7 +59,21 @@ type VirtualMachine struct {
 }
 
 func NewVirutalMachine() *VirtualMachine {
-	virtualMachine := &VirtualMachine{Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE), SymbolTables: dataStructures.NewStack(), reader: bufio.NewReader(os.Stdin)}
+	virtualMachine := &VirtualMachine{
+		instructionIndex: 0,
+
+		Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE),
+
+		Reg_ReturnIndex:   0,
+		Stack_ReturnIndex: make([]int, STACK_RETURN_INDEX_SIZE),
+
+		Reg_ScopeIndex: 0,
+		Stack_Scopes:   make([]string, STACK_SCOPES_SIZE),
+
+		SymbolTables: dataStructures.NewStack(),
+
+		reader: bufio.NewReader(os.Stdin),
+	}
 
 	virtualMachine.SymbolTables.Push([]Symbol{})
 
@@ -58,7 +84,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 	reader := NewInstructionReader(filePath, vm)
 	reader.Read()
 
-	for _, instruction := range vm.Instructions {
+	for vm.instructionIndex < len(vm.Instructions) {
+		instruction := vm.Instructions[vm.instructionIndex]
+
 		switch instruction.InstructionType {
 
 		// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
@@ -92,10 +120,15 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_LoadRegB:
 			vm.Reg_GenericB = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
 
+		// Enter scope
+		case IT_PushScope:
+			vm.Stack_Scopes[vm.Reg_ScopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
+			vm.Reg_ScopeIndex++
+
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
 		// Swap generic registers
-		case IT_SwapGeneric:
+		case IT_SwapAB:
 			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
 
 		// Copy registers to registers
@@ -175,6 +208,13 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_DeclareString:
 			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
 
+		// Return from a function
+		case IT_Return:
+			vm.SymbolTables.Pop()
+			vm.Reg_ScopeIndex--
+
+			vm.instructionIndex = int(instruction.InstructionValue[0] - 1)
+
 		// Move line
 		case IT_LineOffset:
 			vm.Line += uint(instruction.InstructionValue[0])
@@ -183,5 +223,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		default:
 			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
 		}
+
+		vm.instructionIndex++
 	}
 }

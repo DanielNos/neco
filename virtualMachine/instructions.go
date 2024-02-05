@@ -14,8 +14,14 @@ const (
 	IT_LoadRegA
 	IT_LoadRegB
 
+	IT_PushScope
+
+	IT_PopArgStackVariable
+
+	IT_Call
+
 	// 0 arguments
-	IT_SwapGeneric
+	IT_SwapAB
 	IT_CopyRegAToC
 	IT_CopyRegBToC
 	IT_CopyRegCToA
@@ -23,6 +29,7 @@ const (
 
 	IT_PushRegAToArgStack
 	IT_PushRegBToArgStack
+	IT_PopArgStackRegA
 
 	IT_IntAdd
 	IT_IntSubtract
@@ -45,6 +52,8 @@ const (
 	IT_DeclareFloat
 	IT_DeclareString
 
+	IT_Return
+
 	IT_LineOffset
 )
 
@@ -62,8 +71,14 @@ var InstructionTypeToString = map[byte]string{
 	IT_LoadRegA: "LOAD_REG_A",
 	IT_LoadRegB: "LOAD_REG_B",
 
+	IT_PushScope: "PUSH_SCOPE",
+
+	IT_PopArgStackVariable: "POP_ARG_STACK_VARIABLE",
+
+	IT_Call: "CALL",
+
 	// 0 arguments
-	IT_SwapGeneric: "SWAP_GENERIC",
+	IT_SwapAB:      "SWAP_A_B",
 	IT_CopyRegAToC: "COPY_REG_A_TO_C",
 	IT_CopyRegBToC: "COPY_REG_B_TO_C",
 	IT_CopyRegCToA: "COPY_REG_C_TO_A",
@@ -71,6 +86,7 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
 	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
+	IT_PopArgStackRegA:    "POP_ARG_STACK_REG_A",
 
 	IT_IntAdd:      "INT_ADD",
 	IT_IntSubtract: "INT_SUB",
@@ -92,6 +108,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareInt:    "DECLARE_INT",
 	IT_DeclareFloat:  "DECLARE_FLOAT",
 	IT_DeclareString: "DECLARE_STRING",
+
+	IT_Return: "RETURN",
 
 	IT_LineOffset: "LINE_OFFSET",
 }

@@ -8,7 +8,48 @@ import (
 
 func (p *Parser) parseFunctionDeclare() *Node {
 	start := p.consume().Position
+	identifierToken := p.consume()
 
+	// Find function symbol
+	function := p.functions[p.functionIndex]
+	p.functionIndex++
+
+	// Enter scope
+	p.enterScope()
+	p.consume()
+
+	// Move to body
+	var returnPosition *dataStructures.CodePos
+
+	for p.peek().TokenType != lexer.TT_EndOfCommand && p.peek().TokenType != lexer.TT_DL_BraceOpen {
+		if p.peek().TokenType == lexer.TT_KW_returns {
+			returnPosition = p.peek().Position
+		}
+		p.consume()
+	}
+
+	// Parse body
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+	body := p.parseScope(false, true).(*Node)
+
+	// Check if function has return statements in all paths
+	if function.returnType.DataType != DT_NoType {
+		if !p.verifyReturns(body, function.returnType) {
+			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, function.returnType))
+		}
+	}
+
+	// Leave scope
+	p.scopeNodeStack.Pop()
+	p.symbolTableStack.Pop()
+
+	p.StringConstants[identifierToken.Value] = -1
+	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
+}
+
+func (p *Parser) parseFunctionHeader() {
 	// Find bucket
 	identifierToken := p.consume()
 	symbol := p.findSymbol(identifierToken.Value)
@@ -59,27 +100,13 @@ func (p *Parser) parseFunctionDeclare() *Node {
 		}
 	}
 
-	// Parse body
-	if p.peek().TokenType == lexer.TT_EndOfCommand {
-		p.consume()
-	}
-	body := p.parseScope(false, true).(*Node)
-
-	// Check if function has return statements in all paths
-	if returnType.DataType != DT_NoType {
-		if !p.verifyReturns(body, returnType) {
-			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, returnType))
-		}
-	}
-
 	// Leave scope
 	p.scopeNodeStack.Pop()
 	p.symbolTableStack.Pop()
 
 	// Insert function symbol
-	p.insertFunction(identifierToken.Value, parameters, returnType)
-
-	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{identifierToken.Value, parameters, returnType, body}}
+	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{p.functionIndex, parameters, returnType})
+	p.functions = append(p.functions, newSymbol.value.(*FunctionSymbol))
 }
 
 func (p *Parser) parseParameters() []Parameter {
@@ -123,12 +150,16 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 
 	// Check if arguments match any function
 	returnType := &VariableType{DT_NoType, false}
+	functionNumber := -1
+
 	if functionBucketSymbol != nil {
-		returnType = &p.matchArguments(functionBucketSymbol, arguments, identifier).returnType
+		functionSymbol := p.matchArguments(functionBucketSymbol, arguments, identifier)
+		returnType = &functionSymbol.returnType
+		functionNumber = functionSymbol.number
 	}
 	p.consume()
 
-	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{identifier.Value, arguments, argumentTypes, returnType}}
+	return &Node{identifier.Position, NT_FunctionCall, &FunctionCallNode{functionNumber, identifier.Value, arguments, argumentTypes, returnType}}
 }
 
 func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierToken *lexer.Token) *FunctionSymbol {

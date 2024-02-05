@@ -20,6 +20,9 @@ type Parser struct {
 
 	symbolTableStack *dataStructures.Stack
 
+	functions     []*FunctionSymbol
+	functionIndex int
+
 	ErrorCount      uint
 	totalErrorCount uint
 
@@ -29,7 +32,7 @@ type Parser struct {
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
+	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), []*FunctionSymbol{}, 0, 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
 }
 
 func (p *Parser) peek() *lexer.Token {
@@ -123,6 +126,10 @@ func (p *Parser) parseModule() *Node {
 	// Insert built-in functions
 	p.insertBuiltInFunctions()
 
+	// Collect function headers
+	p.collectFunctionHeaders()
+	p.tokenIndex = 1
+
 	// Parse module
 	scopeNode := p.parseScope(false, false)
 
@@ -136,6 +143,17 @@ func (p *Parser) parseModule() *Node {
 	}
 
 	return module
+}
+
+func (p *Parser) collectFunctionHeaders() {
+	for p.peek().TokenType != lexer.TT_EndOfFile {
+		if p.peek().TokenType == lexer.TT_KW_fun {
+			p.consume()
+			p.parseFunctionHeader()
+		} else {
+			p.consume()
+		}
+	}
 }
 
 func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {

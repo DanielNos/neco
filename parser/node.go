@@ -124,6 +124,7 @@ type VariableNode struct {
 }
 
 type FunctionDeclareNode struct {
+	Number     int
 	Identifier string
 	Parameters []Parameter
 	ReturnType VariableType
@@ -137,6 +138,7 @@ type Parameter struct {
 }
 
 type FunctionCallNode struct {
+	Number        int
 	Identifier    string
 	Arguments     []*Node
 	ArgumentTypes []VariableType

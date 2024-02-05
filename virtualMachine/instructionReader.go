@@ -147,7 +147,7 @@ func (ir *InstructionReader) readInstructions() {
 		instructionType := ir.bytes[ir.byteIndex]
 
 		// 1 argument instruction
-		if instructionType <= IT_LoadRegB {
+		if instructionType <= IT_Call {
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, []byte{ir.bytes[ir.byteIndex]}})
 			// 0 argument instruction

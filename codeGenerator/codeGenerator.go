@@ -28,13 +28,15 @@ type CodeGenerator struct {
 	variableIdentifierCounters *dataStructures.Stack
 	variableIdentifiers        *dataStructures.Stack
 
+	functions map[int]int // Function number : function start
+
 	line uint
 
 	ErrorCount int
 }
 
 func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
-	codeGenerator := &CodeGenerator{outputFile, tree, optimize, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), 0, 0}
+	codeGenerator := &CodeGenerator{outputFile, tree, optimize, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), map[int]int{}, 0, 0}
 
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
@@ -46,7 +48,7 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	// Generate constant IDs
 	cg.generateConstantIDs()
 
-	// Get first line
+	// Get root statement list
 	statements := cg.tree.Value.(*parser.ModuleNode).Statements.Statements
 
 	// No instructions, generate line offset and halt instruction
@@ -59,9 +61,16 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 		return &cg.instructions
 	}
 
-	// Generate instructions
+	// Generate functions
 	for _, node := range statements {
-		cg.generateNode(node)
+		if node.NodeType == parser.NT_FunctionDeclare {
+			if cg.line < node.Position.Line {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.Line - cg.line)}})
+				cg.line = node.Position.Line
+			}
+
+			cg.generateFunction(node.Value.(*parser.FunctionDeclareNode))
+		}
 	}
 
 	// Optimize instructions
@@ -163,9 +172,16 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	functionCall := node.Value.(*parser.FunctionCallNode)
 	cg.generateArguments(functionCall.Arguments)
 
+	// Call user defined function
+	if functionCall.Number != -1 {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Call, []byte{byte(functionCall.Number)}})
+		return
+	}
+
+	// Built-in function
 	identifier := functionCall.Identifier
 
-	// Check for overloaded function
+	// Check for overloaded built-in function
 	_, overloaded := overloadedBuiltInFunctions[identifier]
 	if overloaded {
 		// Add parameter types to identifier so it can be matched to correct function
@@ -174,7 +190,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 		}
 	}
 
-	// Look up function
+	// Try to look up built-in function
 	builtInFunction, exists := builtInFunctions[identifier]
 
 	// Function exists
@@ -184,9 +200,9 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	} else if functionCall.Identifier == "exit" {
 		// Rewrite is as halt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
-		// Unknown function
+		// Normal function
 	} else {
-		panic("Unkown built-in function.")
+		panic("Unkown function.")
 	}
 }
 
@@ -227,7 +243,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)
 		if !loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SwapGeneric, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SwapAB, NO_ARGS})
 		}
 
 	// Operators

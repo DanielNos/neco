@@ -26,6 +26,7 @@ type VariableSymbol struct {
 }
 
 type FunctionSymbol struct {
+	number     int
 	parameters []Parameter
 	returnType VariableType
 }
@@ -64,11 +65,10 @@ func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
 	if exists {
 		return symbol
 	}
-
 	return nil
 }
 
-func (p *Parser) insertFunction(name string, parameters []Parameter, returnType VariableType) {
+func (p *Parser) insertFunction(name string, functionSymbol *FunctionSymbol) *Symbol {
 	// Find bucket
 	bucket, exists := p.symbolTableStack.Bottom.Value.(symbolTable)[name]
 
@@ -79,7 +79,10 @@ func (p *Parser) insertFunction(name string, parameters []Parameter, returnType 
 	}
 
 	// Insert function in to bucket
-	bucket.value.(symbolTable)[createParametersIdentifier(parameters)] = &Symbol{ST_Function, &FunctionSymbol{parameters, returnType}}
+	symbol := &Symbol{ST_Function, functionSymbol}
+	bucket.value.(symbolTable)[createParametersIdentifier(functionSymbol.parameters)] = symbol
+
+	return symbol
 }
 
 func createParametersIdentifier(parameters []Parameter) string {

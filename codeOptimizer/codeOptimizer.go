@@ -10,6 +10,7 @@ func Optimize(instructions []VM.Instruction) {
 		if instructions[i].InstructionType == VM.IT_LineOffset && instructions[i+1].InstructionType == VM.IT_LineOffset {
 			instructions[i+1].InstructionValue[0] += instructions[i].InstructionValue[0]
 			instructions[i].InstructionType = 255
+			continue
 		}
 	}
 }

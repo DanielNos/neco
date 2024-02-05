@@ -95,7 +95,7 @@ func visualize(node *Node, indent string, isLast bool) {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 
-		println()
+		fmt.Printf(" (%d)\n", functionDeclareNode.Number)
 
 		scopeNode := functionDeclareNode.Body.Value.(*ScopeNode)
 
