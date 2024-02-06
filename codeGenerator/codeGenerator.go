@@ -28,7 +28,7 @@ type CodeGenerator struct {
 	variableIdentifierCounters *dataStructures.Stack
 	variableIdentifiers        *dataStructures.Stack
 
-	functions map[int]int // Function number : function start
+	functions []int // Function number : function start
 
 	line uint
 
@@ -36,7 +36,25 @@ type CodeGenerator struct {
 }
 
 func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
-	codeGenerator := &CodeGenerator{outputFile, tree, optimize, intConstants, floatConstants, stringConstants, make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)), []VM.Instruction{}, dataStructures.NewStack(), dataStructures.NewStack(), map[int]int{}, 0, 0}
+	codeGenerator := &CodeGenerator{
+		outputFile,
+		tree,
+		optimize,
+
+		intConstants,
+		floatConstants,
+		stringConstants,
+		make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
+
+		[]VM.Instruction{},
+
+		dataStructures.NewStack(),
+		dataStructures.NewStack(),
+
+		[]int{},
+		0,
+		0,
+	}
 
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
@@ -164,7 +182,9 @@ func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) 
 		cg.generateNode(node)
 	}
 
-	cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{0}})
+	if functionNode.Identifier == "entry" {
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{0}})
+	}
 }
 
 func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {

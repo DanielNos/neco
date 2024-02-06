@@ -83,6 +83,10 @@ func printInstructions(instructions *[]VM.Instruction) {
 			}
 		}
 
+		if instruction.InstructionType == VM.IT_Return {
+			println()
+		}
+
 		println()
 	}
 }

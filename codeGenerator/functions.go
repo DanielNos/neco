@@ -7,7 +7,7 @@ import (
 
 func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) {
 	// Store start position
-	cg.functions[function.Number] = len(cg.instructions)
+	cg.functions = append(cg.functions, len(cg.instructions))
 
 	// Push scope
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScope, []byte{byte(cg.stringConstants[function.Identifier])}})

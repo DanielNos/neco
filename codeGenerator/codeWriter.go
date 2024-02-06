@@ -3,16 +3,24 @@ package codeGenerator
 import (
 	"encoding/binary"
 	"math"
+	"neco/errors"
+	"neco/logger"
 	VM "neco/virtualMachine"
 	"os"
 )
 
 const CONSTANTS_SEGMENT = 0
-const STRINGS_SEGMENT = 0
-const INTS_SEGMENT = 1
-const FLOATS_SEGMENT = 2
+const (
+	STRINGS_SEGMENT = 0
+	INTS_SEGMENT    = 1
+	FLOATS_SEGMENT  = 2
+)
 
 const CODE_SEGMENT = 1
+const (
+	FUNCTIONS_SEGMENT    = 0
+	INSTRUCTIONS_SEGMENT = 1
+)
 
 type CodeWriter struct {
 	codeGenerator *CodeGenerator
@@ -51,6 +59,38 @@ func (cw *CodeWriter) writeCodeSegment() {
 	startPos := cw.getFilePosition()
 	cw.file.WriteString("CODE")
 
+	cw.writeFunctions()
+	cw.writeInstructions()
+
+	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeFunctions() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("FUNC")
+
+	lastFunction := 0
+
+	for _, function := range cw.codeGenerator.functions {
+		// Can't have bigger difference than 1 byte
+		if function-lastFunction > 256 {
+			logger.Fatal(errors.CODE_GENERATION, "Function distance bigger than 256.")
+		}
+
+		// Write difference between this function and the last one
+		cw.file.Write([]byte{byte(function - lastFunction)})
+		lastFunction = function
+	}
+
+	cw.file.WriteAt([]byte{FUNCTIONS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeInstructions() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("INST")
+
 	// Write instructions
 	for _, instruction := range cw.codeGenerator.instructions {
 		// Skip instruction removed by code optimizer
@@ -68,7 +108,7 @@ func (cw *CodeWriter) writeCodeSegment() {
 		cw.file.Write(instruction.InstructionValue)        // Write arguments
 	}
 
-	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{INSTRUCTIONS_SEGMENT}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 

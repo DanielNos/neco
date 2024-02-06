@@ -60,7 +60,7 @@ func (ir *InstructionReader) Read() {
 
 	// Read segments
 	ir.readConstants()
-	ir.readInstructions()
+	ir.readCode()
 }
 
 func (ir *InstructionReader) readConstants() {
@@ -127,6 +127,31 @@ func (ir *InstructionReader) readFloatConstants() {
 		ir.virtualMachine.Constants = append(ir.virtualMachine.Constants, math.Float64frombits(floatBits))
 
 		ir.byteIndex += 8
+	}
+}
+
+func (ir *InstructionReader) readCode() {
+	ir.byteIndex += 4
+
+	ir.readFunctions()
+	ir.readInstructions()
+}
+
+func (ir *InstructionReader) readFunctions() {
+	ir.byteIndex++
+
+	// Collect header
+	functionsSize := byte3ToInt(ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1], ir.bytes[ir.byteIndex+2])
+	ir.byteIndex += 3
+
+	// Allocate array
+	ir.virtualMachine.functions = make([]int, functionsSize)
+
+	lastFunction := 0
+	for i := 0; i < functionsSize; i++ {
+		ir.virtualMachine.functions[i] = lastFunction + int(ir.bytes[ir.byteIndex])
+		lastFunction = ir.virtualMachine.functions[i]
+		ir.byteIndex++
 	}
 }
 

@@ -28,7 +28,7 @@ const (
 
 const (
 	STACK_ARGUMENT_SIZE     = 100
-	STACK_RETURN_INDEX_SIZE = 100
+	STACK_RETURN_INDEX_SIZE = 1024
 	STACK_SCOPES_SIZE       = 100
 )
 
@@ -37,6 +37,8 @@ type VirtualMachine struct {
 
 	Instructions     []Instruction
 	instructionIndex int
+
+	functions []int
 
 	Reg_GenericA interface{}
 	Reg_GenericB interface{}
@@ -124,6 +126,21 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PushScope:
 			vm.Stack_Scopes[vm.Reg_ScopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.Reg_ScopeIndex++
+
+		// Call a function
+		case IT_Call:
+			// Push return adress to stack
+			vm.Stack_ReturnIndex[vm.Reg_ReturnIndex] = vm.instructionIndex
+			vm.Reg_ReturnIndex++
+
+			// Return adress stack overflow
+			if vm.Reg_ReturnIndex == STACK_RETURN_INDEX_SIZE {
+				logger.Fatal(errors.STACK_OVERFLOW, "Function return adress stack overflow.")
+			}
+
+			// Jump to function
+			vm.instructionIndex = vm.functions[instruction.InstructionValue[0]]
+			continue
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
@@ -213,7 +230,8 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.SymbolTables.Pop()
 			vm.Reg_ScopeIndex--
 
-			vm.instructionIndex = int(instruction.InstructionValue[0] - 1)
+			vm.instructionIndex = vm.Stack_ReturnIndex[vm.Reg_ReturnIndex-1]
+			vm.Reg_ReturnIndex--
 
 		// Move line
 		case IT_LineOffset:
