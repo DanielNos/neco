@@ -19,6 +19,8 @@ const (
 	IT_PopArgStackVariable
 
 	IT_Call
+	IT_Jump
+	IT_JumpIfTrue
 
 	// 0 arguments
 	IT_SwapAB
@@ -53,6 +55,17 @@ const (
 	IT_DeclareString
 
 	IT_Return
+
+	IT_Equal
+	IT_LowerInt
+	IT_LowerFloat
+	IT_GreaterInt
+	IT_GreaterFloat
+	IT_LowerEqualInt
+	IT_LowerEqualFloat
+	IT_GreaterEqualInt
+	IT_GreaterEqualFloat
+	IT_Not
 
 	IT_LineOffset
 )
@@ -110,6 +123,20 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareString: "DECLARE_STRING",
 
 	IT_Return: "RETURN",
+
+	IT_Equal:             "EQUAL",
+	IT_LowerInt:          "LOWER_INT",
+	IT_GreaterInt:        "GREATER_INT",
+	IT_LowerEqualInt:     "LOWER_EQUAL_INT",
+	IT_GreaterEqualInt:   "GREATER_EQUAL_INT",
+	IT_LowerFloat:        "LOWER_FLOAT",
+	IT_GreaterFloat:      "GREATER_FLOAT",
+	IT_LowerEqualFloat:   "LOWER_EQUAL_FLOAT",
+	IT_GreaterEqualFloat: "GREATER_EQUAL_FLOAT",
+	IT_Not:               "NOT",
+
+	IT_Jump:       "JUMP",
+	IT_JumpIfTrue: "JUMP_IF_TRUE",
 
 	IT_LineOffset: "LINE_OFFSET",
 }

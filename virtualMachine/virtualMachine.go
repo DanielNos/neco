@@ -233,6 +233,46 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.instructionIndex = vm.Stack_ReturnIndex[vm.Reg_ReturnIndex-1]
 			vm.Reg_ReturnIndex--
 
+		// Comparison instructions
+		case IT_Equal:
+			vm.Reg_GenericA = vm.Reg_GenericA == vm.Reg_GenericB
+
+		case IT_LowerInt:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) < vm.Reg_GenericB.(int64)
+
+		case IT_LowerFloat:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) < vm.Reg_GenericB.(float64)
+
+		case IT_GreaterInt:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) > vm.Reg_GenericB.(int64)
+
+		case IT_GreaterFloat:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) > vm.Reg_GenericB.(float64)
+
+		case IT_LowerEqualInt:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) <= vm.Reg_GenericB.(int64)
+
+		case IT_LowerEqualFloat:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) <= vm.Reg_GenericB.(float64)
+
+		case IT_GreaterEqualInt:
+			vm.Reg_GenericA = vm.Reg_GenericA.(int64) >= vm.Reg_GenericB.(int64)
+
+		case IT_GreaterEqualFloat:
+			vm.Reg_GenericA = vm.Reg_GenericA.(float64) >= vm.Reg_GenericB.(float64)
+
+		case IT_Not:
+			vm.Reg_GenericA = !vm.Reg_GenericA.(bool)
+
+		// Jumps
+		case IT_Jump:
+			vm.instructionIndex += int(instruction.InstructionValue[0])
+
+		case IT_JumpIfTrue:
+			if vm.Reg_GenericA.(bool) {
+				vm.instructionIndex += int(instruction.InstructionValue[0])
+			}
+
 		// Move line
 		case IT_LineOffset:
 			vm.Line += uint(instruction.InstructionValue[0])

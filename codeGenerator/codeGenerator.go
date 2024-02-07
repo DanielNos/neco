@@ -172,18 +172,72 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegA, []byte{identifier}})
 
+	// If statement
+	case parser.NT_If:
+		cg.generateIfStatement(node.Value.(*parser.IfNode))
+
 	default:
 		panic("Unkown node.")
 	}
 }
 
-func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) {
-	for _, node := range functionNode.Body.Value.(*parser.ScopeNode).Statements {
-		cg.generateNode(node)
+func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
+	jumpInstructions := make([]*VM.Instruction, len(ifStatement.ElseIfs)+1)
+	jumpInstructionPositions := make([]int, len(ifStatement.ElseIfs)+1)
+
+	// Generate if condition and jump
+	cg.generateExpression(ifStatement.Condition, true)
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
+
+	jumpInstructions[0] = &cg.instructions[len(cg.instructions)-1]
+	jumpInstructionPositions[0] = len(cg.instructions)
+
+	// Generate else if conditions and jumps
+	for i, elseIf := range ifStatement.ElseIfs {
+		cg.generateExpression(elseIf.Value.(*parser.IfNode).Condition, true)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
+
+		jumpInstructions[i+1] = &cg.instructions[len(cg.instructions)-1]
+		jumpInstructionPositions[i+1] = len(cg.instructions)
 	}
+
+	// Generate else body
+	var jumpFromElse *VM.Instruction = nil
+	if ifStatement.ElseBody != nil {
+		cg.generateStatements(ifStatement.ElseBody.Value.(*parser.ScopeNode))
+
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+		jumpFromElse = &cg.instructions[len(cg.instructions)-1]
+	}
+	jumpFromElsePosition := len(cg.instructions)
+
+	// Generate if body
+	jumpInstructions[0].InstructionValue[0] = byte(len(cg.instructions) - jumpInstructionPositions[0])
+	cg.generateStatements(ifStatement.Body.Value.(*parser.ScopeNode))
+
+	// Generate else if bodies
+	for i, elseIf := range ifStatement.ElseIfs {
+		jumpInstructions[i+1].InstructionValue[0] = byte(len(cg.instructions) - jumpInstructionPositions[i+1])
+		cg.generateStatements(elseIf.Value.(*parser.IfNode).Body.Value.(*parser.ScopeNode))
+	}
+
+	// Record else body jump destination
+	if jumpFromElse != nil {
+		jumpFromElse.InstructionValue[0] = byte(len(cg.instructions) - jumpFromElsePosition)
+	}
+}
+
+func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) {
+	cg.generateStatements(functionNode.Body.Value.(*parser.ScopeNode))
 
 	if functionNode.Identifier == "entry" {
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{0}})
+	}
+}
+
+func (cg *CodeGenerator) generateStatements(scopeNode *parser.ScopeNode) {
+	for _, node := range scopeNode.Statements {
+		cg.generateNode(node)
 	}
 }
 
@@ -268,24 +322,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// Operators
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
+		// Generate arguments
 		binaryNode := node.Value.(*parser.BinaryNode)
+		cg.generateExpressionArguments(binaryNode)
 
-		// Opearator on two leaf nodes
-		if (binaryNode.Left.NodeType == parser.NT_Variable || binaryNode.Left.NodeType == parser.NT_Literal) && (binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal) {
-			cg.generateExpression(binaryNode.Left, true)
-			cg.generateExpression(binaryNode.Right, false)
-			// Operator on left and leaf on right
-		} else if binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal {
-			cg.generateExpression(binaryNode.Left, true)
-			cg.generateExpression(binaryNode.Right, false)
-			// Operator on right and anything on left
-		} else {
-			cg.generateExpression(binaryNode.Right, true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
-			cg.generateExpression(binaryNode.Left, true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
-		}
-
+		// Generate operator
 		// Add strings
 		if binaryNode.DataType == parser.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
@@ -296,12 +337,56 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		} else {
 			cg.instructions = append(cg.instructions, VM.Instruction{floatOperatorToInstruction[node.NodeType], NO_ARGS})
 		}
+
+	// Comparison operators
+	case parser.NT_Equal, parser.NT_NotEqual:
+		// Generate arguments
+		binaryNode := node.Value.(*parser.BinaryNode)
+		cg.generateExpressionArguments(binaryNode)
+
+		// Generate operator
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})
+
+		if node.NodeType == parser.NT_NotEqual {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
+		}
+
+	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
+		// Generate arguments
+		binaryNode := node.Value.(*parser.BinaryNode)
+		cg.generateExpressionArguments(binaryNode)
+
+		// Generate operator
+		if binaryNode.DataType == parser.DT_Int {
+			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToIntInstruction[node.NodeType], NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToFloatInstruction[node.NodeType], NO_ARGS})
+		}
+
 	// Variable
 	case parser.NT_Variable:
 		cg.generateVariable(node, loadLeft)
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
+	}
+}
+
+func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNode) {
+	// Opearator on two leaf nodes
+	if (binaryNode.Left.NodeType == parser.NT_Variable || binaryNode.Left.NodeType == parser.NT_Literal) && (binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal) {
+		cg.generateExpression(binaryNode.Left, true)
+		cg.generateExpression(binaryNode.Right, false)
+		// Operator on left and leaf on right
+	} else if binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal {
+		cg.generateExpression(binaryNode.Left, true)
+		cg.generateExpression(binaryNode.Right, false)
+		// Operator on right and anything on left
+	} else {
+		cg.generateExpression(binaryNode.Right, true)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
+		cg.generateExpression(binaryNode.Left, true)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
 	}
 }
 

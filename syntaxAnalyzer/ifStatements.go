@@ -56,13 +56,12 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		sn.consume()
 
 		// Check else statement
-		if sn.peekNext().TokenType == lexer.TT_KW_else {
+		if sn.peek().TokenType == lexer.TT_KW_else {
 			sn.consume()
 			sn.analyzeElseStatement()
 			return
 			// Check elif statement
-		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
-			sn.consume()
+		} else if sn.peek().TokenType == lexer.TT_KW_elif {
 			sn.analyzeIfStatement(true)
 			return
 		}

@@ -23,6 +23,20 @@ var floatOperatorToInstruction = map[parser.NodeType]byte{
 	parser.NT_Modulo:   VM.IT_FloatModulo,
 }
 
+var logicalOperatorToIntInstruction = map[parser.NodeType]byte{
+	parser.NT_Lower:        VM.IT_LowerInt,
+	parser.NT_Greater:      VM.IT_GreaterInt,
+	parser.NT_LowerEqual:   VM.IT_LowerEqualInt,
+	parser.NT_GreaterEqual: VM.IT_GreaterEqualInt,
+}
+
+var logicalOperatorToFloatInstruction = map[parser.NodeType]byte{
+	parser.NT_Lower:        VM.IT_LowerFloat,
+	parser.NT_Greater:      VM.IT_GreaterFloat,
+	parser.NT_LowerEqual:   VM.IT_LowerEqualFloat,
+	parser.NT_GreaterEqual: VM.IT_GreaterEqualFloat,
+}
+
 func (cg *CodeGenerator) lineToInstruction(line byte) byte {
 	if line > 128 {
 		cg.newError("There can't be more that 128 empty lines in succession.")

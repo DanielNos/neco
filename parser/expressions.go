@@ -173,16 +173,17 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
 			}
 
+			// Comparison operators return boolean
+			if expression.NodeType.IsComparisonOperator() {
+				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
+			}
+
 			// Only + can be used on strings
 			if leftType.DataType == DT_String && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
-			// Comparison operators return boolean
-			if expression.NodeType.IsComparisonOperator() {
-				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
-			}
 			expression.Value.(*BinaryNode).DataType = leftType.DataType
 			return leftType
 		}
