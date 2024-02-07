@@ -34,7 +34,7 @@ func (p *Parser) parseWhile() *Node {
 	p.scopeCounter++
 
 	// Create and insert if node into loop body
-	ifStatement := &Node{condition.Position, NT_If, &IfNode{condition, ifBlock, nil, nil}}
+	ifStatement := &Node{condition.Position, NT_If, &IfNode{[]*IfStatement{{condition, ifBlock}}, nil}}
 	p.appendScope(ifStatement)
 
 	body := p.parseScope(false, true).(*Node)

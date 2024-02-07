@@ -57,7 +57,6 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 
 		// Check else statement
 		if sn.peek().TokenType == lexer.TT_KW_else {
-			sn.consume()
 			sn.analyzeElseStatement()
 			return
 			// Check elif statement

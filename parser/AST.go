@@ -129,16 +129,17 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_If:
 		println("if")
 		ifNode := node.Value.(*IfNode)
-		visualize(ifNode.Condition, indent, false)
-		visualize(ifNode.Body, indent, len(ifNode.ElseIfs) == 0 && ifNode.ElseBody == nil)
+		visualize(ifNode.IfStatements[0].Condition, indent, false)
+		visualize(ifNode.IfStatements[0].Body, indent, len(ifNode.IfStatements) == 1 && ifNode.ElseBody == nil)
 
-		if len(ifNode.ElseIfs) == 0 {
-			if ifNode.ElseBody != nil {
+		if len(ifNode.IfStatements) == 1 {
+			if ifNode.ElseBody != nil {	
 				visualize(ifNode.ElseBody, indent, true)
 			}
 		} else {
-			for i, elif := range ifNode.ElseIfs {
-				visualize(elif, indent, i == len(ifNode.ElseIfs)-1 && ifNode.ElseBody == nil)
+			for i, elif := range ifNode.IfStatements {
+				visualize(elif.Condition, indent, i == len(ifNode.IfStatements)-1 && ifNode.ElseBody == nil)
+				visualize(elif.Body, indent, i == len(ifNode.IfStatements)-1 && ifNode.ElseBody == nil)
 			}
 			if ifNode.ElseBody != nil {
 				visualize(ifNode.ElseBody, indent, true)

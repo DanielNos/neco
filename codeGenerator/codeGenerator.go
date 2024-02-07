@@ -182,23 +182,16 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 }
 
 func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
-	jumpInstructions := make([]*VM.Instruction, len(ifStatement.ElseIfs)+1)
-	jumpInstructionPositions := make([]int, len(ifStatement.ElseIfs)+1)
-
-	// Generate if condition and jump
-	cg.generateExpression(ifStatement.Condition, true)
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
-
-	jumpInstructions[0] = &cg.instructions[len(cg.instructions)-1]
-	jumpInstructionPositions[0] = len(cg.instructions)
+	jumpInstructions := make([]*VM.Instruction, len(ifStatement.IfStatements))
+	jumpInstructionPositions := make([]int, len(ifStatement.IfStatements))
 
 	// Generate else if conditions and jumps
-	for i, elseIf := range ifStatement.ElseIfs {
-		cg.generateExpression(elseIf.Value.(*parser.IfNode).Condition, true)
+	for i, statement := range ifStatement.IfStatements {
+		cg.generateExpression(statement.Condition, true)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
 
-		jumpInstructions[i+1] = &cg.instructions[len(cg.instructions)-1]
-		jumpInstructionPositions[i+1] = len(cg.instructions)
+		jumpInstructions[i] = &cg.instructions[len(cg.instructions)-1]
+		jumpInstructionPositions[i] = len(cg.instructions)
 	}
 
 	// Generate else body
@@ -211,19 +204,25 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	}
 	jumpFromElsePosition := len(cg.instructions)
 
-	// Generate if body
-	jumpInstructions[0].InstructionValue[0] = byte(len(cg.instructions) - jumpInstructionPositions[0])
-	cg.generateStatements(ifStatement.Body.Value.(*parser.ScopeNode))
-
 	// Generate else if bodies
-	for i, elseIf := range ifStatement.ElseIfs {
-		jumpInstructions[i+1].InstructionValue[0] = byte(len(cg.instructions) - jumpInstructionPositions[i+1])
-		cg.generateStatements(elseIf.Value.(*parser.IfNode).Body.Value.(*parser.ScopeNode))
+	for i, statement := range ifStatement.IfStatements {
+		jumpInstructions[i].InstructionValue[0] = byte(len(cg.instructions) - jumpInstructionPositions[i])
+		cg.generateStatements(statement.Body.Value.(*parser.ScopeNode))
+
+		// Generate jump to end instruction
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+		jumpInstructions[i] = &cg.instructions[len(cg.instructions)-1]
 	}
 
-	// Record else body jump destination
+	// Set if and elif bodies jump to end position
+	endPosition := byte(len(cg.instructions) - jumpFromElsePosition)
+	for _, instruction := range jumpInstructions {
+		instruction.InstructionValue[0] = endPosition
+	}
+
+	// Set else body jump to end destination
 	if jumpFromElse != nil {
-		jumpFromElse.InstructionValue[0] = byte(len(cg.instructions) - jumpFromElsePosition)
+		jumpFromElse.InstructionValue[0] = endPosition
 	}
 }
 

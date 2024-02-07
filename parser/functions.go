@@ -246,21 +246,16 @@ func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) boo
 		} else if statement.NodeType == NT_If {
 			ifNode := statement.Value.(*IfNode)
 
-			// Check if body
-			if !p.verifyReturns(ifNode.Body, returnType) {
-				return false
+			// Check if bodies
+			for _, ifStatement := range ifNode.IfStatements {
+				if !p.verifyReturns(ifStatement.Body, returnType) {
+					return false
+				}
 			}
 
 			// Check else body
 			if ifNode.ElseBody != nil && !p.verifyReturns(ifNode.ElseBody, returnType) {
 				return false
-			}
-
-			// Check else if bodies
-			for _, elif := range ifNode.ElseIfs {
-				if !p.verifyReturns(elif.Value.(*IfNode).Body, returnType) {
-					return false
-				}
 			}
 
 			return true

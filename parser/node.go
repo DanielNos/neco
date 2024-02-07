@@ -146,10 +146,13 @@ type FunctionCallNode struct {
 }
 
 type IfNode struct {
+	IfStatements []*IfStatement
+	ElseBody     *Node
+}
+
+type IfStatement struct {
 	Condition *Node
 	Body      *Node
-	ElseIfs   []*Node
-	ElseBody  *Node
 }
 
 type ForNode struct {
