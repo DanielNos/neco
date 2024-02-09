@@ -28,6 +28,9 @@ const (
 	IT_CopyRegBToC
 	IT_CopyRegCToA
 	IT_CopyRegCToB
+	IT_CopyRegAToD
+	IT_CopyRegDToA
+	IT_CopyRegDToB
 
 	IT_PushRegAToArgStack
 	IT_PushRegBToArgStack
@@ -67,6 +70,11 @@ const (
 	IT_GreaterEqualFloat
 	IT_Not
 
+	IT_SetRegAFalse
+	IT_SetRegATrue
+	IT_SetRegBFalse
+	IT_SetRegBTrue
+
 	IT_LineOffset
 )
 
@@ -96,6 +104,9 @@ var InstructionTypeToString = map[byte]string{
 	IT_CopyRegBToC: "COPY_REG_B_TO_C",
 	IT_CopyRegCToA: "COPY_REG_C_TO_A",
 	IT_CopyRegCToB: "COPY_REG_C_TO_B",
+	IT_CopyRegAToD: "COPY_REG_A_TO_D",
+	IT_CopyRegDToA: "COPY_REG_D_TO_A",
+	IT_CopyRegDToB: "COPY_REG_D_TO_B",
 
 	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
 	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
@@ -134,6 +145,11 @@ var InstructionTypeToString = map[byte]string{
 	IT_LowerEqualFloat:   "LOWER_EQUAL_FLOAT",
 	IT_GreaterEqualFloat: "GREATER_EQUAL_FLOAT",
 	IT_Not:               "NOT",
+
+	IT_SetRegAFalse: "SET_REG_A_FALSE",
+	IT_SetRegATrue:  "SET_REG_A_TRUE",
+	IT_SetRegBFalse: "SET_REG_B_FALSE",
+	IT_SetRegBTrue:  "SET_REG_B_TRUE",
 
 	IT_Jump:       "JUMP",
 	IT_JumpIfTrue: "JUMP_IF_TRUE",

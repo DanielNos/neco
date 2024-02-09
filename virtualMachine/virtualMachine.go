@@ -23,6 +23,8 @@ type RegisterOrStack byte
 const (
 	Reg_GenericA RegisterOrStack = iota
 	Reg_GenericB
+	Reg_GenericC
+	Reg_GenericD
 	Stack_Argument
 )
 
@@ -43,6 +45,8 @@ type VirtualMachine struct {
 	Reg_GenericA interface{}
 	Reg_GenericB interface{}
 	Reg_GenericC interface{}
+	Reg_GenericD interface{}
+	Reg_GenericE interface{}
 
 	Reg_ArgumentPointer int
 	Stack_Argument      []interface{}
@@ -272,6 +276,19 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			if vm.Reg_GenericA.(bool) {
 				vm.instructionIndex += int(instruction.InstructionValue[0])
 			}
+
+		// Put bools to registers
+		case IT_SetRegATrue:
+			vm.Reg_GenericA = true
+
+		case IT_SetRegAFalse:
+			vm.Reg_GenericA = false
+
+		case IT_SetRegBTrue:
+			vm.Reg_GenericA = true
+
+		case IT_SetRegBFalse:
+			vm.Reg_GenericA = false
 
 		// Move line
 		case IT_LineOffset:

@@ -12,5 +12,11 @@ func Optimize(instructions []VM.Instruction) {
 			instructions[i].InstructionType = 255
 			continue
 		}
+
+		// Zero distance jump
+		if instructions[i].InstructionType == VM.IT_Jump && instructions[i].InstructionValue[0] == 0 {
+			instructions[i].InstructionType = 255
+			continue
+		}
 	}
 }

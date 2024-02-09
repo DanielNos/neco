@@ -176,6 +176,15 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_If:
 		cg.generateIfStatement(node.Value.(*parser.IfNode))
 
+	// Return
+	case parser.NT_Return:
+		// Generate returned expression
+		if node.Value != nil {
+			cg.generateExpression(node.Value.(*parser.Node), true)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToD, NO_ARGS})
+		}
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
+
 	default:
 		panic("Unkown node.")
 	}
@@ -315,8 +324,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	// Function call
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)
-		if !loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SwapAB, NO_ARGS})
+		if loadLeft {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegDToA, NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegDToB, NO_ARGS})
 		}
 
 	// Operators
@@ -362,7 +373,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToFloatInstruction[node.NodeType], NO_ARGS})
 		}
 
-	// Variable
+	// Variables
 	case parser.NT_Variable:
 		cg.generateVariable(node, loadLeft)
 
@@ -408,9 +419,21 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 	}
 
 	switch literalNode.DataType {
-	// String
-	case parser.DT_String:
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
+	// Bool
+	case parser.DT_Bool:
+		if loadLeft {
+			if literalNode.Value.(bool) {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegATrue, NO_ARGS})
+			} else {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegAFalse, NO_ARGS})
+			}
+		} else {
+			if literalNode.Value.(bool) {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegBTrue, NO_ARGS})
+			} else {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegBFalse, NO_ARGS})
+			}
+		}
 
 	// Int
 	case parser.DT_Int:
@@ -419,5 +442,8 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 	// Float
 	case parser.DT_Float:
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
+	// String
+	case parser.DT_String:
+		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
 	}
 }
