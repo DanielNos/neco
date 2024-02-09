@@ -74,7 +74,7 @@ func (p *Parser) parseFunctionHeader() {
 			p.newError(identifierToken.Position, "Function entry() can't be overloaded.")
 		}
 
-		// Create parameters id and look for a function using
+		// Create parameters id and look for a function using it
 		if symbol.symbolType == ST_FunctionBucket {
 			id := createParametersIdentifier(parameters)
 			if symbol.value.(symbolTable)[id] != nil {
@@ -105,7 +105,7 @@ func (p *Parser) parseFunctionHeader() {
 	p.symbolTableStack.Pop()
 
 	// Insert function symbol
-	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{p.functionIndex, parameters, returnType})
+	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType})
 	p.functions = append(p.functions, newSymbol.value.(*FunctionSymbol))
 }
 

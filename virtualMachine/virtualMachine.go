@@ -21,14 +21,6 @@ const (
 type RegisterOrStack byte
 
 const (
-	Reg_GenericA RegisterOrStack = iota
-	Reg_GenericB
-	Reg_GenericC
-	Reg_GenericD
-	Stack_Argument
-)
-
-const (
 	STACK_ARGUMENT_SIZE     = 100
 	STACK_RETURN_INDEX_SIZE = 1024
 	STACK_SCOPES_SIZE       = 100
@@ -165,6 +157,15 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_CopyRegCToB:
 			vm.Reg_GenericB = vm.Reg_GenericC
 
+		case IT_CopyRegAToD:
+			vm.Reg_GenericD = vm.Reg_GenericA
+
+		case IT_CopyRegDToA:
+			vm.Reg_GenericA = vm.Reg_GenericD
+
+		case IT_CopyRegDToB:
+			vm.Reg_GenericB = vm.Reg_GenericD
+
 		// Push register to stack
 		case IT_PushRegAToArgStack:
 			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericA
@@ -277,7 +278,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				vm.instructionIndex += int(instruction.InstructionValue[0])
 			}
 
-		// Put bools to registers
+		// Put bools in registers
 		case IT_SetRegATrue:
 			vm.Reg_GenericA = true
 
