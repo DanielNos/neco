@@ -126,7 +126,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Call a function
 		case IT_Call:
 			// Push return adress to stack
-			vm.Stack_ReturnIndex[vm.Reg_ReturnIndex] = vm.instructionIndex
+			vm.Stack_ReturnIndex[vm.Reg_ReturnIndex] = vm.instructionIndex + 1
 			vm.Reg_ReturnIndex++
 
 			// Return adress stack overflow
@@ -135,7 +135,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			}
 
 			// Jump to function
-			vm.instructionIndex = vm.functions[instruction.InstructionValue[0]]
+			vm.instructionIndex = vm.functions[instruction.InstructionValue[0]] - 1
 			continue
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
@@ -235,8 +235,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.SymbolTables.Pop()
 			vm.Reg_ScopeIndex--
 
-			vm.instructionIndex = vm.Stack_ReturnIndex[vm.Reg_ReturnIndex-1]
 			vm.Reg_ReturnIndex--
+			vm.instructionIndex = vm.Stack_ReturnIndex[vm.Reg_ReturnIndex]
+			continue
 
 		// Comparison instructions
 		case IT_Equal:

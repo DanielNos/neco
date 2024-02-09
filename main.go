@@ -57,14 +57,17 @@ func printTokens(tokens []*lexer.Token) {
 }
 
 func printInstructions(instructions *[]VM.Instruction) {
-	for _, instruction := range *instructions {
+	for i, instruction := range *instructions {
 		// Skip removed instruction
 		if instruction.InstructionType == 255 {
 			continue
 		}
 
 		// Print instruction name
-		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
+		if i < 10 {
+			print(" ")
+		}
+		fmt.Printf("%d   %s", i, VM.InstructionTypeToString[instruction.InstructionType])
 
 		i := len(VM.InstructionTypeToString[instruction.InstructionType])
 		for i < 25 {
