@@ -105,7 +105,7 @@ func (p *Parser) parseFunctionHeader() {
 	p.symbolTableStack.Pop()
 
 	// Insert function symbol
-	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType})
+	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType, identifierToken.Value == "entry"})
 	p.functions = append(p.functions, newSymbol.value.(*FunctionSymbol))
 }
 
@@ -152,10 +152,17 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 	returnType := &VariableType{DT_NoType, false}
 	functionNumber := -1
 
+	// Try to match arguments to some function from a bucket if it exists
 	if functionBucketSymbol != nil {
+		// Function is picked by matching arguments
 		functionSymbol := p.matchArguments(functionBucketSymbol, arguments, identifier)
+
+		// Store values from function symbol
 		returnType = &functionSymbol.returnType
 		functionNumber = functionSymbol.number
+
+		// Set function as used
+		functionSymbol.everCalled = true
 	}
 	p.consume()
 

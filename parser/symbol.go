@@ -29,6 +29,7 @@ type FunctionSymbol struct {
 	number     int
 	parameters []Parameter
 	returnType VariableType
+	everCalled bool
 }
 
 type symbolTable map[string]*Symbol

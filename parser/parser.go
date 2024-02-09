@@ -142,6 +142,20 @@ func (p *Parser) parseModule() *Node {
 		logger.Warning("The entry() function wasn't found. The compiled program won't be executable by itself.")
 	}
 
+	// Check if all functions were called
+	for identifier, symbol := range p.symbolTableStack.Bottom.Value.(symbolTable) {
+		// Try to find function bucket symbol
+		if symbol.symbolType == ST_FunctionBucket {
+			// Check if every function in the bucket was ever called
+			for _, functionSymbol := range symbol.value.(symbolTable) {
+				if !functionSymbol.value.(*FunctionSymbol).everCalled {
+					logger.Warning(fmt.Sprintf("Function %s was never called.", identifier))
+				}
+			}
+		}
+
+	}
+
 	return module
 }
 
