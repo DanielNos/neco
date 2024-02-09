@@ -13,12 +13,10 @@ import (
 )
 
 const (
-	VERSION_MAJOR byte = 0
-	VERSION_MINOR      = 1
-	VERSION_PATCH      = 0
+	VERSION_MAJOR = 0
+	VERSION_MINOR = 1
+	VERSION_PATCH = 0
 )
-
-type RegisterOrStack byte
 
 const (
 	STACK_ARGUMENT_SIZE     = 100
@@ -48,8 +46,7 @@ type VirtualMachine struct {
 
 	Reg_ScopeIndex int
 	Stack_Scopes   []string
-
-	SymbolTables *dataStructures.Stack
+	SymbolTables   *dataStructures.Stack
 
 	reader *bufio.Reader
 
@@ -122,6 +119,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PushScope:
 			vm.Stack_Scopes[vm.Reg_ScopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.Reg_ScopeIndex++
+			vm.SymbolTables.Push([]Symbol{})
 
 		// Call a function
 		case IT_Call:

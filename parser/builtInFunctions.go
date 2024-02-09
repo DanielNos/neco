@@ -1,8 +1,15 @@
 package parser
 
 func (p *Parser) insertBuiltInFunctions() {
-	p.insertFunction("print", &FunctionSymbol{-1, []Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}})
-	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{VariableType{DT_String, false}, "text", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("print", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Bool, false}, "bool", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("print", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("print", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("print", &FunctionSymbol{-1, []Parameter{{VariableType{DT_String, false}, "string", nil}}, VariableType{DT_NoType, false}})
+
+	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Bool, false}, "bool", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Float, false}, "float", nil}}, VariableType{DT_NoType, false}})
+	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{VariableType{DT_String, false}, "string", nil}}, VariableType{DT_NoType, false}})
 
 	p.insertFunction("str", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Bool, false}, "boolean", nil}}, VariableType{DT_String, false}})
 	p.insertFunction("str", &FunctionSymbol{-1, []Parameter{{VariableType{DT_Int, false}, "integer", nil}}, VariableType{DT_String, false}})

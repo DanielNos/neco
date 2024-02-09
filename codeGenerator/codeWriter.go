@@ -130,7 +130,7 @@ func (cw *CodeWriter) writeStringsSegment() {
 
 	for i := 0; i < len(cw.codeGenerator.stringConstants); i++ {
 		cw.file.WriteString(cw.codeGenerator.constants[i].(string))
-		cw.file.Write([]byte{0})
+		cw.file.Write(ARGS_ZERO)
 	}
 
 	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)

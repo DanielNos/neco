@@ -49,14 +49,14 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
 		if vm.Stack_Argument[vm.Reg_ArgumentPointer-1] == nil {
 			print("none")
 		} else {
-			fmt.Printf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(string))
+			fmt.Printf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
 		}
 
 	case BIF_PrintLine:
 		if vm.Stack_Argument[vm.Reg_ArgumentPointer-1] == nil {
 			println("none")
 		} else {
-			fmt.Printf("%v\n", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(string))
+			fmt.Printf("%v\n", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
 		}
 		vm.Reg_ArgumentPointer--
 
