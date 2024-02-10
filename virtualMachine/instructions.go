@@ -1,8 +1,12 @@
 package virtualMachine
 
 const (
-	// 1 argument
-	IT_CallBuiltInFunc byte = iota
+	// 1 argument 2 bytes
+	IT_JumpEx byte = iota
+	IT_JumpIfTrueEx
+
+	// 1 argument 1 byte
+	IT_CallBuiltInFunc
 	IT_Halt
 
 	IT_StoreRegA
@@ -82,7 +86,11 @@ const (
 )
 
 var InstructionTypeToString = map[byte]string{
-	// 1 argument
+	// 1 argument 2 bytes
+	IT_JumpEx:       "JUMP_EX",
+	IT_JumpIfTrueEx: "JUMP_IF_TRUE_EX",
+
+	// 1 argument 1 byte
 	IT_CallBuiltInFunc: "CALL_BUILTIN_FUNC",
 	IT_Halt:            "HALT",
 
@@ -99,7 +107,9 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PopArgStackVariable: "POP_ARG_STACK_VARIABLE",
 
-	IT_Call: "CALL",
+	IT_Call:       "CALL",
+	IT_Jump:       "JUMP",
+	IT_JumpIfTrue: "JUMP_IF_TRUE",
 
 	// 0 arguments
 	IT_SwapAB:      "SWAP_A_B",
@@ -154,9 +164,6 @@ var InstructionTypeToString = map[byte]string{
 	IT_SetRegBFalse: "SET_REG_B_FALSE",
 	IT_SetRegBTrue:  "SET_REG_B_TRUE",
 
-	IT_Jump:       "JUMP",
-	IT_JumpIfTrue: "JUMP_IF_TRUE",
-
 	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
 	IT_PopScope:         "POP_SCOPE",
 
@@ -166,4 +173,9 @@ var InstructionTypeToString = map[byte]string{
 type Instruction struct {
 	InstructionType  byte
 	InstructionValue []byte
+}
+
+type ExpandedInstruction struct {
+	InstructionType  byte
+	InstructionValue []int
 }

@@ -9,6 +9,8 @@ import (
 	"os"
 )
 
+var STRING_TERMINATOR = []byte{0}
+
 const CONSTANTS_SEGMENT = 0
 const (
 	STRINGS_SEGMENT = 0
@@ -130,7 +132,7 @@ func (cw *CodeWriter) writeStringsSegment() {
 
 	for i := 0; i < len(cw.codeGenerator.stringConstants); i++ {
 		cw.file.WriteString(cw.codeGenerator.constants[i].(string))
-		cw.file.Write(ARGS_ZERO)
+		cw.file.Write(STRING_TERMINATOR)
 	}
 
 	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)

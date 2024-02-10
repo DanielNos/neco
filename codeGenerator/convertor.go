@@ -1,6 +1,7 @@
 package codeGenerator
 
 import (
+	"encoding/binary"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -43,4 +44,11 @@ func (cg *CodeGenerator) lineToInstruction(line byte) byte {
 	}
 
 	return line - 1 | 1<<7
+}
+
+func intTo2Bytes(int int) []byte {
+	bytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(bytes, uint16(int))
+
+	return bytes
 }

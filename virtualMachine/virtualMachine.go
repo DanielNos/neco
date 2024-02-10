@@ -27,7 +27,7 @@ const (
 type VirtualMachine struct {
 	Constants []interface{}
 
-	Instructions     []Instruction
+	Instructions     []ExpandedInstruction
 	instructionIndex int
 
 	functions []int

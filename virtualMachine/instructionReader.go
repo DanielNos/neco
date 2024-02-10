@@ -18,7 +18,7 @@ type InstructionReader struct {
 	virtualMachine *VirtualMachine
 }
 
-var NO_ARGS = []byte{}
+var NO_ARGS = []int{}
 
 const OFFSET_BYTE_MASK = byte(0b0111_1111)
 
@@ -171,16 +171,21 @@ func (ir *InstructionReader) readInstructions() {
 	for ir.byteIndex < endIndex {
 		instructionType := ir.bytes[ir.byteIndex]
 
-		// 1 argument instruction
-		if instructionType <= IT_JumpIfTrue {
+		// 1 argument 2 byte instruction
+		if instructionType <= IT_JumpIfTrueEx {
 			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, []byte{ir.bytes[ir.byteIndex]}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(binary.LittleEndian.Uint16([]byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}))}})
+			ir.byteIndex++
+			// 1 argument 1 byte instruction
+		} else if instructionType <= IT_JumpIfTrue {
+			ir.byteIndex++
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 			// 0 argument instruction
 		} else if instructionType < IT_LineOffset {
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{instructionType, NO_ARGS})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, NO_ARGS})
 			// Line offset
 		} else {
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, Instruction{IT_LineOffset, []byte{(ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK) + 1}})
+			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{IT_LineOffset, []int{int((ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK)) + 1}})
 		}
 
 		ir.byteIndex++

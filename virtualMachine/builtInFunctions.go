@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	BIF_Print byte = iota
+	BIF_Print = iota
 	BIF_PrintLine
 
 	BIF_BoolToString
@@ -42,7 +42,7 @@ const (
 const INT_0 = int64(0)
 const INT_1 = int64(1)
 
-func (vm *VirtualMachine) callBuiltInFunction(functionCode byte) {
+func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	switch functionCode {
 	// Print functions
 	case BIF_Print:
