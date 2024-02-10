@@ -22,12 +22,12 @@ type CodeGenerator struct {
 	intConstants    map[int64]int
 	floatConstants  map[float64]int
 	stringConstants map[string]int
-	constants       []interface{}
+	constants       []interface{} // int64/float64/string
 
 	instructions []VM.Instruction
 
-	variableIdentifierCounters *dataStructures.Stack
-	variableIdentifiers        *dataStructures.Stack
+	variableIdentifierCounters *dataStructures.Stack // of uint8
+	variableIdentifiers        *dataStructures.Stack // of map[string]uint8
 
 	functions []int // Function number : function start
 
@@ -189,7 +189,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// Scope
 	case parser.NT_Scope:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
-		cg.variableIdentifierCounters.Push(uint8(0))
+		cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
 		cg.variableIdentifiers.Push(map[string]uint8{})
 
 		cg.generateStatements(node.Value.(*parser.ScopeNode))
@@ -200,14 +200,6 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	default:
 		panic("Unkown node.")
-	}
-}
-
-func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) {
-	cg.generateStatements(functionNode.Body.Value.(*parser.ScopeNode))
-
-	if functionNode.Identifier == "entry" {
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: ARGS_ZERO})
 	}
 }
 

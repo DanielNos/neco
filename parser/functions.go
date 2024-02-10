@@ -43,7 +43,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 
 	// Leave scope
 	p.scopeNodeStack.Pop()
-	p.symbolTableStack.Pop()
+	p.stack_symbolTablestack.Pop()
 
 	p.StringConstants[identifierToken.Value] = -1
 	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
@@ -102,7 +102,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	// Leave scope
 	p.scopeNodeStack.Pop()
-	p.symbolTableStack.Pop()
+	p.stack_symbolTablestack.Pop()
 
 	// Insert function symbol
 	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType, identifierToken.Value == "entry"})

@@ -18,7 +18,7 @@ type Parser struct {
 	scopeCounter   int
 	scopeNodeStack *dataStructures.Stack
 
-	symbolTableStack *dataStructures.Stack
+	stack_symbolTablestack *dataStructures.Stack
 
 	functions     []*FunctionSymbol
 	functionIndex int
@@ -92,18 +92,18 @@ func (p *Parser) newErrorNoMessage(position *dataStructures.CodePos) {
 }
 
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {
-	p.symbolTableStack.Top.Value.(symbolTable)[key] = symbol
+	p.stack_symbolTablestack.Top.Value.(symbolTable)[key] = symbol
 }
 
 func (p *Parser) enterScope() {
-	p.symbolTableStack.Push(symbolTable{})
+	p.stack_symbolTablestack.Push(symbolTable{})
 	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})
 	p.scopeCounter++
 }
 
 func (p *Parser) leaveScope() {
 	p.scopeNodeStack.Pop()
-	p.symbolTableStack.Pop()
+	p.stack_symbolTablestack.Pop()
 }
 
 func (p *Parser) Parse() *Node {
@@ -143,7 +143,7 @@ func (p *Parser) parseModule() *Node {
 	}
 
 	// Check if all functions were called
-	for identifier, symbol := range p.symbolTableStack.Bottom.Value.(symbolTable) {
+	for identifier, symbol := range p.stack_symbolTablestack.Bottom.Value.(symbolTable) {
 		// Try to find function bucket symbol
 		if symbol.symbolType == ST_FunctionBucket {
 			// Check if every function in the bucket was ever called
@@ -239,7 +239,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 		if p.scopeNodeStack.Size > 1 {
 			if enteredScope {
 				p.scopeNodeStack.Pop()
-				p.symbolTableStack.Pop()
+				p.stack_symbolTablestack.Pop()
 			}
 			p.consume()
 			// Root scope

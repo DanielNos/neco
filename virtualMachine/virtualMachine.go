@@ -19,9 +19,10 @@ const (
 )
 
 const (
-	STACK_ARGUMENT_SIZE     = 100
+	stack_arguments_SIZE    = 100
 	STACK_RETURN_INDEX_SIZE = 1024
-	STACK_SCOPES_SIZE       = 100
+	stack_scopes_SIZE       = 100
+	SYMBOL_TABLE_SIZE       = 100
 )
 
 type VirtualMachine struct {
@@ -32,45 +33,48 @@ type VirtualMachine struct {
 
 	functions []int
 
-	Reg_GenericA interface{}
-	Reg_GenericB interface{}
-	Reg_GenericC interface{}
-	Reg_GenericD interface{}
-	Reg_GenericE interface{}
+	// Public registers and stack
+	reg_genericA interface{}
+	reg_genericB interface{}
+	reg_genericC interface{}
+	reg_genericD interface{}
 
-	Reg_ArgumentPointer int
-	Stack_Argument      []interface{}
+	reg_argumentPointer int
+	stack_arguments     []interface{}
 
-	Reg_ReturnIndex   int
-	Stack_ReturnIndex []int
+	// Private stacks
+	reg_returnIndex     int
+	stack_returnIndexes []int
 
-	Reg_ScopeIndex int
-	Stack_Scopes   []string
-	SymbolTables   *dataStructures.Stack
+	reg_scopeIndex int
+	stack_scopes   []string
 
-	reader *bufio.Reader
+	reg_symbolIndex    int
+	stack_symbolTables *dataStructures.Stack
 
-	Line uint
+	reader    *bufio.Reader
+	firstLine int
 }
 
 func NewVirutalMachine() *VirtualMachine {
 	virtualMachine := &VirtualMachine{
 		instructionIndex: 0,
 
-		Stack_Argument: make([]interface{}, STACK_ARGUMENT_SIZE),
+		stack_arguments: make([]interface{}, stack_arguments_SIZE),
 
-		Reg_ReturnIndex:   0,
-		Stack_ReturnIndex: make([]int, STACK_RETURN_INDEX_SIZE),
+		reg_returnIndex:     0,
+		stack_returnIndexes: make([]int, STACK_RETURN_INDEX_SIZE),
 
-		Reg_ScopeIndex: 0,
-		Stack_Scopes:   make([]string, STACK_SCOPES_SIZE),
+		reg_scopeIndex: 0,
+		stack_scopes:   make([]string, stack_scopes_SIZE),
 
-		SymbolTables: dataStructures.NewStack(),
+		reg_symbolIndex:    0,
+		stack_symbolTables: dataStructures.NewStack(),
 
 		reader: bufio.NewReader(os.Stdin),
 	}
 
-	virtualMachine.SymbolTables.Push([]Symbol{})
+	virtualMachine.stack_symbolTables.Push(NewSymbolMap(SYMBOL_TABLE_SIZE))
 
 	return virtualMachine
 }
@@ -96,39 +100,39 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericA
+			vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.reg_genericA
 
 		case IT_StoreRegB:
-			vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.Reg_GenericB
+			vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.reg_genericB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
-			vm.Reg_GenericA = vm.Constants[instruction.InstructionValue[0]]
+			vm.reg_genericA = vm.Constants[instruction.InstructionValue[0]]
 
 		case IT_LoadConstRegB:
-			vm.Reg_GenericB = vm.Constants[instruction.InstructionValue[0]]
+			vm.reg_genericB = vm.Constants[instruction.InstructionValue[0]]
 
 		// Load variable to a register
 		case IT_LoadRegA:
-			vm.Reg_GenericA = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+			vm.reg_genericA = vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
 
 		case IT_LoadRegB:
-			vm.Reg_GenericB = vm.SymbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+			vm.reg_genericB = vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
 
 		// Enter scope
 		case IT_PushScope:
-			vm.Stack_Scopes[vm.Reg_ScopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
-			vm.Reg_ScopeIndex++
-			vm.SymbolTables.Push([]Symbol{})
+			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
+			vm.reg_scopeIndex++
+			vm.stack_symbolTables.Push([]Symbol{})
 
 		// Call a function
 		case IT_Call:
 			// Push return adress to stack
-			vm.Stack_ReturnIndex[vm.Reg_ReturnIndex] = vm.instructionIndex + 1
-			vm.Reg_ReturnIndex++
+			vm.stack_returnIndexes[vm.reg_returnIndex] = vm.instructionIndex + 1
+			vm.reg_returnIndex++
 
 			// Return adress stack overflow
-			if vm.Reg_ReturnIndex == STACK_RETURN_INDEX_SIZE {
+			if vm.reg_returnIndex == STACK_RETURN_INDEX_SIZE {
 				logger.Fatal(errors.STACK_OVERFLOW, "Function return adress stack overflow.")
 			}
 
@@ -140,173 +144,178 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Swap generic registers
 		case IT_SwapAB:
-			vm.Reg_GenericA, vm.Reg_GenericB = vm.Reg_GenericB, vm.Reg_GenericA
+			vm.reg_genericA, vm.reg_genericB = vm.reg_genericB, vm.reg_genericA
 
 		// Copy registers to registers
 		case IT_CopyRegAToC:
-			vm.Reg_GenericC = vm.Reg_GenericA
+			vm.reg_genericC = vm.reg_genericA
 
 		case IT_CopyRegBToC:
-			vm.Reg_GenericC = vm.Reg_GenericB
+			vm.reg_genericC = vm.reg_genericB
 
 		case IT_CopyRegCToA:
-			vm.Reg_GenericA = vm.Reg_GenericC
+			vm.reg_genericA = vm.reg_genericC
 
 		case IT_CopyRegCToB:
-			vm.Reg_GenericB = vm.Reg_GenericC
+			vm.reg_genericB = vm.reg_genericC
 
 		case IT_CopyRegAToD:
-			vm.Reg_GenericD = vm.Reg_GenericA
+			vm.reg_genericD = vm.reg_genericA
 
 		case IT_CopyRegDToA:
-			vm.Reg_GenericA = vm.Reg_GenericD
+			vm.reg_genericA = vm.reg_genericD
 
 		case IT_CopyRegDToB:
-			vm.Reg_GenericB = vm.Reg_GenericD
+			vm.reg_genericB = vm.reg_genericD
 
 		// Push register to stack
 		case IT_PushRegAToArgStack:
-			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericA
-			vm.Reg_ArgumentPointer++
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_genericA
+			vm.reg_argumentPointer++
 
 		case IT_PushRegBToArgStack:
-			vm.Stack_Argument[vm.Reg_ArgumentPointer] = vm.Reg_GenericB
-			vm.Reg_ArgumentPointer++
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_genericB
+			vm.reg_argumentPointer++
 
 		// Integer operations
 		case IT_IntAdd:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) + vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) + vm.reg_genericB.(int64)
 
 		case IT_IntSubtract:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) - vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) - vm.reg_genericB.(int64)
 
 		case IT_IntMultiply:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) * vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) * vm.reg_genericB.(int64)
 
 		case IT_IntDivide:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) / vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) / vm.reg_genericB.(int64)
 
 		case IT_IntPower:
-			vm.Reg_GenericA = necoMath.PowerInt64(vm.Reg_GenericA.(int64), vm.Reg_GenericB.(int64))
+			vm.reg_genericA = necoMath.PowerInt64(vm.reg_genericA.(int64), vm.reg_genericB.(int64))
 
 		case IT_IntModulo:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) % vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) % vm.reg_genericB.(int64)
 
 		// Float operations
 		case IT_FloatAdd:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) + vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) + vm.reg_genericB.(float64)
 
 		case IT_FloatSubtract:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) - vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) - vm.reg_genericB.(float64)
 
 		case IT_FloatMultiply:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) * vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) * vm.reg_genericB.(float64)
 
 		case IT_FloatDivide:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) / vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) / vm.reg_genericB.(float64)
 
 		case IT_FloatPower:
-			vm.Reg_GenericA = math.Pow(vm.Reg_GenericA.(float64), vm.Reg_GenericB.(float64))
+			vm.reg_genericA = math.Pow(vm.reg_genericA.(float64), vm.reg_genericB.(float64))
 
 		case IT_FloatModulo:
-			vm.Reg_GenericA = math.Mod(vm.Reg_GenericA.(float64), vm.Reg_GenericB.(float64))
+			vm.reg_genericA = math.Mod(vm.reg_genericA.(float64), vm.reg_genericB.(float64))
 
 		// String operations
 		case IT_StringConcat:
-			vm.Reg_GenericA = fmt.Sprintf("%s%s", vm.Reg_GenericA, vm.Reg_GenericB)
+			vm.reg_genericA = fmt.Sprintf("%s%s", vm.reg_genericA, vm.reg_genericB)
 
 		// Declare variables
 		case IT_DeclareBool:
-			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
 
 		case IT_DeclareInt:
-			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
 
 		case IT_DeclareFloat:
-			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
 
 		case IT_DeclareString:
-			vm.SymbolTables.Top.Value = append(vm.SymbolTables.Top.Value.([]Symbol), Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
 
 		// Return from a function
 		case IT_Return:
-			vm.SymbolTables.Pop()
-			vm.Reg_ScopeIndex--
+			vm.stack_symbolTables.Pop()
+			vm.reg_scopeIndex--
 
-			vm.Reg_ReturnIndex--
-			vm.instructionIndex = vm.Stack_ReturnIndex[vm.Reg_ReturnIndex]
+			vm.reg_returnIndex--
+			vm.instructionIndex = vm.stack_returnIndexes[vm.reg_returnIndex]
 			continue
 
 		// Comparison instructions
 		case IT_Equal:
-			vm.Reg_GenericA = vm.Reg_GenericA == vm.Reg_GenericB
+			vm.reg_genericA = vm.reg_genericA == vm.reg_genericB
 
 		case IT_LowerInt:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) < vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) < vm.reg_genericB.(int64)
 
 		case IT_LowerFloat:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) < vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) < vm.reg_genericB.(float64)
 
 		case IT_GreaterInt:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) > vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) > vm.reg_genericB.(int64)
 
 		case IT_GreaterFloat:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) > vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) > vm.reg_genericB.(float64)
 
 		case IT_LowerEqualInt:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) <= vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) <= vm.reg_genericB.(int64)
 
 		case IT_LowerEqualFloat:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) <= vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) <= vm.reg_genericB.(float64)
 
 		case IT_GreaterEqualInt:
-			vm.Reg_GenericA = vm.Reg_GenericA.(int64) >= vm.Reg_GenericB.(int64)
+			vm.reg_genericA = vm.reg_genericA.(int64) >= vm.reg_genericB.(int64)
 
 		case IT_GreaterEqualFloat:
-			vm.Reg_GenericA = vm.Reg_GenericA.(float64) >= vm.Reg_GenericB.(float64)
+			vm.reg_genericA = vm.reg_genericA.(float64) >= vm.reg_genericB.(float64)
 
 		case IT_Not:
-			vm.Reg_GenericA = !vm.Reg_GenericA.(bool)
+			vm.reg_genericA = !vm.reg_genericA.(bool)
 
 		// Jumps
 		case IT_Jump:
 			vm.instructionIndex += int(instruction.InstructionValue[0])
 
 		case IT_JumpIfTrue:
-			if vm.Reg_GenericA.(bool) {
+			if vm.reg_genericA.(bool) {
 				vm.instructionIndex += int(instruction.InstructionValue[0])
 			}
 
 		// Put bools in registers
 		case IT_SetRegATrue:
-			vm.Reg_GenericA = true
+			vm.reg_genericA = true
 
 		case IT_SetRegAFalse:
-			vm.Reg_GenericA = false
+			vm.reg_genericA = false
 
 		case IT_SetRegBTrue:
-			vm.Reg_GenericA = true
+			vm.reg_genericA = true
 
 		case IT_SetRegBFalse:
-			vm.Reg_GenericA = false
+			vm.reg_genericA = false
 
 		// Scopes
 		case IT_PushScopeUnnamed:
-			vm.Stack_Scopes[vm.Reg_ScopeIndex] = ""
-			vm.Reg_ScopeIndex++
-			vm.SymbolTables.Push([]Symbol{})
+			vm.stack_scopes[vm.reg_scopeIndex] = ""
+			vm.reg_scopeIndex++
+			vm.stack_symbolTables.Push([]Symbol{})
 
 		case IT_PopScope:
-			vm.SymbolTables.Pop()
-			vm.Reg_ScopeIndex--
+			vm.stack_symbolTables.Pop()
+			vm.reg_scopeIndex--
 
-		// Move line
+		// Ignore line offsets
 		case IT_LineOffset:
-			vm.Line += uint(instruction.InstructionValue[0])
 
 		// Unknown instruction
 		default:
-			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.Line, instruction.InstructionType))
+			for i := 0; i < vm.instructionIndex; i++ {
+				if vm.Instructions[i].InstructionType == IT_LineOffset {
+					vm.firstLine += vm.Instructions[i].InstructionValue[0]
+				}
+			}
+
+			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.firstLine, instruction.InstructionType))
 		}
 
 		vm.instructionIndex++

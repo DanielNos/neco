@@ -28,7 +28,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		cg.generateExpressionArguments(binaryNode)
 
 		// Generate operator
-		// Add strings
+		// Concatenate strings
 		if binaryNode.DataType == parser.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
 			// Operation on ints

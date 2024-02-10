@@ -90,3 +90,11 @@ func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegAToArgStack, NO_ARGS})
 	}
 }
+
+func (cg *CodeGenerator) generateBody(functionNode *parser.FunctionDeclareNode) {
+	cg.generateStatements(functionNode.Body.Value.(*parser.ScopeNode))
+
+	if functionNode.Identifier == "entry" {
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: ARGS_ZERO})
+	}
+}

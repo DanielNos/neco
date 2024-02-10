@@ -35,7 +35,7 @@ type FunctionSymbol struct {
 type symbolTable map[string]*Symbol
 
 func (p *Parser) findSymbol(identifier string) *Symbol {
-	stackNode := p.symbolTableStack.Top
+	stackNode := p.stack_symbolTablestack.Top
 
 	for stackNode != nil {
 		symbol, exists := stackNode.Value.(symbolTable)[identifier]
@@ -51,7 +51,7 @@ func (p *Parser) findSymbol(identifier string) *Symbol {
 }
 
 func (p *Parser) getSymbol(identifier string) *Symbol {
-	symbol, exists := p.symbolTableStack.Top.Value.(symbolTable)[identifier]
+	symbol, exists := p.stack_symbolTablestack.Top.Value.(symbolTable)[identifier]
 
 	if exists {
 		return symbol
@@ -61,7 +61,7 @@ func (p *Parser) getSymbol(identifier string) *Symbol {
 }
 
 func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
-	symbol, exists := p.symbolTableStack.Bottom.Value.(symbolTable)[identifier]
+	symbol, exists := p.stack_symbolTablestack.Bottom.Value.(symbolTable)[identifier]
 
 	if exists {
 		return symbol
@@ -71,12 +71,12 @@ func (p *Parser) getGlobalSymbol(identifier string) *Symbol {
 
 func (p *Parser) insertFunction(name string, functionSymbol *FunctionSymbol) *Symbol {
 	// Find bucket
-	bucket, exists := p.symbolTableStack.Bottom.Value.(symbolTable)[name]
+	bucket, exists := p.stack_symbolTablestack.Bottom.Value.(symbolTable)[name]
 
 	// Create bucket if it doesn't exist
 	if !exists {
 		bucket = &Symbol{ST_FunctionBucket, symbolTable{}}
-		p.symbolTableStack.Bottom.Value.(symbolTable)[name] = bucket
+		p.stack_symbolTablestack.Bottom.Value.(symbolTable)[name] = bucket
 	}
 
 	// Insert function in to bucket

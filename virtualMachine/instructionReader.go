@@ -165,7 +165,7 @@ func (ir *InstructionReader) readInstructions() {
 	endIndex := ir.byteIndex + codeSize
 
 	// Collect first line number
-	ir.virtualMachine.Line = 1 + uint(ir.bytes[ir.byteIndex]) - 128
+	ir.virtualMachine.firstLine = int(1 + uint(ir.bytes[ir.byteIndex]) - 128)
 	ir.byteIndex++
 
 	for ir.byteIndex < endIndex {

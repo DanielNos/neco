@@ -46,111 +46,111 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	switch functionCode {
 	// Print functions
 	case BIF_Print:
-		if vm.Stack_Argument[vm.Reg_ArgumentPointer-1] == nil {
+		if vm.stack_arguments[vm.reg_argumentPointer-1] == nil {
 			print("none")
 		} else {
-			fmt.Printf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
+			fmt.Printf("%v", vm.stack_arguments[vm.reg_argumentPointer-1])
 		}
 
 	case BIF_PrintLine:
-		if vm.Stack_Argument[vm.Reg_ArgumentPointer-1] == nil {
+		if vm.stack_arguments[vm.reg_argumentPointer-1] == nil {
 			println("none")
 		} else {
-			fmt.Printf("%v\n", vm.Stack_Argument[vm.Reg_ArgumentPointer-1])
+			fmt.Printf("%v\n", vm.stack_arguments[vm.reg_argumentPointer-1])
 		}
-		vm.Reg_ArgumentPointer--
+		vm.reg_argumentPointer--
 
 	// Data types to string
 	case BIF_BoolToString:
-		vm.Reg_GenericA = fmt.Sprintf("%v", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(bool))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer-1].(bool))
+		vm.reg_argumentPointer--
 
 	case BIF_IntToString:
-		vm.Reg_GenericA = fmt.Sprintf("%d", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer-1].(int64))
+		vm.reg_argumentPointer--
 
 	case BIF_FloatToString:
-		vm.Reg_GenericA = fmt.Sprintf("%f", vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(float64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer-1].(float64))
+		vm.reg_argumentPointer--
 
 	// Data type to data type
 	case BIF_BoolToInt:
-		if vm.Reg_GenericA.(bool) {
-			vm.Reg_GenericA = INT_1
+		if vm.reg_genericA.(bool) {
+			vm.reg_genericA = INT_1
 		} else {
-			vm.Reg_GenericA = INT_0
+			vm.reg_genericA = INT_0
 		}
-		vm.Reg_ArgumentPointer--
+		vm.reg_argumentPointer--
 
 	case BIF_IntToFloat:
-		vm.Reg_GenericA = float64(vm.Reg_GenericA.(int64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = float64(vm.reg_genericA.(int64))
+		vm.reg_argumentPointer--
 
 	// Rounding floats
 	case BIF_Floor:
-		vm.Reg_GenericA = math.Floor(vm.Reg_GenericA.(float64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = math.Floor(vm.reg_genericA.(float64))
+		vm.reg_argumentPointer--
 
 	case BIF_FloorToInt:
-		vm.Reg_GenericA = int64(vm.Reg_GenericA.(float64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = int64(vm.reg_genericA.(float64))
+		vm.reg_argumentPointer--
 
 	case BIF_Ceil:
-		vm.Reg_GenericA = math.Ceil(vm.Reg_GenericA.(float64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = math.Ceil(vm.reg_genericA.(float64))
+		vm.reg_argumentPointer--
 
 	case BIF_CeilToInt:
-		vm.Reg_GenericA = int64(math.Ceil(vm.Reg_GenericA.(float64)))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = int64(math.Ceil(vm.reg_genericA.(float64)))
+		vm.reg_argumentPointer--
 
 	case BIF_Round:
-		vm.Reg_GenericA = math.Round(vm.Reg_GenericA.(float64))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = math.Round(vm.reg_genericA.(float64))
+		vm.reg_argumentPointer--
 
 	case BIF_RoundToInt:
-		vm.Reg_GenericA = int64(math.Round(vm.Reg_GenericA.(float64)))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = int64(math.Round(vm.reg_genericA.(float64)))
+		vm.reg_argumentPointer--
 
 	// Absolute values
 	case BIF_AbsInt:
-		if vm.Reg_GenericA.(int64) < 0 {
-			vm.Reg_GenericA = -vm.Reg_GenericA.(int64)
+		if vm.reg_genericA.(int64) < 0 {
+			vm.reg_genericA = -vm.reg_genericA.(int64)
 		}
 
 	case BIF_AbsFloat:
-		vm.Reg_GenericA = math.Abs(vm.Reg_GenericA.(float64))
+		vm.reg_genericA = math.Abs(vm.reg_genericA.(float64))
 
 	// Reading from terminal
 	case BIF_ReadLine:
-		vm.Reg_GenericA, _ = vm.reader.ReadString('\n')
-		vm.Reg_GenericA = vm.Reg_GenericA.(string)[:len(vm.Reg_GenericA.(string))-1]
+		vm.reg_genericA, _ = vm.reader.ReadString('\n')
+		vm.reg_genericA = vm.reg_genericA.(string)[:len(vm.reg_genericA.(string))-1]
 
 	case BIF_ReadChar:
 		char, _, _ := vm.reader.ReadRune()
-		vm.Reg_GenericA = fmt.Sprintf("%c", char)
+		vm.reg_genericA = fmt.Sprintf("%c", char)
 
 	// String functions
 	case BIF_Length:
-		vm.Reg_GenericA = len(vm.Reg_GenericA.(string))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = len(vm.reg_genericA.(string))
+		vm.reg_argumentPointer--
 
 	case BIF_ToLower:
-		vm.Reg_GenericA = strings.ToLower(vm.Reg_GenericA.(string))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = strings.ToLower(vm.reg_genericA.(string))
+		vm.reg_argumentPointer--
 
 	case BIF_ToUpper:
-		vm.Reg_GenericA = strings.ToUpper(vm.Reg_GenericA.(string))
-		vm.Reg_ArgumentPointer--
+		vm.reg_genericA = strings.ToUpper(vm.reg_genericA.(string))
+		vm.reg_argumentPointer--
 
 	// Random numbers
 	case BIF_RandomInt:
-		vm.Reg_GenericA = int64(rand.Uint64())
+		vm.reg_genericA = int64(rand.Uint64())
 
 	case BIF_RandomFloat:
-		vm.Reg_GenericA = rand.Float64()
+		vm.reg_genericA = rand.Float64()
 
 	case BIF_RandomRangeInt:
-		vm.Reg_GenericA = rand.Int63n(vm.Stack_Argument[vm.Reg_ArgumentPointer-1].(int64)-vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)+1) + vm.Stack_Argument[vm.Reg_ArgumentPointer-2].(int64)
-		vm.Reg_ArgumentPointer -= 2
+		vm.reg_genericA = rand.Int63n(vm.stack_arguments[vm.reg_argumentPointer-1].(int64)-vm.stack_arguments[vm.reg_argumentPointer-2].(int64)+1) + vm.stack_arguments[vm.reg_argumentPointer-2].(int64)
+		vm.reg_argumentPointer -= 2
 	}
 }
