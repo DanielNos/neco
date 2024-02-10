@@ -2,6 +2,8 @@ package codeGenerator
 
 import (
 	"fmt"
+	"neco/errors"
+	"neco/logger"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -92,8 +94,23 @@ func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNo
 }
 
 func (cg *CodeGenerator) generateVariable(node *parser.Node, loadLeft bool) {
-	identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[node.Value.(*parser.VariableNode).Identifier]
+	variableName := node.Value.(*parser.VariableNode).Identifier
+	currentNode := cg.variableIdentifiers.Top
 
+	// Try to find variable in scopes
+	identifier, exists := currentNode.Value.(map[string]uint8)[variableName]
+
+	for !exists && currentNode != nil {
+		currentNode = currentNode.Previous
+		identifier, exists = currentNode.Value.(map[string]uint8)[variableName]
+	}
+
+	// Failed to find variable
+	if !exists || currentNode == nil {
+		logger.Fatal(errors.CODE_GENERATION, "Failed to find variable identifier.")
+	}
+
+	// Load variable to correct register
 	if loadLeft {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
 	} else {

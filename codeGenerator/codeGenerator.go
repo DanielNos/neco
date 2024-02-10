@@ -214,17 +214,18 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 
 	for i := 0; i < len(variable.Identifiers); i++ {
 		cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
-		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 
 		switch variable.VariableType.DataType {
 		case parser.DT_Bool:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
 		case parser.DT_Int:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
 		case parser.DT_Float:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
 		case parser.DT_String:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
 		}
+
+		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 	}
 }

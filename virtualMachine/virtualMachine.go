@@ -22,7 +22,7 @@ const (
 	stack_arguments_SIZE    = 100
 	STACK_RETURN_INDEX_SIZE = 1024
 	stack_scopes_SIZE       = 100
-	SYMBOL_TABLE_SIZE       = 100
+	SYMBOL_MAP_SIZE         = 100
 )
 
 type VirtualMachine struct {
@@ -74,7 +74,7 @@ func NewVirutalMachine() *VirtualMachine {
 		reader: bufio.NewReader(os.Stdin),
 	}
 
-	virtualMachine.stack_symbolTables.Push(NewSymbolMap(SYMBOL_TABLE_SIZE))
+	virtualMachine.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 	return virtualMachine
 }
@@ -100,10 +100,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.reg_genericA
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue = vm.reg_genericA
 
 		case IT_StoreRegB:
-			vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue = vm.reg_genericB
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue = vm.reg_genericB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
@@ -114,16 +114,29 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load variable to a register
 		case IT_LoadRegA:
-			vm.reg_genericA = vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			if value == nil {
+				println("OH NO")
+			}
+
+			vm.reg_genericA = value.symbolValue
 
 		case IT_LoadRegB:
-			vm.reg_genericB = vm.stack_symbolTables.Top.Value.([]Symbol)[instruction.InstructionValue[0]].symbolValue
+			vm.reg_genericB = vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue
 
 		// Enter scope
 		case IT_PushScope:
 			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.reg_scopeIndex++
-			vm.stack_symbolTables.Push([]Symbol{})
+
+			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 		// Call a function
 		case IT_Call:
@@ -221,16 +234,16 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Declare variables
 		case IT_DeclareBool:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
 
 		case IT_DeclareInt:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
 
 		case IT_DeclareFloat:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
 
 		case IT_DeclareString:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
 
 		// Return from a function
 		case IT_Return:
@@ -298,7 +311,8 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PushScopeUnnamed:
 			vm.stack_scopes[vm.reg_scopeIndex] = ""
 			vm.reg_scopeIndex++
-			vm.stack_symbolTables.Push([]Symbol{})
+
+			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 		case IT_PopScope:
 			vm.stack_symbolTables.Pop()

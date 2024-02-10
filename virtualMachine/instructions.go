@@ -9,6 +9,11 @@ const (
 	IT_CallBuiltInFunc
 	IT_Halt
 
+	IT_DeclareBool
+	IT_DeclareInt
+	IT_DeclareFloat
+	IT_DeclareString
+
 	IT_StoreRegA
 	IT_StoreRegB
 
@@ -55,11 +60,6 @@ const (
 	IT_FloatModulo
 
 	IT_StringConcat
-
-	IT_DeclareBool
-	IT_DeclareInt
-	IT_DeclareFloat
-	IT_DeclareString
 
 	IT_Return
 
