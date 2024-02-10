@@ -290,6 +290,16 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_SetRegBFalse:
 			vm.Reg_GenericA = false
 
+		// Scopes
+		case IT_PushScopeUnnamed:
+			vm.Stack_Scopes[vm.Reg_ScopeIndex] = ""
+			vm.Reg_ScopeIndex++
+			vm.SymbolTables.Push([]Symbol{})
+
+		case IT_PopScope:
+			vm.SymbolTables.Pop()
+			vm.Reg_ScopeIndex--
+
 		// Move line
 		case IT_LineOffset:
 			vm.Line += uint(instruction.InstructionValue[0])

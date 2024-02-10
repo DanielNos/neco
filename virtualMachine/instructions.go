@@ -75,6 +75,9 @@ const (
 	IT_SetRegBFalse
 	IT_SetRegBTrue
 
+	IT_PushScopeUnnamed
+	IT_PopScope
+
 	IT_LineOffset
 )
 
@@ -153,6 +156,9 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_Jump:       "JUMP",
 	IT_JumpIfTrue: "JUMP_IF_TRUE",
+
+	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
+	IT_PopScope:         "POP_SCOPE",
 
 	IT_LineOffset: "LINE_OFFSET",
 }

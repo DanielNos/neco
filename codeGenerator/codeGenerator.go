@@ -186,6 +186,18 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		}
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
 
+	// Scope
+	case parser.NT_Scope:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
+		cg.variableIdentifierCounters.Push(uint8(0))
+		cg.variableIdentifiers.Push(map[string]uint8{})
+
+		cg.generateStatements(node.Value.(*parser.ScopeNode))
+
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+		cg.variableIdentifierCounters.Pop()
+		cg.variableIdentifiers.Pop()
+
 	default:
 		panic("Unkown node.")
 	}
