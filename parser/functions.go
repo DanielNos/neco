@@ -157,12 +157,14 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 		// Function is picked by matching arguments
 		functionSymbol := p.matchArguments(functionBucketSymbol, arguments, identifier)
 
-		// Store values from function symbol
-		returnType = &functionSymbol.returnType
-		functionNumber = functionSymbol.number
+		if functionSymbol != nil {
+			// Store values from function symbol
+			returnType = &functionSymbol.returnType
+			functionNumber = functionSymbol.number
 
-		// Set function as used
-		functionSymbol.everCalled = true
+			// Set function as used
+			functionSymbol.everCalled = true
+		}
 	}
 	p.consume()
 

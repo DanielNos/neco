@@ -77,14 +77,18 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 		}
 
 		// Print line of code with error
-		fmt.Fprint(os.Stderr, "\t\t ")
+		fmt.Fprint(os.Stderr, "\t\t")
 		fmt.Fprintf(os.Stderr, "%s", lineString)
 		fmt.Fprint(os.Stderr, "\n\t\t")
 
 		// Move to error token
 		var i uint
-		for i = 0; i < startChar; i++ {
-			fmt.Fprintf(os.Stderr, " ")
+		for i = 0; i < startChar-1; i++ {
+			if lineString[i] == '\t' {
+				fmt.Fprintf(os.Stderr, "\t")
+			} else {
+				fmt.Fprintf(os.Stderr, " ")
+			}
 		}
 
 		// Draw arrows under the error token
