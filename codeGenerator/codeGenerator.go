@@ -73,7 +73,6 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	// No instructions, generate line offset and halt instruction
 	if len(statements) == 0 {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, ARGS_ZERO})
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Halt, ARGS_ZERO})
 
 		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
 
@@ -150,12 +149,6 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	}
 
 	switch node.NodeType {
-	// Function declaration
-	case parser.NT_FunctionDeclare:
-		if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
-			cg.generateBody(node.Value.(*parser.FunctionDeclareNode))
-		}
-
 	// Function call
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)

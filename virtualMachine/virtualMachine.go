@@ -80,8 +80,18 @@ func NewVirutalMachine() *VirtualMachine {
 }
 
 func (vm *VirtualMachine) Execute(filePath string) {
+	// Read instructions
 	reader := NewInstructionReader(filePath, vm)
 	reader.Read()
+
+	// Enter root scope
+	vm.stack_returnIndexes[vm.reg_returnIndex] = len(vm.Instructions)
+	vm.reg_returnIndex++
+
+	vm.stack_scopes[vm.reg_scopeIndex] = filePath
+	vm.reg_scopeIndex++
+
+	vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 	for vm.instructionIndex < len(vm.Instructions) {
 		instruction := vm.Instructions[vm.instructionIndex]

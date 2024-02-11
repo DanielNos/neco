@@ -146,14 +146,14 @@ func (p *Parser) parseParameters() []Parameter {
 func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lexer.Token) *Node {
 	// Collect arguments
 	p.consume()
-	arguments, argumentTypes := p.parseArguments()
+	arguments, argumentTypes, errorsInArguments := p.parseArguments()
 
 	// Check if arguments match any function
 	returnType := &VariableType{DT_NoType, false}
 	functionNumber := -1
 
-	// Try to match arguments to some function from a bucket if it exists
-	if functionBucketSymbol != nil {
+	// Try to match arguments to some function from the bucket
+	if functionBucketSymbol != nil && !errorsInArguments {
 		// Function is picked by matching arguments
 		functionSymbol := p.matchArguments(functionBucketSymbol, arguments, identifier)
 
@@ -208,16 +208,17 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 	return nil
 }
 
-func (p *Parser) parseArguments() ([]*Node, []VariableType) {
+func (p *Parser) parseArguments() ([]*Node, []VariableType, bool) {
 	arguments := []*Node{}
 	argumentTypes := []VariableType{}
 
 	// No arguments
 	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-		return arguments, argumentTypes
+		return arguments, argumentTypes, false
 	}
 
 	// Collect arguments
+	errorCount := p.ErrorCount
 	var argument *Node
 	for {
 		argument = p.parseExpressionRoot()
@@ -230,7 +231,7 @@ func (p *Parser) parseArguments() ([]*Node, []VariableType) {
 		p.consume()
 	}
 
-	return arguments, argumentTypes
+	return arguments, argumentTypes, errorCount != p.ErrorCount
 }
 
 func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {
