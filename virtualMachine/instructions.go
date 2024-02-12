@@ -28,6 +28,7 @@ const (
 	IT_PopArgStackVariable
 
 	IT_Call
+	IT_JumpBack
 	IT_Jump
 	IT_JumpIfTrue
 
@@ -108,6 +109,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_PopArgStackVariable: "POP_ARG_STACK_VARIABLE",
 
 	IT_Call:       "CALL",
+	IT_JumpBack:   "JUMP_BACK",
 	IT_Jump:       "JUMP",
 	IT_JumpIfTrue: "JUMP_IF_TRUE",
 

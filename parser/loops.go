@@ -28,7 +28,7 @@ func (p *Parser) parseWhile() *Node {
 	p.enterScope()
 
 	// Construct condition using if node
-	breakNode := &Node{condition.Position, NT_Drop, 1}
+	breakNode := &Node{condition.Position, NT_Break, 1}
 
 	ifBlock := &Node{condition.Position, NT_Scope, &ScopeNode{p.scopeCounter, []*Node{breakNode}}}
 	p.scopeCounter++

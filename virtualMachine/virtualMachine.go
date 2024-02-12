@@ -124,6 +124,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load variable to a register
 		case IT_LoadRegA:
+			// Find variable
 			symbolTable := vm.stack_symbolTables.Top
 			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
 
@@ -132,8 +133,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
 			}
 
+			// Couldn't find variable
 			if value == nil {
-				println("OH NO")
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
 			}
 
 			vm.reg_genericA = value.symbolValue
@@ -295,13 +298,16 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_Not:
 			vm.reg_genericA = !vm.reg_genericA.(bool)
 
-		// Jumps
+			// Jumps
+		case IT_JumpBack:
+			vm.instructionIndex -= instruction.InstructionValue[0]
+
 		case IT_Jump:
-			vm.instructionIndex += int(instruction.InstructionValue[0])
+			vm.instructionIndex += instruction.InstructionValue[0]
 
 		case IT_JumpIfTrue:
 			if vm.reg_genericA.(bool) {
-				vm.instructionIndex += int(instruction.InstructionValue[0])
+				vm.instructionIndex += instruction.InstructionValue[0]
 			}
 
 		// Put bools in registers
@@ -333,15 +339,18 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Unknown instruction
 		default:
-			for i := 0; i < vm.instructionIndex; i++ {
-				if vm.Instructions[i].InstructionType == IT_LineOffset {
-					vm.firstLine += vm.Instructions[i].InstructionValue[0]
-				}
-			}
-
+			vm.traceLine()
 			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.firstLine, instruction.InstructionType))
 		}
 
 		vm.instructionIndex++
+	}
+}
+
+func (vm *VirtualMachine) traceLine() {
+	for i := 0; i < vm.instructionIndex; i++ {
+		if vm.Instructions[i].InstructionType == IT_LineOffset {
+			vm.firstLine += vm.Instructions[i].InstructionValue[0]
+		}
 	}
 }

@@ -181,15 +181,21 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Scope
 	case parser.NT_Scope:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
-		cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
-		cg.variableIdentifiers.Push(map[string]uint8{})
+		cg.enterScope()
 
 		cg.generateStatements(node.Value.(*parser.ScopeNode))
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
-		cg.variableIdentifierCounters.Pop()
-		cg.variableIdentifiers.Pop()
+		cg.leaveScope()
+
+	// Loops
+	case parser.NT_Loop:
+		cg.enterScope()
+
+		startPosition := len(cg.instructions)
+		cg.generateStatements(node.Value.(*parser.Node).Value.(*parser.ScopeNode))
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
+
+		cg.leaveScope()
 
 	default:
 		panic("Unkown node.")
@@ -221,4 +227,16 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 
 		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 	}
+}
+
+func (cg *CodeGenerator) enterScope() {
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
+	cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
+	cg.variableIdentifiers.Push(map[string]uint8{})
+}
+
+func (cg *CodeGenerator) leaveScope() {
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+	cg.variableIdentifierCounters.Pop()
+	cg.variableIdentifiers.Pop()
 }

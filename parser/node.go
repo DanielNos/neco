@@ -44,7 +44,7 @@ const (
 	NT_If
 	NT_Loop
 	NT_For
-	NT_Drop
+	NT_Break
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -76,7 +76,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_If:              "If",
 	NT_Loop:            "Loop",
 	NT_For:             "For",
-	NT_Drop:            "Drop",
+	NT_Break:           "Drop",
 }
 
 func (nt NodeType) String() string {

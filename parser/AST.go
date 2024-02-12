@@ -133,7 +133,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(ifNode.IfStatements[0].Body, indent, len(ifNode.IfStatements) == 1 && ifNode.ElseBody == nil)
 
 		if len(ifNode.IfStatements) == 1 {
-			if ifNode.ElseBody != nil {	
+			if ifNode.ElseBody != nil {
 				visualize(ifNode.ElseBody, indent, true)
 			}
 		} else {
@@ -160,7 +160,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(forNode.StepStatement, indent, false)
 		visualize(forNode.Body, indent, true)
 
-	case NT_Drop:
+	case NT_Break:
 		fmt.Printf("drop %d\n", node.Value.(int))
 
 	default:
