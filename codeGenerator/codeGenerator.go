@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"neco/codeOptimizer"
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
 	"neco/parser"
@@ -12,7 +12,11 @@ import (
 )
 
 var NO_ARGS = []byte{}
-var ARGS_ZERO = []byte{0}
+
+type Break struct {
+	instruction         *VM.Instruction
+	instructionPosition int
+}
 
 type CodeGenerator struct {
 	filePath string
@@ -26,10 +30,12 @@ type CodeGenerator struct {
 
 	instructions []VM.Instruction
 
-	variableIdentifierCounters *dataStructures.Stack // of uint8
-	variableIdentifiers        *dataStructures.Stack // of map[string]uint8
+	variableIdentifierCounters *data.Stack // of uint8
+	variableIdentifiers        *data.Stack // of map[string]uint8
 
 	functions []int // Function number : function start
+
+	scopeBreaks *data.Stack
 
 	line uint
 
@@ -49,10 +55,13 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 
 		[]VM.Instruction{},
 
-		dataStructures.NewStack(),
-		dataStructures.NewStack(),
+		data.NewStack(),
+		data.NewStack(),
 
 		[]int{},
+
+		data.NewStack(),
+
 		0,
 		0,
 	}
@@ -72,7 +81,7 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	// No instructions, generate line offset and halt instruction
 	if len(statements) == 0 {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, ARGS_ZERO})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{0}})
 
 		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
 
@@ -189,13 +198,41 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Loops
 	case parser.NT_Loop:
+		// Enter scope and create an array for breaks
 		cg.enterScope()
+		cg.scopeBreaks.Push([]Break{})
 
+		// Record start position of loop
 		startPosition := len(cg.instructions)
+		// Generate loop body
 		cg.generateStatements(node.Value.(*parser.Node).Value.(*parser.ScopeNode))
+		// Generate jump instruction back to start
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
 
+		// Set destinations of break jumps
+		distance := 0
+		instructionCount := len(cg.instructions)
+		for _, b := range cg.scopeBreaks.Pop().([]Break) {
+			distance = instructionCount - b.instructionPosition
+
+			// If distance is larger than 255, change instruction type to extended jump
+			if distance > MAX_UINT8 {
+				b.instruction.InstructionType = VM.IT_JumpIfTrueEx
+				b.instruction.InstructionValue = intTo2Bytes(distance)
+			} else {
+				b.instruction.InstructionValue[0] = byte(distance)
+			}
+		}
+
+		// Leave loop scope
 		cg.leaveScope()
+
+	// Break
+	case parser.NT_Break:
+		// Generate jump
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+		// Store it so it's destination can be set at the end of the loop
+		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
 
 	default:
 		panic("Unkown node.")

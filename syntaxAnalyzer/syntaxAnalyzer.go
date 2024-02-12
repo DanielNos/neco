@@ -295,7 +295,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case lexer.TT_KW_break: // Break
 		sn.consume()
 
-	case lexer.TT_KW_return, lexer.TT_KW_drop: // Return, Drop
+	case lexer.TT_KW_return: // Return
 		sn.consume()
 
 		if sn.peek().TokenType != lexer.TT_EndOfCommand {

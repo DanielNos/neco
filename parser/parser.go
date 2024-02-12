@@ -288,6 +288,10 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_DL_BraceOpen:
 		return p.parseScope(true, true).(*Node)
 
+	// Break
+	case lexer.TT_KW_break:
+		return &Node{p.consume().Position, NT_Break, nil}
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()

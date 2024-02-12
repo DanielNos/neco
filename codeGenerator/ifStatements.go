@@ -42,7 +42,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 		// Set elif's conditional jump destination to next instruction
 		distance := len(cg.instructions) - jumpInstructionPositions[i]
 
-		// If distance is larger than 255, change instruction type to extended
+		// If distance is larger than 255, change instruction type to extended jump
 		if distance > MAX_UINT8 {
 			jumpInstructions[i].InstructionType = VM.IT_JumpIfTrueEx
 			jumpInstructions[i].InstructionValue = intTo2Bytes(distance)
@@ -66,7 +66,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	for i, instruction := range jumpInstructions {
 		distance := endPosition - jumpInstructionPositions[i]
 
-		// If distance is larger than 255, change instruction type to extended
+		// If distance is larger than 255, change instruction type to extended jump
 		if distance > MAX_UINT8 {
 			instruction.InstructionType = VM.IT_JumpEx
 			instruction.InstructionValue = intTo2Bytes(distance)

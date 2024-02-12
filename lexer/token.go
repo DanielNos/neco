@@ -82,7 +82,6 @@ const (
 	TT_KW_if
 	TT_KW_elif
 	TT_KW_else
-	TT_KW_drop
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -157,10 +156,9 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_enum:   "enum",
 	TT_KW_class:  "class",
 
-	TT_KW_if:   "if",
-	TT_KW_else: "else",
-	TT_KW_elif: "elif",
-	TT_KW_drop: "drop",
+	TT_KW_if:    "if",
+	TT_KW_else:  "else",
+	TT_KW_elif:  "elif",
 }
 
 func (tt TokenType) String() string {

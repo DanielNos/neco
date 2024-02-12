@@ -28,7 +28,6 @@ var KEYWORDS = map[string]TokenType{
 	"if":   TT_KW_if,
 	"elif": TT_KW_elif,
 	"else": TT_KW_else,
-	"drop": TT_KW_drop,
 }
 
 var DELIMITERS = map[rune]TokenType{
