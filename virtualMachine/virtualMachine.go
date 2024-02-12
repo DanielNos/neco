@@ -110,10 +110,42 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue = vm.reg_genericA
+			// Find variable
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			// Couldn't find variable
+			if value == nil {
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+			}
+
+			// Store register B in symbol
+			value.symbolValue = vm.reg_genericA
 
 		case IT_StoreRegB:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue = vm.reg_genericB
+			// Find variable
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			// Couldn't find variable
+			if value == nil {
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+			}
+
+			// Store register B in symbol
+			value.symbolValue = vm.reg_genericB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
@@ -142,7 +174,22 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.reg_genericA = value.symbolValue
 
 		case IT_LoadRegB:
-			vm.reg_genericB = vm.stack_symbolTables.Top.Value.(*SymbolMap).Get(instruction.InstructionValue[0]).symbolValue
+			// Find variable
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			// Couldn't find variable
+			if value == nil {
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+			}
+
+			vm.reg_genericB = value.symbolValue
 
 		// Enter scope
 		case IT_PushScope:

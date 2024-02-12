@@ -175,6 +175,7 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
+				expression.Value.(*BinaryNode).DataType = DT_Bool
 				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
 			}
 
@@ -184,8 +185,13 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 				return leftType
 			}
 
-			expression.Value.(*BinaryNode).DataType = leftType.DataType
-			return leftType
+			if leftType.DataType != DT_NoType {
+				expression.Value.(*BinaryNode).DataType = leftType.DataType
+				return leftType
+			}
+
+			expression.Value.(*BinaryNode).DataType = rightType.DataType
+			return rightType
 		}
 
 		// Failed to get data type

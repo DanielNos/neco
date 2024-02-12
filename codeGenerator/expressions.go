@@ -110,7 +110,7 @@ func (cg *CodeGenerator) generateVariable(node *parser.Node, loadLeft bool) {
 		logger.Fatal(errors.CODE_GENERATION, "Failed to find variable identifier.")
 	}
 
-	// Load variable to correct register
+	// Load variable to correct regi
 	if loadLeft {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
 	} else {

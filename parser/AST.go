@@ -160,6 +160,9 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(forNode.StepStatement, indent, false)
 		visualize(forNode.Body, indent, true)
 
+	case NT_Break:
+		println("break")
+
 	default:
 		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.NodeType])
 	}

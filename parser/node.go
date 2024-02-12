@@ -76,7 +76,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_If:              "If",
 	NT_Loop:            "Loop",
 	NT_For:             "For",
-	NT_Break:           "Drop",
+	NT_Break:           "Break",
 }
 
 func (nt NodeType) String() string {
