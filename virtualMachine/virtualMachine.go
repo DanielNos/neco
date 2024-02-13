@@ -187,6 +187,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Enter scope
 		case IT_PushScope:
+			fmt.Printf("ENTERING %s\n", vm.Constants[instruction.InstructionValue[0]].(string))
 			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.reg_scopeIndex++
 
@@ -366,12 +367,14 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Scopes
 		case IT_PushScopeUnnamed:
+			println("ENTERING UNNAMED")
 			vm.stack_scopes[vm.reg_scopeIndex] = ""
 			vm.reg_scopeIndex++
 
 			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 		case IT_PopScope:
+			fmt.Printf("POPPING %s\n", vm.stack_scopes[vm.reg_scopeIndex])
 			vm.stack_symbolTables.Pop()
 			vm.reg_scopeIndex--
 

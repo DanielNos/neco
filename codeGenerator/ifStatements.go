@@ -23,7 +23,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 
 	// Generate else body
 	if ifStatement.ElseBody != nil {
-		cg.generateStatements(ifStatement.ElseBody.Value.(*parser.ScopeNode))
+		cg.generateScope(ifStatement.ElseBody.Value.(*parser.ScopeNode))
 	}
 
 	// Generate jump instruction that will jump over all elifs
@@ -41,7 +41,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 		updateJumpDistance(jumpInstructions[i], len(cg.instructions)-jumpInstructionPositions[i], VM.IT_JumpIfTrueEx)
 
 		// Generate elif's body
-		cg.generateStatements(statement.Body.Value.(*parser.ScopeNode))
+		cg.generateScope(statement.Body.Value.(*parser.ScopeNode))
 
 		// Generate jump instruction to the end of elif bodies
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})

@@ -200,34 +200,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Loops
 	case parser.NT_Loop:
-		// Enter scope and create an array for breaks
-		cg.enterScope()
-		cg.scopeBreaks.Push([]Break{})
-
-		// Record start position of loop
-		startPosition := len(cg.instructions)
-		// Generate loop body
-		cg.generateStatements(node.Value.(*parser.Node).Value.(*parser.ScopeNode))
-		// Generate jump instruction back to start
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
-
-		// Set destinations of break jumps
-		distance := 0
-		instructionCount := len(cg.instructions)
-		for _, b := range cg.scopeBreaks.Pop().([]Break) {
-			distance = instructionCount - b.instructionPosition
-
-			// If distance is larger than 255, change instruction type to extended jump
-			if distance > MAX_UINT8 {
-				b.instruction.InstructionType = VM.IT_JumpIfTrueEx
-				b.instruction.InstructionValue = intTo2Bytes(distance)
-			} else {
-				b.instruction.InstructionValue[0] = byte(distance)
-			}
-		}
-
-		// Leave loop scope
-		cg.leaveScope()
+		cg.generateLoop(node.Value.(*parser.Node))
 
 	// Break
 	case parser.NT_Break:
@@ -238,12 +211,6 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	default:
 		panic("Unkown node.")
-	}
-}
-
-func (cg *CodeGenerator) generateStatements(scopeNode *parser.ScopeNode) {
-	for _, node := range scopeNode.Statements {
-		cg.generateNode(node)
 	}
 }
 
@@ -278,4 +245,16 @@ func (cg *CodeGenerator) leaveScope() {
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
 	cg.variableIdentifierCounters.Pop()
 	cg.variableIdentifiers.Pop()
+}
+
+func (cg *CodeGenerator) generateStatements(scopeNode *parser.ScopeNode) {
+	for _, node := range scopeNode.Statements {
+		cg.generateNode(node)
+	}
+}
+
+func (cg *CodeGenerator) generateScope(scopeNode *parser.ScopeNode) {
+	cg.enterScope()
+	cg.generateStatements(scopeNode)
+	cg.leaveScope()
 }

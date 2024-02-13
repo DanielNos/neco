@@ -56,7 +56,7 @@ type VariableType struct {
 }
 
 func (vt VariableType) Equals(other VariableType) bool {
-	return vt.DType == other.DType && vt.UserDefinedType == other.UserDefinedType
+	return (vt.DType == other.DType && vt.DType != DT_UserDefined) || vt.UserDefinedType == other.UserDefinedType
 }
 
 func (v VariableType) String() string {

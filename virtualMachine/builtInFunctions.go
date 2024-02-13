@@ -37,6 +37,8 @@ const (
 	BIF_RandomInt
 	BIF_RandomFloat
 	BIF_RandomRangeInt
+
+	BIF_Trace
 )
 
 const INT_0 = int64(0)
@@ -46,32 +48,25 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	switch functionCode {
 	// Print functions
 	case BIF_Print:
-		if vm.stack_arguments[vm.reg_argumentPointer-1] == nil {
-			print("none")
-		} else {
-			fmt.Printf("%v", vm.stack_arguments[vm.reg_argumentPointer-1])
-		}
+		vm.reg_argumentPointer--
+		fmt.Printf("%v", vm.stack_arguments[vm.reg_argumentPointer])
 
 	case BIF_PrintLine:
-		if vm.stack_arguments[vm.reg_argumentPointer-1] == nil {
-			println("none")
-		} else {
-			fmt.Printf("%v\n", vm.stack_arguments[vm.reg_argumentPointer-1])
-		}
 		vm.reg_argumentPointer--
+		fmt.Printf("%v\n", vm.stack_arguments[vm.reg_argumentPointer])
 
 	// Data types to string
 	case BIF_BoolToString:
-		vm.reg_genericA = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer-1].(bool))
 		vm.reg_argumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer].(bool))
 
 	case BIF_IntToString:
-		vm.reg_genericA = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer-1].(int64))
 		vm.reg_argumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer].(int64))
 
 	case BIF_FloatToString:
-		vm.reg_genericA = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer-1].(float64))
 		vm.reg_argumentPointer--
+		vm.reg_genericA = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	// Data type to data type
 	case BIF_BoolToInt:
@@ -150,7 +145,16 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		vm.reg_genericA = rand.Float64()
 
 	case BIF_RandomRangeInt:
-		vm.reg_genericA = rand.Int63n(vm.stack_arguments[vm.reg_argumentPointer-1].(int64)-vm.stack_arguments[vm.reg_argumentPointer-2].(int64)+1) + vm.stack_arguments[vm.reg_argumentPointer-2].(int64)
 		vm.reg_argumentPointer -= 2
+		vm.reg_genericA = rand.Int63n(vm.stack_arguments[vm.reg_argumentPointer+1].(int64)-vm.stack_arguments[vm.reg_argumentPointer].(int64)+1) + vm.stack_arguments[vm.reg_argumentPointer].(int64)
+
+	// Trace
+	case BIF_Trace:
+		print("[")
+		for _, scope := range vm.stack_scopes[:vm.reg_scopeIndex-1] {
+			fmt.Printf("\"%v\", ", scope)
+		}
+		fmt.Printf("\"%v\"", vm.stack_scopes[vm.reg_scopeIndex-1])
+		println("]")
 	}
 }
