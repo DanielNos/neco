@@ -44,7 +44,6 @@ const (
 	TT_LT_Int
 	TT_LT_Float
 	TT_LT_String
-	TT_LT_None
 
 	TT_KW_global
 	TT_KW_const
@@ -121,7 +120,6 @@ var TokenTypeToString = map[TokenType]string{
 	TT_LT_Int:    "Int",
 	TT_LT_Float:  "Float",
 	TT_LT_String: "String",
-	TT_LT_None:   "None",
 
 	TT_KW_global: "global",
 	TT_KW_const:  "const",
@@ -156,9 +154,9 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_enum:   "enum",
 	TT_KW_class:  "class",
 
-	TT_KW_if:    "if",
-	TT_KW_else:  "else",
-	TT_KW_elif:  "elif",
+	TT_KW_if:   "if",
+	TT_KW_else: "else",
+	TT_KW_elif: "elif",
 }
 
 func (tt TokenType) String() string {
@@ -170,7 +168,7 @@ func (tt TokenType) IsVariableType() bool {
 }
 
 func (tt TokenType) IsLiteral() bool {
-	return tt >= TT_LT_Bool && tt <= TT_LT_None
+	return tt >= TT_LT_Bool && tt <= TT_LT_String
 }
 
 func (tt TokenType) IsOperator() bool {

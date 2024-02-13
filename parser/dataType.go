@@ -8,7 +8,6 @@ type DType uint8
 
 const (
 	DT_NoType DType = iota
-	DT_None
 	DT_Bool
 	DT_Int
 	DT_Float
@@ -20,8 +19,6 @@ func (dt DType) String() string {
 	switch dt {
 	case DT_NoType:
 		return "No Type"
-	case DT_None:
-		return "None"
 	case DT_Bool:
 		return "Bool"
 	case DT_Int:
@@ -39,8 +36,6 @@ func (dt DType) String() string {
 
 var TokenTypeToDataType = map[lexer.TokenType]DType{
 	lexer.TT_KW_var: DT_NoType,
-
-	lexer.TT_LT_None: DT_None,
 
 	lexer.TT_KW_bool: DT_Bool,
 	lexer.TT_LT_Bool: DT_Bool,

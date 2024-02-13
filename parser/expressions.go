@@ -27,8 +27,6 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		var literalValue LiteralValue
 
 		switch p.peek().TokenType {
-		case lexer.TT_LT_None:
-			literalValue = nil
 		case lexer.TT_LT_Bool:
 			literalValue = p.peek().Value[0] == '1'
 		case lexer.TT_LT_Int:

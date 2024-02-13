@@ -243,7 +243,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 		}
 
-	case lexer.TT_LT_None, lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
+	case lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 		startChar := sn.peek().Position.StartChar
 		sn.analyzeExpression()
 		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")

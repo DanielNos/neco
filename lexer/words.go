@@ -27,9 +27,6 @@ func (l *Lexer) lexLetter() {
 		} else if value == "false" { // Literal false
 			l.newTokenFrom(startLine, startChar, TT_LT_Bool, "0")
 			l.token.Reset()
-		} else if value == "none" { // Literal none
-			l.newTokenFrom(startLine, startChar, TT_LT_None, "")
-			l.token.Reset()
 		} else { // Identifier
 			l.newToken(startLine, startChar, TT_Identifier)
 		}
