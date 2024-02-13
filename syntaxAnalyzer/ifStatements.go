@@ -53,14 +53,15 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		return
 		// Skip 1 EOC
 	} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
-		sn.consume()
 
 		// Check else statement
-		if sn.peek().TokenType == lexer.TT_KW_else {
+		if sn.peekNext().TokenType == lexer.TT_KW_else {
+			sn.consume()
 			sn.analyzeElseStatement()
 			return
 			// Check elif statement
-		} else if sn.peek().TokenType == lexer.TT_KW_elif {
+		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
+			sn.consume()
 			sn.analyzeIfStatement(true)
 			return
 		}
@@ -75,19 +76,19 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		sn.consume()
 
 		// Found else
-		if sn.peekNext().TokenType == lexer.TT_KW_else {
+		if sn.peek().TokenType == lexer.TT_KW_else {
 			sn.consume()
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeElseStatement()
 			return
 			// Found elif
-		} else if sn.peekNext().TokenType == lexer.TT_KW_elif {
+		} else if sn.peek().TokenType == lexer.TT_KW_elif {
 			sn.consume()
 			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
 			sn.analyzeIfStatement(true)
 			return
 			// Other tokens
-		} else if sn.peekNext().TokenType != lexer.TT_EndOfCommand {
+		} else if sn.peek().TokenType != lexer.TT_EndOfCommand {
 			return
 		}
 	}
