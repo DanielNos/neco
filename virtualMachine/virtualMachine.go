@@ -13,12 +13,6 @@ import (
 )
 
 const (
-	VERSION_MAJOR = 0
-	VERSION_MINOR = 1
-	VERSION_PATCH = 0
-)
-
-const (
 	stack_arguments_SIZE    = 100
 	STACK_RETURN_INDEX_SIZE = 1024
 	stack_scopes_SIZE       = 100

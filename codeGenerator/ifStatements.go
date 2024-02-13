@@ -5,8 +5,6 @@ import (
 	VM "neco/virtualMachine"
 )
 
-const MAX_UINT8 = 255
-
 func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	jumpInstructions := make([]*VM.Instruction, len(ifStatement.IfStatements))
 	jumpInstructionPositions := make([]int, len(ifStatement.IfStatements))
@@ -24,31 +22,23 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	}
 
 	// Generate else body
-	var jumpFromElse *VM.Instruction = nil
 	if ifStatement.ElseBody != nil {
-		// Generate body
 		cg.generateStatements(ifStatement.ElseBody.Value.(*parser.ScopeNode))
-
-		// Generate jump instruction that will jump over all elifs
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
-		// Store the jump instruction so it's destination can  be set later
-		jumpFromElse = &cg.instructions[len(cg.instructions)-1]
 	}
+
+	// Generate jump instruction that will jump over all elifs
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+
+	// Store the jump instruction so it's destination can  be set later
+	jumpFromElse := &cg.instructions[len(cg.instructions)-1]
+
 	// Store jump position
 	jumpFromElsePosition := len(cg.instructions)
 
 	// Generate else if bodies
 	for i, statement := range ifStatement.IfStatements {
 		// Set elif's conditional jump destination to next instruction
-		distance := len(cg.instructions) - jumpInstructionPositions[i]
-
-		// If distance is larger than 255, change instruction type to extended jump
-		if distance > MAX_UINT8 {
-			jumpInstructions[i].InstructionType = VM.IT_JumpIfTrueEx
-			jumpInstructions[i].InstructionValue = intTo2Bytes(distance)
-		} else {
-			jumpInstructions[i].InstructionValue[0] = byte(distance)
-		}
+		updateJumpDistance(jumpInstructions[i], len(cg.instructions)-jumpInstructionPositions[i], VM.IT_JumpIfTrueEx)
 
 		// Generate elif's body
 		cg.generateStatements(statement.Body.Value.(*parser.ScopeNode))
@@ -64,28 +54,20 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	// Calculate distance from end of each of if/elif body to the end. Assign it to the jump instructions.
 	endPosition := len(cg.instructions)
 	for i, instruction := range jumpInstructions {
-		distance := endPosition - jumpInstructionPositions[i]
-
-		// If distance is larger than 255, change instruction type to extended jump
-		if distance > MAX_UINT8 {
-			instruction.InstructionType = VM.IT_JumpEx
-			instruction.InstructionValue = intTo2Bytes(distance)
-		} else {
-			instruction.InstructionValue[0] = byte(distance)
-		}
+		updateJumpDistance(instruction, endPosition-jumpInstructionPositions[i], VM.IT_JumpEx)
 	}
 
 	// Assign distance to the end to the jump instruction in else block
-	if jumpFromElse != nil {
-		distance := endPosition - jumpFromElsePosition
+	updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition, VM.IT_JumpEx)
+	jumpFromElse.InstructionValue[0] = byte(endPosition - jumpFromElsePosition)
+}
 
-		// If distance is larger than 255, change instruction type to extended
-		if distance > MAX_UINT8 {
-			jumpFromElse.InstructionType = VM.IT_JumpEx
-			jumpFromElse.InstructionValue = intTo2Bytes(distance)
-		} else {
-			jumpFromElse.InstructionValue[0] = byte(distance)
-		}
-		jumpFromElse.InstructionValue[0] = byte(endPosition - jumpFromElsePosition)
+func updateJumpDistance(instruction *VM.Instruction, distance int, extendedInstructionType byte) {
+	// If distance is larger than 255, change instruction type to extended jump
+	if distance > MAX_UINT8 {
+		instruction.InstructionType = extendedInstructionType
+		instruction.InstructionValue = intTo2Bytes(distance)
+	} else {
+		instruction.InstructionValue[0] = byte(distance)
 	}
 }

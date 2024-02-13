@@ -13,6 +13,8 @@ import (
 
 var NO_ARGS = []byte{}
 
+const MAX_UINT8 = 255
+
 type Break struct {
 	instruction         *VM.Instruction
 	instructionPosition int
