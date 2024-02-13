@@ -37,7 +37,8 @@ type CodeGenerator struct {
 
 	functions []int // Function number : function start
 
-	scopeBreaks *data.Stack
+	scopeBreaks     *data.Stack // break
+	loopScopeDepths *data.Stack // int
 
 	line uint
 
@@ -62,6 +63,7 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 
 		[]int{},
 
+		data.NewStack(),
 		data.NewStack(),
 
 		0,
@@ -204,8 +206,14 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Break
 	case parser.NT_Break:
+		// Generate scope drops
+		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int); i++ {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+		}
+
 		// Generate jump
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+
 		// Store it so it's destination can be set at the end of the loop
 		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
 

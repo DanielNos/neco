@@ -6,9 +6,11 @@ import (
 )
 
 func (cg *CodeGenerator) generateLoop(node *parser.Node) {
-	// Enter scope and create an array for breaks
+	// Enter scope and create
 	cg.enterScope()
+	// Create break array and record loop scope
 	cg.scopeBreaks.Push([]Break{})
+	cg.loopScopeDepths.Push(cg.variableIdentifiers.Size)
 
 	// Record start position of loops
 	startPosition := len(cg.instructions)
@@ -22,6 +24,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	// Set destinations of break jumps
 	distance := 0
 	instructionCount := len(cg.instructions)
+
 	for _, b := range cg.scopeBreaks.Pop().([]Break) {
 		distance = instructionCount - b.instructionPosition
 
@@ -33,6 +36,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 			b.instruction.InstructionValue[0] = byte(distance)
 		}
 	}
+	cg.loopScopeDepths.Pop()
 
 	// Leave loop scope
 	cg.leaveScope()
