@@ -89,7 +89,7 @@ func (p *Parser) insertFunction(name string, functionSymbol *FunctionSymbol) *Sy
 func createParametersIdentifier(parameters []Parameter) string {
 	id := ""
 	for _, parameter := range parameters {
-		id = fmt.Sprintf("%s.%s", id, parameter.DataType)
+		id = fmt.Sprintf("%s.%s", id, parameter.DType)
 	}
 
 	return id

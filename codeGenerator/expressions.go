@@ -31,10 +31,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 		// Generate operator
 		// Concatenate strings
-		if binaryNode.DataType == parser.DT_String {
+		if binaryNode.DType == parser.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
 			// Operation on ints
-		} else if binaryNode.DataType == parser.DT_Int {
+		} else if binaryNode.DType == parser.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
 			// Operation on floats
 		} else {
@@ -60,7 +60,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		cg.generateExpressionArguments(binaryNode)
 
 		// Generate operator
-		if binaryNode.DataType == parser.DT_Int {
+		if binaryNode.DType == parser.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToIntInstruction[node.NodeType], NO_ARGS})
 		} else {
 			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToFloatInstruction[node.NodeType], NO_ARGS})
@@ -126,7 +126,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 		instruction = VM.IT_LoadConstRegB
 	}
 
-	switch literalNode.DataType {
+	switch literalNode.DType {
 	// Bool
 	case parser.DT_Bool:
 		if loadLeft {

@@ -19,7 +19,7 @@ func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) 
 	parameterCount := len(function.Parameters)
 	for i := parameterCount - 1; i >= 0; i-- {
 		// Declare variable for argument
-		switch function.Parameters[i].DataType.DataType {
+		switch function.Parameters[i].DType.DType {
 		case parser.DT_Bool:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, NO_ARGS})
 		case parser.DT_Int:

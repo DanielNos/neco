@@ -108,14 +108,14 @@ type AssignNode struct {
 type LiteralValue interface{}
 
 type LiteralNode struct {
-	DataType DataType
-	Value    LiteralValue
+	DType DType
+	Value LiteralValue
 }
 
 type BinaryNode struct {
-	Left     *Node
-	Right    *Node
-	DataType DataType
+	Left  *Node
+	Right *Node
+	DType DType
 }
 
 type VariableNode struct {
@@ -132,7 +132,7 @@ type FunctionDeclareNode struct {
 }
 
 type Parameter struct {
-	DataType     VariableType
+	DType        VariableType
 	Identifier   string
 	DefaultValue *Node
 }

@@ -14,6 +14,6 @@ type Symbol struct {
 }
 
 type VariableSymbol struct {
-	dataType parser.DataType
+	dataType parser.DType
 	value    interface{}
 }

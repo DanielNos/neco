@@ -1,22 +1,22 @@
 package parser
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
-type DataType uint8
+type DType uint8
 
 const (
-	DT_NoType DataType = iota
+	DT_NoType DType = iota
 	DT_None
 	DT_Bool
 	DT_Int
 	DT_Float
 	DT_String
+	DT_UserDefined
 )
 
-func (dt DataType) String() string {
+func (dt DType) String() string {
 	switch dt {
 	case DT_NoType:
 		return "No Type"
@@ -30,12 +30,14 @@ func (dt DataType) String() string {
 		return "Float"
 	case DT_String:
 		return "String"
+	case DT_UserDefined:
+		return "Custom"
 	}
 
 	return "[INVALID DATA TYPE]"
 }
 
-var TokenTypeToDataType = map[lexer.TokenType]DataType{
+var TokenTypeToDataType = map[lexer.TokenType]DType{
 	lexer.TT_KW_var: DT_NoType,
 
 	lexer.TT_LT_None: DT_None,
@@ -54,17 +56,14 @@ var TokenTypeToDataType = map[lexer.TokenType]DataType{
 }
 
 type VariableType struct {
-	DataType  DataType
-	CanBeNone bool
+	DType           DType
+	UserDefinedType interface{}
 }
 
 func (vt VariableType) Equals(other VariableType) bool {
-	return vt.DataType == other.DataType && vt.CanBeNone == other.CanBeNone
+	return vt.DType == other.DType && vt.UserDefinedType == other.UserDefinedType
 }
 
 func (v VariableType) String() string {
-	if v.CanBeNone {
-		return fmt.Sprintf("%s?", v.DataType)
-	}
-	return v.DataType.String()
+	return v.DType.String()
 }

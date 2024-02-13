@@ -35,7 +35,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	body := p.parseScope(false, true).(*Node)
 
 	// Check if function has return statements in all paths
-	if function.returnType.DataType != DT_NoType {
+	if function.returnType.DType != DT_NoType {
 		if !p.verifyReturns(body, function.returnType) {
 			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, function.returnType))
 		}
@@ -91,7 +91,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
 		returnPosition = p.consume().Position
-		returnType.DataType = TokenTypeToDataType[p.consume().TokenType]
+		returnType.DType = TokenTypeToDataType[p.consume().TokenType]
 		returnPosition.EndChar = p.peekPrevious().Position.EndChar
 
 		// Function entry() can't have a return type
@@ -188,7 +188,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 		// Try to match arguments to parameters
 		matched := true
 		for i, parameter := range function.value.(*FunctionSymbol).parameters {
-			if !parameter.DataType.Equals(argumentTypes[i]) {
+			if !parameter.DType.Equals(argumentTypes[i]) {
 				matched = false
 				break
 			}

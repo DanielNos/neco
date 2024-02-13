@@ -253,7 +253,7 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 	for i := 0; i < len(variable.Identifiers); i++ {
 		cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
 
-		switch variable.VariableType.DataType {
+		switch variable.VariableType.DType {
 		case parser.DT_Bool:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
 		case parser.DT_Int:

@@ -51,15 +51,15 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
 
 		// Combine - and int node
-		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DataType == DT_Int {
+		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == DT_Int {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(int64)
 			left = right
 			// Combine - and float node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DataType == DT_Float {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == DT_Float {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(float64)
 			left = right
 			// Combine ! and bool node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DataType == DT_Bool {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DType == DT_Bool {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
@@ -109,7 +109,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		nodeType := TokenTypeToNodeType[operator.TokenType]
 
 		// Combine two literals into single node
-		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DataType == right.Value.(*LiteralNode).DataType {
+		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DType == right.Value.(*LiteralNode).DType {
 			left = combineLiteralNodes(left, right, nodeType, operator.Position)
 			continue
 		}
@@ -158,7 +158,7 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
 			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
-			expression.Value.(*BinaryNode).DataType = unaryType.DataType
+			expression.Value.(*BinaryNode).DType = unaryType.DType
 			return unaryType
 		}
 
@@ -168,44 +168,44 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 		// Same type on both sides
 		if leftType.Equals(rightType) {
 			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.DataType != DT_Bool || rightType.DataType != DT_Bool) {
+			if expression.NodeType.IsLogicOperator() && (leftType.DType != DT_Bool || rightType.DType != DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
+				return VariableType{DT_Bool, nil}
 			}
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
-				expression.Value.(*BinaryNode).DataType = DT_Bool
-				return VariableType{DT_Bool, leftType.CanBeNone || rightType.CanBeNone}
+				expression.Value.(*BinaryNode).DType = DT_Bool
+				return VariableType{DT_Bool, nil}
 			}
 
 			// Only + can be used on strings
-			if leftType.DataType == DT_String && expression.NodeType != NT_Add {
+			if leftType.DType == DT_String && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
-			if leftType.DataType != DT_NoType {
-				expression.Value.(*BinaryNode).DataType = leftType.DataType
+			if leftType.DType != DT_NoType {
+				expression.Value.(*BinaryNode).DType = leftType.DType
 				return leftType
 			}
 
-			expression.Value.(*BinaryNode).DataType = rightType.DataType
+			expression.Value.(*BinaryNode).DType = rightType.DType
 			return rightType
 		}
 
 		// Failed to get data type
-		if leftType.DataType == DT_NoType || rightType.DataType == DT_NoType {
+		if leftType.DType == DT_NoType || rightType.DType == DT_NoType {
 			return VariableType{DT_NoType, false}
 		}
 
 		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-		return VariableType{max(leftType.DataType, rightType.DataType), leftType.CanBeNone || rightType.CanBeNone}
+		return VariableType{max(leftType.DType, rightType.DType), nil}
 	}
 
 	switch expression.NodeType {
 	case NT_Literal:
-		return VariableType{expression.Value.(*LiteralNode).DataType, false}
+		return VariableType{expression.Value.(*LiteralNode).DType, false}
 	case NT_Variable:
 		return expression.Value.(*VariableNode).VariableType
 	case NT_FunctionCall:
@@ -224,7 +224,7 @@ func (p *Parser) collectConstants(expression *Node) {
 	} else if expression.NodeType == NT_Literal {
 		literalNode := expression.Value.(*LiteralNode)
 
-		switch literalNode.DataType {
+		switch literalNode.DType {
 		case DT_Int:
 			p.IntConstants[literalNode.Value.(int64)] = -1
 		case DT_Float:
@@ -268,7 +268,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	leftLiteral := left.Value.(*LiteralNode)
 	rightLiteral := right.Value.(*LiteralNode)
 
-	switch leftLiteral.DataType {
+	switch leftLiteral.DType {
 	// Booleans
 	case DT_Bool:
 		switch parentNodeType {

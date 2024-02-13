@@ -30,13 +30,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_VariableDeclare:
 		declare := node.Value.(*VariableDeclareNode)
 
-		fmt.Printf("Declare %s", declare.VariableType)
-
-		if declare.VariableType.CanBeNone {
-			print("?:")
-		} else {
-			print(":")
-		}
+		fmt.Printf("Declare %s:", declare.VariableType)
 
 		for _, id := range declare.Identifiers {
 			fmt.Printf(" %s", id)
@@ -53,13 +47,13 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Literal:
 		literal := node.Value.(*LiteralNode)
-		fmt.Printf("%s %v\n", literal.DataType.String(), literal.Value)
+		fmt.Printf("%s %v\n", literal.DType.String(), literal.Value)
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
 		NT_And, NT_Or:
 		binary := node.Value.(*BinaryNode)
-		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DataType)
+		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DType)
 
 		if binary.Left != nil {
 			visualize(binary.Left, indent, false)
@@ -80,18 +74,18 @@ func visualize(node *Node, indent string, isLast bool) {
 		fmt.Printf("fun %s(", functionDeclareNode.Identifier)
 
 		if len(functionDeclareNode.Parameters) > 0 {
-			fmt.Printf("%s %s", functionDeclareNode.Parameters[0].DataType, functionDeclareNode.Parameters[0].Identifier)
+			fmt.Printf("%s %s", functionDeclareNode.Parameters[0].DType, functionDeclareNode.Parameters[0].Identifier)
 		}
 
 		if len(functionDeclareNode.Parameters) > 1 {
 			for _, parameter := range functionDeclareNode.Parameters[1:] {
-				fmt.Printf(", %s %s", parameter.DataType, parameter.Identifier)
+				fmt.Printf(", %s %s", parameter.DType, parameter.Identifier)
 			}
 		}
 
 		print(") ")
 
-		if functionDeclareNode.ReturnType.DataType != DT_NoType {
+		if functionDeclareNode.ReturnType.DType != DT_NoType {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 
