@@ -52,6 +52,7 @@ const (
 	TT_KW_int
 	TT_KW_flt
 	TT_KW_str
+	TT_KW_list
 
 	TT_KW_Assign
 	TT_KW_AddAssign
@@ -128,6 +129,7 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_int:    "int",
 	TT_KW_flt:    "flt",
 	TT_KW_str:    "str",
+	TT_KW_list:   "list",
 
 	TT_KW_Assign:         "=",
 	TT_KW_AddAssign:      "+=",
@@ -164,7 +166,7 @@ func (tt TokenType) String() string {
 }
 
 func (tt TokenType) IsVariableType() bool {
-	return tt >= TT_KW_var && tt <= TT_KW_str
+	return tt >= TT_KW_var && tt <= TT_KW_list
 }
 
 func (tt TokenType) IsLiteral() bool {

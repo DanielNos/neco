@@ -20,7 +20,7 @@ const (
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	variableType  VariableType
+	variableType  DataType
 	isInitialized bool
 	isConstant    bool
 }
@@ -28,7 +28,7 @@ type VariableSymbol struct {
 type FunctionSymbol struct {
 	number     int
 	parameters []Parameter
-	returnType VariableType
+	returnType DataType
 	everCalled bool
 }
 

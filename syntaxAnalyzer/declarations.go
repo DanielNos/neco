@@ -8,6 +8,27 @@ import (
 func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 	sn.consume()
 
+	// Check for a composite type
+	if sn.peek().TokenType == lexer.TT_OP_Lower {
+		sn.consume()
+
+		if !sn.peek().TokenType.IsVariableType() {
+			sn.newError(sn.peek(), "Expected subtype in composite data type.")
+
+			if sn.peek().TokenType != lexer.TT_OP_Greater {
+				sn.consume()
+			}
+		} else {
+			sn.consume()
+		}
+
+		if sn.peek().TokenType != lexer.TT_OP_Greater {
+			sn.newError(sn.peek(), "Expected closing > aftrer data type.")
+		} else {
+			sn.consume()
+		}
+	}
+
 	// Check identifier
 	if sn.peek().TokenType != lexer.TT_Identifier {
 		if constant {

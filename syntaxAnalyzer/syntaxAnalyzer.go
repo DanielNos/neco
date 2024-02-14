@@ -248,7 +248,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeExpression()
 		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 
-	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str: // Variable declarations
+	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list: // Variable declarations
 		sn.analyzeVariableDeclaration(false)
 
 	case lexer.TT_KW_const: // Constant declarations

@@ -86,7 +86,7 @@ func (p *Parser) parseFunctionHeader() {
 	p.consume()
 
 	// Collect return type
-	returnType := VariableType{DT_NoType, false}
+	returnType := DataType{DT_NoType, nil}
 	var returnPosition *dataStructures.CodePos
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
@@ -122,8 +122,8 @@ func (p *Parser) parseParameters() []Parameter {
 		identifier := p.consume().Value
 
 		// Create parameter and symbol
-		paremeters = append(paremeters, Parameter{VariableType{dataType, false}, identifier, nil})
-		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, true, false}})
+		paremeters = append(paremeters, Parameter{DataType{dataType, nil}, identifier, nil})
+		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{DataType{dataType, nil}, true, false}})
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			break
@@ -133,8 +133,8 @@ func (p *Parser) parseParameters() []Parameter {
 		for p.peek().TokenType == lexer.TT_Identifier {
 			// Create parameter and symbol
 			identifier = p.consume().Value
-			paremeters = append(paremeters, Parameter{VariableType{dataType, false}, identifier, nil})
-			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{VariableType{dataType, false}, true, false}})
+			paremeters = append(paremeters, Parameter{DataType{dataType, nil}, identifier, nil})
+			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{DataType{dataType, nil}, true, false}})
 
 			p.consume()
 		}
@@ -149,7 +149,7 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 	arguments, argumentTypes, errorsInArguments := p.parseArguments()
 
 	// Check if arguments match any function
-	returnType := &VariableType{DT_NoType, false}
+	returnType := &DataType{DT_NoType, nil}
 	functionNumber := -1
 
 	// Try to match arguments to some function from the bucket
@@ -173,7 +173,7 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 
 func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierToken *lexer.Token) *FunctionSymbol {
 	// Collect argument data types
-	argumentTypes := make([]VariableType, len(arguments))
+	argumentTypes := make([]DataType, len(arguments))
 
 	for i, argument := range arguments {
 		argumentTypes[i] = p.GetExpressionType(argument)
@@ -208,9 +208,9 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 	return nil
 }
 
-func (p *Parser) parseArguments() ([]*Node, []VariableType, bool) {
+func (p *Parser) parseArguments() ([]*Node, []DataType, bool) {
 	arguments := []*Node{}
-	argumentTypes := []VariableType{}
+	argumentTypes := []DataType{}
 
 	// No arguments
 	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
@@ -234,7 +234,7 @@ func (p *Parser) parseArguments() ([]*Node, []VariableType, bool) {
 	return arguments, argumentTypes, errorCount != p.ErrorCount
 }
 
-func (p *Parser) verifyReturns(statementList *Node, returnType VariableType) bool {
+func (p *Parser) verifyReturns(statementList *Node, returnType DataType) bool {
 	for _, statement := range statementList.Value.(*ScopeNode).Statements {
 		// Return
 		if statement.NodeType == NT_Return {

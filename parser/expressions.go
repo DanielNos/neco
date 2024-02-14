@@ -79,7 +79,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 				// Undeclared variable
 			} else {
 				p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
-				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, VariableType{DT_NoType, false}}}
+				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, DataType{DT_NoType, nil}}}
 			}
 			// Function call
 		} else if symbol.symbolType == ST_FunctionBucket {
@@ -92,7 +92,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			}
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, symbol.value.(*VariableSymbol).variableType}}
 		} else {
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, VariableType{DT_NoType, false}}}
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
 		}
 
 		// Invalid token
@@ -151,7 +151,7 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	}
 }
 
-func (p *Parser) GetExpressionType(expression *Node) VariableType {
+func (p *Parser) GetExpressionType(expression *Node) DataType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
@@ -168,13 +168,13 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.DType != DT_Bool || rightType.DType != DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return VariableType{DT_Bool, nil}
+				return DataType{DT_Bool, nil}
 			}
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
 				expression.Value.(*BinaryNode).DType = DT_Bool
-				return VariableType{DT_Bool, nil}
+				return DataType{DT_Bool, nil}
 			}
 
 			// Only + can be used on strings
@@ -194,18 +194,18 @@ func (p *Parser) GetExpressionType(expression *Node) VariableType {
 
 		// Failed to get data type
 		if leftType.DType == DT_NoType || rightType.DType == DT_NoType {
-			return VariableType{DT_NoType, false}
+			return DataType{DT_NoType, nil}
 		}
 
 		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-		return VariableType{max(leftType.DType, rightType.DType), nil}
+		return DataType{max(leftType.DType, rightType.DType), nil}
 	}
 
 	switch expression.NodeType {
 	case NT_Literal:
-		return VariableType{expression.Value.(*LiteralNode).DType, false}
+		return DataType{expression.Value.(*LiteralNode).DType, nil}
 	case NT_Variable:
-		return expression.Value.(*VariableNode).VariableType
+		return expression.Value.(*VariableNode).DataType
 	case NT_FunctionCall:
 		return *expression.Value.(*FunctionCallNode).ReturnType
 	}

@@ -30,7 +30,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_VariableDeclare:
 		declare := node.Value.(*VariableDeclareNode)
 
-		fmt.Printf("Declare %s:", declare.VariableType)
+		fmt.Printf("Declare %s:", declare.DataType)
 
 		for _, id := range declare.Identifiers {
 			fmt.Printf(" %s", id)

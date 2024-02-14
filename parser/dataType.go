@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"neco/lexer"
 )
 
@@ -13,6 +14,7 @@ const (
 	DT_Float
 	DT_String
 	DT_UserDefined
+	DT_List
 )
 
 func (dt DType) String() string {
@@ -27,6 +29,8 @@ func (dt DType) String() string {
 		return "Float"
 	case DT_String:
 		return "String"
+	case DT_List:
+		return "List"
 	case DT_UserDefined:
 		return "Custom"
 	}
@@ -48,17 +52,23 @@ var TokenTypeToDataType = map[lexer.TokenType]DType{
 
 	lexer.TT_KW_str:    DT_String,
 	lexer.TT_LT_String: DT_String,
+
+	lexer.TT_KW_list: DT_List,
 }
 
-type VariableType struct {
-	DType           DType
-	UserDefinedType interface{}
+type DataType struct {
+	DType   DType
+	SubType interface{}
 }
 
-func (vt VariableType) Equals(other VariableType) bool {
-	return (vt.DType == other.DType && vt.DType != DT_UserDefined) || vt.UserDefinedType == other.UserDefinedType
+func (vt DataType) Equals(other DataType) bool {
+	return vt.DType == other.DType && vt.SubType == other.SubType
 }
 
-func (v VariableType) String() string {
-	return v.DType.String()
+func (dt DataType) String() string {
+	if dt.DType <= DT_UserDefined {
+		return dt.DType.String()
+	}
+
+	return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
 }

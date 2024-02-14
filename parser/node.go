@@ -95,9 +95,9 @@ type ScopeNode struct {
 }
 
 type VariableDeclareNode struct {
-	VariableType VariableType
-	Constant     bool
-	Identifiers  []string
+	DataType    DataType
+	Constant    bool
+	Identifiers []string
 }
 
 type AssignNode struct {
@@ -119,20 +119,20 @@ type BinaryNode struct {
 }
 
 type VariableNode struct {
-	Identifier   string
-	VariableType VariableType
+	Identifier string
+	DataType   DataType
 }
 
 type FunctionDeclareNode struct {
 	Number     int
 	Identifier string
 	Parameters []Parameter
-	ReturnType VariableType
+	ReturnType DataType
 	Body       *Node
 }
 
 type Parameter struct {
-	DType        VariableType
+	DType        DataType
 	Identifier   string
 	DefaultValue *Node
 }
@@ -141,8 +141,8 @@ type FunctionCallNode struct {
 	Number        int
 	Identifier    string
 	Arguments     []*Node
-	ArgumentTypes []VariableType
-	ReturnType    *VariableType
+	ArgumentTypes []DataType
+	ReturnType    *DataType
 }
 
 type IfNode struct {

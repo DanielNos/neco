@@ -218,7 +218,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	switch p.peek().TokenType {
 
 	// Variable declaration
-	case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str:
+	case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list:
 		return p.parseVariableDeclare(false)
 
 	case lexer.TT_KW_var:
@@ -311,12 +311,12 @@ func (p *Parser) parseIdentifier() *Node {
 		// Undeclared symbol
 		if symbol == nil {
 			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
+			expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{{DT_NoType, nil}})
 		} else {
 			// Assignment to function
 			if symbol.symbolType == ST_Function {
 				p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
-				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{{DT_NoType, false}})
+				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{{DT_NoType, nil}})
 				// Assignment to variable
 			} else {
 				// Can't assign to constants
@@ -324,7 +324,7 @@ func (p *Parser) parseIdentifier() *Node {
 					p.newError(p.peek().Position, fmt.Sprintf("Can't assign to constant variable %s.", identifier.Value))
 				}
 
-				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []VariableType{symbol.value.(*VariableSymbol).variableType})
+				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{symbol.value.(*VariableSymbol).variableType})
 
 				symbol.value.(*VariableSymbol).isInitialized = true
 			}
@@ -334,15 +334,15 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Assign to multiple variables
 	if p.peek().TokenType == lexer.TT_DL_Comma {
-		var dataTypes = []VariableType{}
+		var dataTypes = []DataType{}
 
 		// Check symbol
 		if symbol == nil {
 			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+			dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 		} else if symbol.symbolType == ST_Function {
 			p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
-			dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+			dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 		} else {
 			dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
 		}
@@ -361,10 +361,10 @@ func (p *Parser) parseIdentifier() *Node {
 			// Check symbol
 			if symbol == nil {
 				p.newError(p.peekPrevious().Position, fmt.Sprintf("Use of undeclared variable %s.", identifiers[len(identifiers)-1]))
-				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+				dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 			} else if symbol.symbolType == ST_Function {
 				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers)-1]))
-				dataTypes = append(dataTypes, VariableType{DT_NoType, false})
+				dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 			} else {
 				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
 			}
@@ -395,12 +395,20 @@ func (p *Parser) parseIdentifier() *Node {
 
 func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	startPosition := p.peek().Position
-	variableType := VariableType{TokenTypeToDataType[p.consume().TokenType], false}
+
+	// Collect data type
+	variableType := DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+
+	if p.peek().TokenType == lexer.TT_OP_Lower {
+		p.consume()
+		variableType.SubType = DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+		p.consume()
+	}
 
 	// Collect identifiers
 	identifierTokens := []*lexer.Token{}
 	identifiers := []string{}
-	variableTypes := []VariableType{}
+	variableTypes := []DataType{}
 
 	for p.peek().TokenType != lexer.TT_EndOfFile {
 		identifierTokens = append(identifierTokens, p.peek())
@@ -442,13 +450,13 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 		p.appendScope(node)
 
 		// Parse expression and collect type
-		var expressionType VariableType
+		var expressionType DataType
 		declareNode, expressionType = p.parseAssign(identifierTokens, variableTypes)
 
 		// Change variable type if no was provided
 		if variableType.DType == DT_NoType {
 			variableType = expressionType
-			node.Value.(*VariableDeclareNode).VariableType = expressionType
+			node.Value.(*VariableDeclareNode).DataType = expressionType
 		}
 	}
 
@@ -460,7 +468,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	return declareNode
 }
 
-func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []VariableType) (*Node, VariableType) {
+func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []DataType) (*Node, DataType) {
 	assign := p.consume()
 	expressionStart := p.peek().Position
 

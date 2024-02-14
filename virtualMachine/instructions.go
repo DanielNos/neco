@@ -13,6 +13,7 @@ const (
 	IT_DeclareInt
 	IT_DeclareFloat
 	IT_DeclareString
+	IT_DeclareList
 
 	IT_StoreRegA
 	IT_StoreRegB
