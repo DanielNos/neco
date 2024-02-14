@@ -61,13 +61,3 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition, VM.IT_JumpEx)
 	jumpFromElse.InstructionValue[0] = byte(endPosition - jumpFromElsePosition)
 }
-
-func updateJumpDistance(instruction *VM.Instruction, distance int, extendedInstructionType byte) {
-	// If distance is larger than 255, change instruction type to extended jump
-	if distance > MAX_UINT8 {
-		instruction.InstructionType = extendedInstructionType
-		instruction.InstructionValue = intTo2Bytes(distance)
-	} else {
-		instruction.InstructionValue[0] = byte(distance)
-	}
-}

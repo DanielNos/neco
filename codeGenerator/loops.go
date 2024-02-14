@@ -22,19 +22,10 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
 
 	// Set destinations of break jumps
-	distance := 0
 	instructionCount := len(cg.instructions)
 
 	for _, b := range cg.scopeBreaks.Pop().([]Break) {
-		distance = instructionCount - b.instructionPosition
-
-		// If distance is larger than 255, change instruction type to extended jump
-		if distance > MAX_UINT8 {
-			b.instruction.InstructionType = VM.IT_JumpIfTrueEx
-			b.instruction.InstructionValue = intTo2Bytes(distance)
-		} else {
-			b.instruction.InstructionValue[0] = byte(distance)
-		}
+		updateJumpDistance(b.instruction, instructionCount-b.instructionPosition, VM.IT_JumpIfTrueEx)
 	}
 	cg.loopScopeDepths.Pop()
 
