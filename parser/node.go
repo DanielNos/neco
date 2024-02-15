@@ -172,6 +172,7 @@ type ListNode struct {
 }
 
 type ListValueNode struct {
+	Identifier string
 	ListSymbol *VariableSymbol
 	Index      *Node
 }

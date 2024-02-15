@@ -180,10 +180,10 @@ func (ir *InstructionReader) readInstructions() {
 		} else if instructionType <= IT_JumpIfTrue {
 			ir.byteIndex++
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
-		
+
 			if instructionType == IT_DeclareList {
 				ir.byteIndex++
-				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ ir.bytes[ir.byteIndex], NO_ARGS})
+				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
 			}
 			// 0 argument instruction
 		} else if instructionType < IT_LineOffset {

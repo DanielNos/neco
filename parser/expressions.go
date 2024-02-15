@@ -93,14 +93,15 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 			identifierToken := p.consume()
 
-			// Indexed list
+			// Value from a list
 			if p.peek().TokenType == lexer.TT_DL_BracketOpen {
 				p.consume()
-				left = &Node{identifierToken.Position, NT_ListValue, &ListValueNode{symbol.value.(*VariableSymbol), p.parseExpressionRoot()}}
+				left = &Node{identifierToken.Position, NT_ListValue, &ListValueNode{identifierToken.Value, symbol.value.(*VariableSymbol), p.parseExpressionRoot()}}
 				p.consume()
+				// Normal variable
+			} else {
+				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).variableType}}
 			}
-
-			left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).variableType}}
 		} else {
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
 		}
@@ -257,6 +258,8 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 		return *expression.Value.(*FunctionCallNode).ReturnType
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
+	case NT_ListValue:
+		return expression.Value.(*ListValueNode).ListSymbol.variableType.SubType.(DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))

@@ -6,6 +6,8 @@ const (
 	IT_JumpIfTrueEx
 
 	// 1 argument 1 byte
+	IT_LoadListValueRegA
+	IT_LoadListValueRegB
 	IT_CallBuiltInFunc
 	IT_Halt
 
@@ -96,6 +98,10 @@ const (
 )
 
 var InstructionTypeToString = map[byte]string{
+	// 2 arguments 2 bytes
+	IT_LoadListValueRegA: "LOAD_LIST_VAL_REG_A",
+	IT_LoadListValueRegB: "LOAD_LIST_VAL_REG_A",
+
 	// 1 argument 2 bytes
 	IT_JumpEx:       "JUMP_EX",
 	IT_JumpIfTrueEx: "JUMP_IF_TRUE_EX",
@@ -108,7 +114,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_StoreRegB: "STORE_REG_B",
 
 	IT_AppendListRegA: "APPEND_LIST_REG_A",
-	IT_SetListRegA: "SET_LIST_REG_A",
+	IT_SetListRegA:    "SET_LIST_REG_A",
 
 	IT_LoadConstRegA: "LOAD_CONST_REG_A",
 	IT_LoadConstRegB: "LOAD_CONST_REG_B",
@@ -184,7 +190,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
 	IT_PopScope:         "POP_SCOPE",
 
-	IT_CreateListRegE: "CREATE_LIST_REG_E",
+	IT_CreateListRegE:  "CREATE_LIST_REG_E",
 	IT_AppendRegAListE: "APPEND_REG_A_LIST_E",
 
 	IT_LineOffset: "LINE_OFFSET",

@@ -68,13 +68,12 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// Variables
 	case parser.NT_Variable:
-		cg.generateVariable(node, loadLeft)
+		cg.generateVariable(node.Value.(*parser.VariableNode).Identifier, loadLeft)
 
 	// Lists
 	case parser.NT_List:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListRegE, NO_ARGS})
-		// this is my kitty -> 🐱 cute and wild <3
-		// show me your bussy <<sexy ass>>
+
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
 			cg.generateExpression(node, true)
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendRegAListE, NO_ARGS})
@@ -84,6 +83,29 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToA, NO_ARGS})
 		} else {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
+		}
+
+	// List values
+	case parser.NT_ListValue:
+		if loadLeft {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegBToC, NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
+		}
+
+		cg.generateExpression(node.Value.(*parser.ListValueNode).Index, loadLeft)
+
+		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier, loadLeft)
+		if loadLeft {
+			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListValueRegA
+		} else {
+			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListValueRegB
+		}
+
+		if loadLeft {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToA, NO_ARGS})
 		}
 
 	default:
@@ -109,8 +131,7 @@ func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNo
 	}
 }
 
-func (cg *CodeGenerator) generateVariable(node *parser.Node, loadLeft bool) {
-	variableName := node.Value.(*parser.VariableNode).Identifier
+func (cg *CodeGenerator) generateVariable(variableName string, loadLeft bool) {
 	currentNode := cg.variableIdentifiers.Top
 
 	// Try to find variable in scopes

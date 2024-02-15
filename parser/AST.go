@@ -165,6 +165,12 @@ func visualize(node *Node, indent string, isLast bool) {
 			visualize(node, indent, i == len(listNode.Nodes)-1)
 		}
 
+	case NT_ListValue:
+		listValue := node.Value.(*ListValueNode)
+
+		fmt.Printf("%s[...]\n", listValue.Identifier)
+		visualize(listValue.Index, indent, true)
+
 	default:
 		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.NodeType])
 	}

@@ -19,12 +19,12 @@ const (
 	SYMBOL_MAP_SIZE         = 100
 )
 
-var InstructionToDataType = map[byte]parser.DType {
-	IT_DeclareBool: parser.DT_Bool,
-	IT_DeclareInt: parser.DT_Int,
-	IT_DeclareFloat: parser.DT_Float,
+var InstructionToDataType = map[byte]parser.DType{
+	IT_DeclareBool:   parser.DT_Bool,
+	IT_DeclareInt:    parser.DT_Int,
+	IT_DeclareFloat:  parser.DT_Float,
 	IT_DeclareString: parser.DT_String,
-	IT_DeclareList: parser.DT_List,
+	IT_DeclareList:   parser.DT_List,
 }
 
 type VirtualMachine struct {
@@ -111,6 +111,55 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_Halt:
 			os.Exit(int(instruction.InstructionValue[0]))
 
+		// Load list element
+		case IT_LoadListValueRegA:
+			// Find variable
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			// Couldn't find variable
+			if value == nil {
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
+			}
+
+			// Index out of range
+			if int64(len(value.symbolValue.([]interface{})))-1 < vm.reg_genericA.(int64) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size is %d, index is %d.", vm.firstLine, len(value.symbolValue.([]interface{})), vm.reg_genericA.(int64)))
+			}
+
+			vm.reg_genericA = value.symbolValue.([]interface{})[vm.reg_genericA.(int64)]
+
+		case IT_LoadListValueRegB:
+			// Find variable
+			symbolTable := vm.stack_symbolTables.Top
+			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+
+			for value == nil {
+				symbolTable = symbolTable.Previous
+				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
+			}
+
+			// Couldn't find variable
+			if value == nil {
+				vm.traceLine()
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
+			}
+
+			// Index out of range
+			if int64(len(value.symbolValue.([]interface{})))-1 < vm.reg_genericB.(int64) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size is %d, index is %d.", vm.firstLine, len(value.symbolValue.([]interface{})), vm.reg_genericB.(int64)))
+			}
+
+			vm.reg_genericB = value.symbolValue.([]interface{})[vm.reg_genericB.(int64)]
+
 		// Store register to a variable
 		case IT_StoreRegA:
 			// Find variable
@@ -125,7 +174,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Couldn't find variable
 			if value == nil {
 				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
 			}
 
 			// Store register B in symbol
@@ -144,7 +193,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Couldn't find variable
 			if value == nil {
 				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
 			}
 
 			// Store register B in symbol
@@ -153,9 +202,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// List operations
 		case IT_AppendListRegA:
 
-
 		case IT_SetListRegA:
-
 
 		// Load constant to register
 		case IT_LoadConstRegA:
@@ -178,7 +225,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Couldn't find variable
 			if value == nil {
 				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
 			}
 
 			vm.reg_genericA = value.symbolValue
@@ -196,7 +243,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Couldn't find variable
 			if value == nil {
 				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("Undecalred variable %d.", instruction.InstructionValue))
+				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
 			}
 
 			vm.reg_genericB = value.symbolValue
@@ -216,7 +263,8 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 			// Return adress stack overflow
 			if vm.reg_returnIndex == STACK_RETURN_INDEX_SIZE {
-				logger.Fatal(errors.STACK_OVERFLOW, "Function return adress stack overflow.")
+				vm.traceLine()
+				logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Function return adress stack overflow.", vm.firstLine))
 			}
 
 			// Jump to function
@@ -403,7 +451,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PopScope:
 			vm.stack_symbolTables.Pop()
 			vm.reg_scopeIndex--
-		
+
 		// List operations
 		case IT_CreateListRegE:
 			vm.reg_genericE = []interface{}{}
