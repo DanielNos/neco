@@ -157,6 +157,14 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Break:
 		println("break")
 
+	case NT_List:
+		listNode := node.Value.(*ListNode)
+		fmt.Printf("%s\n", listNode.DataType)
+
+		for i, node := range listNode.Nodes {
+			visualize(node, indent, i == len(listNode.Nodes)-1)
+		}
+
 	default:
 		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.NodeType])
 	}

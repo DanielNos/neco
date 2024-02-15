@@ -78,6 +78,12 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
+	// List
+	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
+		sn.analyzeList()
+		return
+	}
+
 	// Operator missing right side expression
 	if sn.peekPrevious().TokenType.IsOperator() {
 		sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
@@ -118,4 +124,31 @@ func (sn *SyntaxAnalyzer) analyzeSubExpression() {
 	}
 
 	sn.newError(opening, "Missing closing parenthesis of a sub-expression.")
+}
+
+func (sn *SyntaxAnalyzer) analyzeList() {
+	sn.consume()
+
+	// Collect expressions in list
+	for sn.peek().TokenType != lexer.TT_DL_BraceClose && sn.peek().TokenType != lexer.TT_EndOfCommand {
+		sn.analyzeExpression()
+
+		// Another expression
+		if sn.peek().TokenType == lexer.TT_DL_Comma {
+			sn.consume()
+
+			// Missing expression
+			if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+				sn.newError(sn.peek(), "Expected expression after comma.")
+				break
+			}
+		}
+
+		// Collect all EOCs
+		for sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
+		}
+	}
+
+	sn.consume()
 }

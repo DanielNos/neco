@@ -95,6 +95,43 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
 		}
 
+		// List
+	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+		startPosition := p.consume().Position
+
+		// Collect edxpressions
+		expressions := []*Node{}
+		expressionType := DataType{DT_NoType, nil}
+		mismatchedTypes := false
+
+		for p.peek().TokenType != lexer.TT_DL_BraceClose {
+			// Collect expression
+			expressions = append(expressions, p.parseExpressionRoot())
+
+			// Assign list type
+			if expressionType.DType == DT_NoType {
+				expressionType = p.GetExpressionType(expressions[len(expressions)-1])
+				// Check if list expressions have all the same type
+			} else if !mismatchedTypes && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(expressionType) {
+				mismatchedTypes = true
+				p.newError(getExpressionPosition(expressions[len(expressions)-1], 0, 0), "Lists can only contain values with the same data type.")
+			}
+
+			// Consume comma
+			if p.peek().TokenType == lexer.TT_DL_Comma {
+				p.consume()
+			}
+
+			// Skip EOCs
+			for p.peek().TokenType == lexer.TT_EndOfCommand {
+				p.consume()
+			}
+		}
+
+		p.consume()
+
+		left = &Node{startPosition, NT_List, &ListNode{expressions, DataType{DT_List, expressionType}}}
+
 		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
@@ -208,6 +245,8 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 		return expression.Value.(*VariableNode).DataType
 	case NT_FunctionCall:
 		return *expression.Value.(*FunctionCallNode).ReturnType
+	case NT_List:
+		return expression.Value.(*ListNode).DataType
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
@@ -233,7 +272,7 @@ func (p *Parser) collectConstants(expression *Node) {
 	}
 }
 
-func getExpressionPosition(expression *Node, left, right uint) dataStructures.CodePos {
+func getExpressionPosition(expression *Node, left, right uint) *dataStructures.CodePos {
 	// Binary node
 	if expression.NodeType.IsOperator() {
 		binaryNode := expression.Value.(*BinaryNode)
@@ -242,7 +281,7 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 			leftPosition := getExpressionPosition(binaryNode.Left, left, right)
 			rightPosition := getExpressionPosition(binaryNode.Right, left, right)
 
-			return dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
+			return &dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
 		}
 
 		expression = binaryNode.Left
@@ -259,7 +298,7 @@ func getExpressionPosition(expression *Node, left, right uint) dataStructures.Co
 		position.EndChar = expression.Position.EndChar
 	}
 
-	return position
+	return &position
 }
 
 func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *dataStructures.CodePos) *Node {

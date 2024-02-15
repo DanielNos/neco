@@ -39,7 +39,7 @@ func (p *Parser) parseIfStatement() *Node {
 
 			if elifConditionType.DType != DT_Bool {
 				conditionPosition := getExpressionPosition(elifCondition, elifCondition.Position.StartChar, elifCondition.Position.EndChar)
-				p.newError(&conditionPosition, "Condition expression data type has to be Bool.")
+				p.newError(conditionPosition, "Condition expression data type has to be Bool.")
 			}
 
 			// Collect body
@@ -90,7 +90,7 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 
 	if conditionType.DType != DT_Bool {
 		conditionPosition := getExpressionPosition(condition, condition.Position.StartChar, condition.Position.EndChar)
-		p.newError(&conditionPosition, "Condition expression data type has to be Bool.")
+		p.newError(conditionPosition, "Condition expression data type has to be Bool.")
 	}
 
 	return condition

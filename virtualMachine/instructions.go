@@ -148,6 +148,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareInt:    "DECLARE_INT",
 	IT_DeclareFloat:  "DECLARE_FLOAT",
 	IT_DeclareString: "DECLARE_STRING",
+	IT_DeclareList:   "DECLARE_LIST",
 
 	IT_Return: "RETURN",
 

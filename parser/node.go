@@ -45,6 +45,7 @@ const (
 	NT_Loop
 	NT_For
 	NT_Break
+	NT_List
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -77,6 +78,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Loop:            "Loop",
 	NT_For:             "For",
 	NT_Break:           "Break",
+	NT_List:            "List",
 }
 
 func (nt NodeType) String() string {
@@ -160,6 +162,11 @@ type ForNode struct {
 	Condition     *Node
 	StepStatement *Node
 	Body          *Node
+}
+
+type ListNode struct {
+	Nodes    []*Node
+	DataType DataType
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

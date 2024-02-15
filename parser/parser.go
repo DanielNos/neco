@@ -486,6 +486,13 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Da
 		for i, identifier := range identifierTokens {
 			// Variable has a type and it's incompatible with expression
 			if variableTypes[i].DType != DT_NoType && !expressionType.Equals(variableTypes[i]) {
+
+				// Assign type to empty list literal
+				if variableTypes[i].DType == DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {
+					expression.Value.(*ListNode).DataType.SubType = variableTypes[i].SubType
+					continue
+				}
+
 				p.newErrorNoMessage(&expressionPosition)
 				logger.Error2CodePos(identifierTokens[i].Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable %s of type %s.", expressionType, identifier, variableTypes[i]))
 			}
@@ -495,6 +502,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Da
 	// Operation-Assign nodes
 	if assign.TokenType != lexer.TT_KW_Assign {
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
+
 		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
 			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
 			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}}})
