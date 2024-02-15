@@ -18,6 +18,9 @@ const (
 	IT_StoreRegA
 	IT_StoreRegB
 
+	IT_AppendListRegA
+	IT_SetListRegA
+
 	IT_LoadConstRegA
 	IT_LoadConstRegB
 
@@ -42,6 +45,8 @@ const (
 	IT_CopyRegAToD
 	IT_CopyRegDToA
 	IT_CopyRegDToB
+	IT_CopyRegEToA
+	IT_CopyRegEToB
 
 	IT_PushRegAToArgStack
 	IT_PushRegBToArgStack
@@ -84,6 +89,9 @@ const (
 	IT_PushScopeUnnamed
 	IT_PopScope
 
+	IT_CreateListRegE
+	IT_AppendRegAListE
+
 	IT_LineOffset
 )
 
@@ -98,6 +106,9 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_StoreRegA: "STORE_REG_A",
 	IT_StoreRegB: "STORE_REG_B",
+
+	IT_AppendListRegA: "APPEND_LIST_REG_A",
+	IT_SetListRegA: "SET_LIST_REG_A",
 
 	IT_LoadConstRegA: "LOAD_CONST_REG_A",
 	IT_LoadConstRegB: "LOAD_CONST_REG_B",
@@ -123,6 +134,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_CopyRegAToD: "COPY_REG_A_TO_D",
 	IT_CopyRegDToA: "COPY_REG_D_TO_A",
 	IT_CopyRegDToB: "COPY_REG_D_TO_B",
+	IT_CopyRegEToA: "COPY_REG_E_TO_A",
+	IT_CopyRegEToB: "COPY_REG_E_TO_B",
 
 	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
 	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
@@ -170,6 +183,9 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
 	IT_PopScope:         "POP_SCOPE",
+
+	IT_CreateListRegE: "CREATE_LIST_REG_E",
+	IT_AppendRegAListE: "APPEND_REG_A_LIST_E",
 
 	IT_LineOffset: "LINE_OFFSET",
 }

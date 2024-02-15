@@ -105,7 +105,6 @@ func (cw *CodeWriter) writeInstructions() {
 			cw.file.Write([]byte{cw.codeGenerator.lineToInstruction(instruction.InstructionValue[0])})
 			continue
 		}
-
 		cw.file.Write([]byte{instruction.InstructionType}) // Write instruction
 		cw.file.Write(instruction.InstructionValue)        // Write arguments
 	}

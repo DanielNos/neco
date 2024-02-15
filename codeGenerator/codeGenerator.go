@@ -228,19 +228,36 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 	for i := 0; i < len(variable.Identifiers); i++ {
 		cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
 
-		switch variable.DataType.DType {
-		case parser.DT_Bool:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
-		case parser.DT_Int:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
-		case parser.DT_Float:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
-		case parser.DT_String:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}})
-		}
+		cg.generateVariableDeclarator(variable.DataType, true)
 
 		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 	}
+}
+
+func (cg *CodeGenerator) generateVariableDeclarator(dataType parser.DataType, passId bool) {
+		args := NO_ARGS
+		if passId {
+			args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
+		}
+
+		switch dataType.DType {
+		case parser.DT_Bool:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
+		case parser.DT_Int:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
+		case parser.DT_Float:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
+		case parser.DT_String:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, args})
+		case parser.DT_List:
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
+
+			subType := dataType.SubType
+			for subType != nil {
+				cg.generateVariableDeclarator(subType.(parser.DataType), false)
+				subType = subType.(parser.DataType).SubType
+			}
+		}
 }
 
 func (cg *CodeGenerator) enterScope() {

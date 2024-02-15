@@ -46,6 +46,7 @@ const (
 	NT_For
 	NT_Break
 	NT_List
+	NT_ListValue
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -79,6 +80,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_For:             "For",
 	NT_Break:           "Break",
 	NT_List:            "List",
+	NT_ListValue:       "ListValue",
 }
 
 func (nt NodeType) String() string {
@@ -134,7 +136,7 @@ type FunctionDeclareNode struct {
 }
 
 type Parameter struct {
-	DType        DataType
+	DataType     DataType
 	Identifier   string
 	DefaultValue *Node
 }
@@ -167,6 +169,11 @@ type ForNode struct {
 type ListNode struct {
 	Nodes    []*Node
 	DataType DataType
+}
+
+type ListValueNode struct {
+	ListSymbol *VariableSymbol
+	Index      *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

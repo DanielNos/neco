@@ -90,7 +90,17 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			if !symbol.value.(*VariableSymbol).isInitialized {
 				p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
 			}
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, symbol.value.(*VariableSymbol).variableType}}
+
+			identifierToken := p.consume()
+
+			// Indexed list
+			if p.peek().TokenType == lexer.TT_DL_BracketOpen {
+				p.consume()
+				left = &Node{identifierToken.Position, NT_ListValue, &ListValueNode{symbol.value.(*VariableSymbol), p.parseExpressionRoot()}}
+				p.consume()
+			}
+
+			left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).variableType}}
 		} else {
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
 		}

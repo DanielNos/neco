@@ -188,7 +188,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 		// Try to match arguments to parameters
 		matched := true
 		for i, parameter := range function.value.(*FunctionSymbol).parameters {
-			if !parameter.DType.Equals(argumentTypes[i]) {
+			if !parameter.DataType.Equals(argumentTypes[i]) {
 				matched = false
 				break
 			}

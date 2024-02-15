@@ -46,6 +46,22 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 				sn.consume()
 				sn.analyzeExpression()
 			}
+			// List index
+		} else if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
+			sn.consume()
+
+			if sn.peek().TokenType == lexer.TT_DL_BracketClose {
+				sn.newError(sn.peek(), "Expected list index.")
+				return
+			} else { 
+				sn.analyzeExpression()
+			}
+
+			if sn.peek().TokenType != lexer.TT_DL_BracketClose {
+				sn.newError(sn.peek(), "Expected closing bracket.")
+			} else {
+				sn.consume()
+			}
 		}
 
 		return

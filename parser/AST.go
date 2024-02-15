@@ -74,12 +74,12 @@ func visualize(node *Node, indent string, isLast bool) {
 		fmt.Printf("fun %s(", functionDeclareNode.Identifier)
 
 		if len(functionDeclareNode.Parameters) > 0 {
-			fmt.Printf("%s %s", functionDeclareNode.Parameters[0].DType, functionDeclareNode.Parameters[0].Identifier)
+			fmt.Printf("%s %s", functionDeclareNode.Parameters[0].DataType, functionDeclareNode.Parameters[0].Identifier)
 		}
 
 		if len(functionDeclareNode.Parameters) > 1 {
 			for _, parameter := range functionDeclareNode.Parameters[1:] {
-				fmt.Printf(", %s %s", parameter.DType, parameter.Identifier)
+				fmt.Printf(", %s %s", parameter.DataType, parameter.Identifier)
 			}
 		}
 

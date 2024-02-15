@@ -19,6 +19,14 @@ const (
 	SYMBOL_MAP_SIZE         = 100
 )
 
+var InstructionToDataType = map[byte]parser.DType {
+	IT_DeclareBool: parser.DT_Bool,
+	IT_DeclareInt: parser.DT_Int,
+	IT_DeclareFloat: parser.DT_Float,
+	IT_DeclareString: parser.DT_String,
+	IT_DeclareList: parser.DT_List,
+}
+
 type VirtualMachine struct {
 	Constants []interface{}
 
@@ -32,6 +40,7 @@ type VirtualMachine struct {
 	reg_genericB interface{}
 	reg_genericC interface{}
 	reg_genericD interface{}
+	reg_genericE interface{}
 
 	reg_argumentPointer int
 	stack_arguments     []interface{}
@@ -141,6 +150,13 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Store register B in symbol
 			value.symbolValue = vm.reg_genericB
 
+		// List operations
+		case IT_AppendListRegA:
+
+
+		case IT_SetListRegA:
+
+
 		// Load constant to register
 		case IT_LoadConstRegA:
 			vm.reg_genericA = vm.Constants[instruction.InstructionValue[0]]
@@ -207,6 +223,26 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.instructionIndex = vm.functions[instruction.InstructionValue[0]] - 1
 			continue
 
+		// Declare variables
+		case IT_DeclareBool:
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Bool, nil}, nil}})
+
+		case IT_DeclareInt:
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Int, nil}, nil}})
+
+		case IT_DeclareFloat:
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Float, nil}, nil}})
+
+		case IT_DeclareString:
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_String, nil}, nil}})
+
+		case IT_DeclareList:
+			id := instruction.InstructionValue[0]
+			vm.instructionIndex++
+			dataType := parser.DataType{parser.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}
+
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(id, &Symbol{ST_Variable, VariableSymbol{dataType, nil}})
+
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
 		// Swap generic registers
@@ -234,6 +270,12 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_CopyRegDToB:
 			vm.reg_genericB = vm.reg_genericD
+
+		case IT_CopyRegEToA:
+			vm.reg_genericA = vm.reg_genericE
+
+		case IT_CopyRegEToB:
+			vm.reg_genericB = vm.reg_genericE
 
 		// Push register to stack
 		case IT_PushRegAToArgStack:
@@ -285,19 +327,6 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// String operations
 		case IT_StringConcat:
 			vm.reg_genericA = fmt.Sprintf("%s%s", vm.reg_genericA, vm.reg_genericB)
-
-		// Declare variables
-		case IT_DeclareBool:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Bool, nil}})
-
-		case IT_DeclareInt:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Int, nil}})
-
-		case IT_DeclareFloat:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_Float, nil}})
-
-		case IT_DeclareString:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DT_String, nil}})
 
 		// Return from a function
 		case IT_Return:
@@ -374,6 +403,13 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PopScope:
 			vm.stack_symbolTables.Pop()
 			vm.reg_scopeIndex--
+		
+		// List operations
+		case IT_CreateListRegE:
+			vm.reg_genericE = []interface{}{}
+
+		case IT_AppendRegAListE:
+			vm.reg_genericE = append(vm.reg_genericE.([]interface{}), vm.reg_genericA)
 
 		// Ignore line offsets
 		case IT_LineOffset:

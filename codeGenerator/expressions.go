@@ -70,6 +70,22 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	case parser.NT_Variable:
 		cg.generateVariable(node, loadLeft)
 
+	// Lists
+	case parser.NT_List:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListRegE, NO_ARGS})
+		// this is my kitty -> 🐱 cute and wild <3
+		// show me your bussy <<sexy ass>>
+		for _, node := range node.Value.(*parser.ListNode).Nodes {
+			cg.generateExpression(node, true)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendRegAListE, NO_ARGS})
+		}
+
+		if loadLeft {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToA, NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
+		}
+
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
 	}
