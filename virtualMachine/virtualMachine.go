@@ -36,11 +36,11 @@ type VirtualMachine struct {
 	functions []int
 
 	// Public registers and stack
-	reg_genericA interface{}
-	reg_genericB interface{}
-	reg_genericC interface{}
-	reg_genericD interface{}
-	reg_genericE interface{}
+	reg_genericA interface{} // Operation A
+	reg_genericB interface{} // Operation B
+	reg_genericC interface{} // Operation Store
+	reg_genericD interface{} // Function Return
+	reg_genericE interface{} // List
 
 	reg_argumentPointer int
 	stack_arguments     []interface{}

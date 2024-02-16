@@ -237,6 +237,40 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 				break
 			}
 
+			// Assigning to list index
+			if sn.peekNext().TokenType == lexer.TT_DL_BracketOpen {
+				startChar := sn.consume().Position.StartChar
+				openingBracket := sn.consume() // Collect [
+
+				// Analyze index expression
+				sn.analyzeExpression()
+
+				// Missing closing bracket
+				if sn.peek().TokenType != lexer.TT_DL_BracketClose {
+					sn.newError(openingBracket, "Index is missing closing bracket.")
+					break
+				}
+
+				sn.consume() // Collect ]
+
+				// End of expression
+				if sn.peek().TokenType == lexer.TT_EndOfCommand {
+					sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
+					break
+				}
+
+				// No assignment
+				if !sn.peek().TokenType.IsAssignKeyword() {
+					break
+				}
+
+				// Assign expression
+				sn.consume() // Collect =
+				sn.analyzeExpression()
+
+				break
+			}
+
 			// Expression
 			startChar := sn.peek().Position.StartChar
 			sn.analyzeExpression()

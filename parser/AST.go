@@ -171,7 +171,15 @@ func visualize(node *Node, indent string, isLast bool) {
 		fmt.Printf("%s[...]\n", listValue.Identifier)
 		visualize(listValue.Index, indent, true)
 
+	case NT_ListAssign:
+		listAssign := node.Value.(*ListAssignNode)
+		println("Assign")
+
+		fmt.Printf("%s├─ %s[...]\n", indent, listAssign.Identifier)
+		visualize(listAssign.IndexExpression, indent+"│  ", true)
+		visualize(listAssign.AssignedExpression, indent, true)
+
 	default:
-		fmt.Printf("NOT IMPLEMENTED: %s\n", NodeTypeToString[node.NodeType])
+		println(NodeTypeToString[node.NodeType])
 	}
 }

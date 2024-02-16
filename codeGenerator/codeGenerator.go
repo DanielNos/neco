@@ -217,6 +217,9 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		// Store it so it's destination can be set at the end of the loop
 		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
 
+	case parser.NT_ListAssign:
+		
+
 	default:
 		panic("Unkown node.")
 	}
@@ -235,29 +238,29 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 }
 
 func (cg *CodeGenerator) generateVariableDeclarator(dataType parser.DataType, passId bool) {
-		args := NO_ARGS
-		if passId {
-			args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
-		}
+	args := NO_ARGS
+	if passId {
+		args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
+	}
 
-		switch dataType.DType {
-		case parser.DT_Bool:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
-		case parser.DT_Int:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
-		case parser.DT_Float:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
-		case parser.DT_String:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, args})
-		case parser.DT_List:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
+	switch dataType.DType {
+	case parser.DT_Bool:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
+	case parser.DT_Int:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
+	case parser.DT_Float:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
+	case parser.DT_String:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, args})
+	case parser.DT_List:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
 
-			subType := dataType.SubType
-			for subType != nil {
-				cg.generateVariableDeclarator(subType.(parser.DataType), false)
-				subType = subType.(parser.DataType).SubType
-			}
+		subType := dataType.SubType
+		for subType != nil {
+			cg.generateVariableDeclarator(subType.(parser.DataType), false)
+			subType = subType.(parser.DataType).SubType
 		}
+	}
 }
 
 func (cg *CodeGenerator) enterScope() {

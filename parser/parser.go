@@ -305,6 +305,7 @@ func (p *Parser) parseIdentifier() *Node {
 	identifier := p.consume()
 	symbol := p.findSymbol(identifier.Value)
 
+
 	// Assign to variable
 	if p.peek().TokenType.IsAssignKeyword() {
 		var expression *Node
@@ -332,6 +333,15 @@ func (p *Parser) parseIdentifier() *Node {
 		return expression
 	}
 
+	// Assign to list at index
+	if p.peek().TokenType == lexer.TT_DL_BracketOpen {
+		p.consume()
+		indexExpression := p.parseExpressionRoot()
+		p.consume()
+
+		return &Node{p.consume().Position, NT_ListAssign, &ListAssignNode{identifier.Value, symbol.value.(*VariableSymbol), indexExpression, p.parseExpressionRoot()}}
+	}
+
 	// Assign to multiple variables
 	if p.peek().TokenType == lexer.TT_DL_Comma {
 		var dataTypes = []DataType{}
@@ -354,7 +364,7 @@ func (p *Parser) parseIdentifier() *Node {
 		for p.peek().TokenType == lexer.TT_DL_Comma {
 			p.consume()
 
-			// Look up identifier and collect identifier
+			// Look up identifier and collect it
 			symbol = p.findSymbol(p.peek().Value)
 			identifiers = append(identifiers, p.consume())
 
