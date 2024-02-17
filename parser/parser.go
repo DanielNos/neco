@@ -305,7 +305,6 @@ func (p *Parser) parseIdentifier() *Node {
 	identifier := p.consume()
 	symbol := p.findSymbol(identifier.Value)
 
-
 	// Assign to variable
 	if p.peek().TokenType.IsAssignKeyword() {
 		var expression *Node
@@ -335,11 +334,44 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Assign to list at index
 	if p.peek().TokenType == lexer.TT_DL_BracketOpen {
+		var listType DataType = DataType{DT_NoType, nil}
+
+		// Undeclared symbol
+		if symbol == nil {
+			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
+		} else {
+			// Not a variable
+			if symbol.symbolType != ST_Variable {
+				p.newError(identifier.Position, fmt.Sprintf("Can't assign to %s. It is not a variable.", identifier.Value))
+				// Collect list type
+			} else {
+				listType = symbol.value.(*VariableSymbol).variableType
+			}
+		}
+
+		// Collect index expression
 		p.consume()
 		indexExpression := p.parseExpressionRoot()
 		p.consume()
 
-		return &Node{p.consume().Position, NT_ListAssign, &ListAssignNode{identifier.Value, symbol.value.(*VariableSymbol), indexExpression, p.parseExpressionRoot()}}
+		// Index must be int
+		if !p.GetExpressionType(indexExpression).Equals(DataType{DT_Int, nil}) {
+			p.newError(getExpressionPosition(indexExpression, indexExpression.Position.StartChar, indexExpression.Position.EndChar), "Index expression has to be int.")
+		}
+
+		assignPosition := p.consume().Position
+
+		// Collect assigned expression
+		assignedExpression := p.parseExpressionRoot()
+		assignedType := p.GetExpressionType(assignedExpression)
+
+		// Check if assigned expression has the correct type
+		if listType.DType != DT_NoType && !assignedType.Equals(listType.SubType.(DataType)) {
+			expressionPosition := getExpressionPosition(assignedExpression, assignedExpression.Position.StartChar, assignedExpression.Position.EndChar)
+			p.newError(expressionPosition, fmt.Sprintf("Can't assign expression of type %s to %s.", assignedType, listType))
+		}
+
+		return &Node{assignPosition, NT_ListAssign, &ListAssignNode{identifier.Value, symbol.value.(*VariableSymbol), indexExpression, assignedExpression}}
 	}
 
 	// Assign to multiple variables

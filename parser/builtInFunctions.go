@@ -21,7 +21,6 @@ func (p *Parser) insertBuiltInFunctions() {
 	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{DataType{DT_List, DataType{DT_Float, nil}}, "list", nil}}, DataType{DT_NoType, nil}, true})
 	p.insertFunction("printLine", &FunctionSymbol{-1, []Parameter{{DataType{DT_List, DataType{DT_String, nil}}, "list", nil}}, DataType{DT_NoType, nil}, true})
 
-
 	p.insertFunction("str", &FunctionSymbol{-1, []Parameter{{DataType{DT_Bool, nil}, "boolean", nil}}, DataType{DT_String, nil}, true})
 	p.insertFunction("str", &FunctionSymbol{-1, []Parameter{{DataType{DT_Int, nil}, "integer", nil}}, DataType{DT_String, nil}, true})
 	p.insertFunction("str", &FunctionSymbol{-1, []Parameter{{DataType{DT_Float, nil}, "float", nil}}, DataType{DT_String, nil}, true})
