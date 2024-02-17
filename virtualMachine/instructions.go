@@ -47,6 +47,7 @@ const (
 	IT_CopyRegAToD
 	IT_CopyRegDToA
 	IT_CopyRegDToB
+	IT_CopyRegAToE
 	IT_CopyRegEToA
 	IT_CopyRegEToB
 
@@ -140,6 +141,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_CopyRegAToD: "COPY_REG_A_TO_D",
 	IT_CopyRegDToA: "COPY_REG_D_TO_A",
 	IT_CopyRegDToB: "COPY_REG_D_TO_B",
+	IT_CopyRegAToE: "COPY_REG_A_TO_E",
 	IT_CopyRegEToA: "COPY_REG_E_TO_A",
 	IT_CopyRegEToB: "COPY_REG_E_TO_B",
 

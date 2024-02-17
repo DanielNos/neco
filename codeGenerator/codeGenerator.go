@@ -218,7 +218,18 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
 
 	case parser.NT_ListAssign:
-		
+		// Generate assigned expression and store it in reg E
+		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression, true)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToE, NO_ARGS})
+
+		// Generate index expression
+		cg.generateExpression(node.Value.(*parser.ListAssignNode).IndexExpression, true)
+
+		// Move assigned expression from reg E to reg B
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
+
+		// Generate list assign instruction
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListRegA, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
 
 	default:
 		panic("Unkown node.")

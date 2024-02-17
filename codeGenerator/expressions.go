@@ -132,20 +132,7 @@ func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNo
 }
 
 func (cg *CodeGenerator) generateVariable(variableName string, loadLeft bool) {
-	currentNode := cg.variableIdentifiers.Top
-
-	// Try to find variable in scopes
-	identifier, exists := currentNode.Value.(map[string]uint8)[variableName]
-
-	for !exists && currentNode != nil {
-		currentNode = currentNode.Previous
-		identifier, exists = currentNode.Value.(map[string]uint8)[variableName]
-	}
-
-	// Failed to find variable
-	if !exists || currentNode == nil {
-		logger.Fatal(errors.CODE_GENERATION, "Failed to find variable identifier.")
-	}
+	identifier := cg.findVariableIdentifier(variableName)
 
 	// Load variable to correct regi
 	if loadLeft {
@@ -191,4 +178,23 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 	case parser.DT_String:
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
 	}
+}
+
+func (cg *CodeGenerator) findVariableIdentifier(variableName string) uint8 {
+	currentNode := cg.variableIdentifiers.Top
+
+	// Try to find variable in scopes
+	identifier, exists := currentNode.Value.(map[string]uint8)[variableName]
+
+	for !exists && currentNode != nil {
+		currentNode = currentNode.Previous
+		identifier, exists = currentNode.Value.(map[string]uint8)[variableName]
+	}
+
+	// Failed to find variable
+	if !exists || currentNode == nil {
+		logger.Fatal(errors.CODE_GENERATION, "Failed to find variable identifier.")
+	}
+
+	return identifier
 }

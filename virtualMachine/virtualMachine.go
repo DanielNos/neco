@@ -113,96 +113,23 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load list element
 		case IT_LoadListValueRegA:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			// Index out of range
-			if int64(len(value.symbolValue.([]interface{})))-1 < vm.reg_genericA.(int64) {
-				vm.traceLine()
-				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size is %d, index is %d.", vm.firstLine, len(value.symbolValue.([]interface{})), vm.reg_genericA.(int64)))
-			}
-
-			vm.reg_genericA = value.symbolValue.([]interface{})[vm.reg_genericA.(int64)]
+			vm.reg_genericA = vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericA.(int64)]
 
 		case IT_LoadListValueRegB:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			// Index out of range
-			if int64(len(value.symbolValue.([]interface{})))-1 < vm.reg_genericB.(int64) {
-				vm.traceLine()
-				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size is %d, index is %d.", vm.firstLine, len(value.symbolValue.([]interface{})), vm.reg_genericB.(int64)))
-			}
-
-			vm.reg_genericB = value.symbolValue.([]interface{})[vm.reg_genericB.(int64)]
+			vm.reg_genericB = vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericB.(int64)]
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			// Store register B in symbol
-			value.symbolValue = vm.reg_genericA
+			vm.findSymbol().symbolValue = vm.reg_genericA
 
 		case IT_StoreRegB:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			// Store register B in symbol
-			value.symbolValue = vm.reg_genericB
+			vm.findSymbol().symbolValue = vm.reg_genericB
 
 		// List operations
 		case IT_AppendListRegA:
 
 		case IT_SetListRegA:
+			vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericA.(int64)] = vm.reg_genericB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
@@ -213,40 +140,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load variable to a register
 		case IT_LoadRegA:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			vm.reg_genericA = value.symbolValue
+			vm.reg_genericA = vm.findSymbol().symbolValue
 
 		case IT_LoadRegB:
-			// Find variable
-			symbolTable := vm.stack_symbolTables.Top
-			value := symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-
-			for value == nil {
-				symbolTable = symbolTable.Previous
-				value = symbolTable.Value.(*SymbolMap).Get(instruction.InstructionValue[0])
-			}
-
-			// Couldn't find variable
-			if value == nil {
-				vm.traceLine()
-				logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, instruction.InstructionValue))
-			}
-
-			vm.reg_genericB = value.symbolValue
+			vm.reg_genericB = vm.findSymbol().symbolValue
 
 		// Enter scope
 		case IT_PushScope:
@@ -318,6 +215,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_CopyRegDToB:
 			vm.reg_genericB = vm.reg_genericD
+
+		case IT_CopyRegAToE:
+			vm.reg_genericE = vm.reg_genericA
 
 		case IT_CopyRegEToA:
 			vm.reg_genericA = vm.reg_genericE
@@ -478,4 +378,23 @@ func (vm *VirtualMachine) traceLine() {
 			vm.firstLine += vm.Instructions[i].InstructionValue[0]
 		}
 	}
+}
+
+func (vm *VirtualMachine) findSymbol() *Symbol {
+	// Find variable
+	symbolTable := vm.stack_symbolTables.Top
+	value := symbolTable.Value.(*SymbolMap).Get(vm.Instructions[vm.instructionIndex].InstructionValue[0])
+
+	for value == nil {
+		symbolTable = symbolTable.Previous
+		value = symbolTable.Value.(*SymbolMap).Get(vm.Instructions[vm.instructionIndex].InstructionValue[0])
+	}
+
+	// Couldn't find variable
+	if value == nil {
+		vm.traceLine()
+		logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, vm.Instructions[vm.instructionIndex].InstructionValue))
+	}
+
+	return value
 }
