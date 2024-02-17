@@ -57,10 +57,35 @@ func printTokens(tokens []*lexer.Token) {
 }
 
 func printInstructions(instructions *[]VM.Instruction) {
+	line := int((*instructions)[0].InstructionValue[0]) - 1
+	linePadder := "  "
+	justChanged := true
+
 	for i, instruction := range *instructions {
 		// Skip removed instruction
 		if instruction.InstructionType == 255 {
 			continue
+		}
+
+		// Display empty line instead of offset and record new line number
+		if instruction.InstructionType == VM.IT_LineOffset {
+			if line < 10 && line+int(instruction.InstructionValue[0]) >= 10 {
+				linePadder = linePadder[1:]
+			}
+
+			line += int(instruction.InstructionValue[0])
+			justChanged = true
+
+			println()
+			continue
+		}
+
+		// Print line number
+		if justChanged {
+			fmt.Printf("%s%d  ", linePadder, line)
+			justChanged = false
+		} else {
+			print("     ")
 		}
 
 		// Print instruction name
@@ -84,10 +109,7 @@ func printInstructions(instructions *[]VM.Instruction) {
 				print(" ")
 				j++
 			}
-		}
 
-		if instruction.InstructionType == VM.IT_Return {
-			println()
 		}
 
 		println()
@@ -266,7 +288,6 @@ func compile(path string, showTokens, showTree, printInstruction, optimize bool)
 
 	// Print generated instructions
 	if printInstruction {
-		println()
 		printInstructions(instructions)
 		println()
 	}

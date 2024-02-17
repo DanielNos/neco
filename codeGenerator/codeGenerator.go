@@ -85,7 +85,7 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	// No instructions, generate line offset and halt instruction
 	if len(statements) == 0 {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{0}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{1}})
 
 		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
 
@@ -93,6 +93,9 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	}
 
 	// Generate functions
+	cg.line = statements[0].Position.Line
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(cg.line)}})
+
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclare {
 			if cg.line < node.Position.Line {
