@@ -113,17 +113,17 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load list element
 		case IT_LoadListValueRegA:
-			vm.reg_genericA = vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericA.(int64)]
+			vm.reg_genericA = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericA.(int64)]
 
 		case IT_LoadListValueRegB:
-			vm.reg_genericB = vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericB.(int64)]
+			vm.reg_genericB = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericB.(int64)]
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			vm.findSymbol().symbolValue = vm.reg_genericA
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_genericA
 
 		case IT_StoreRegB:
-			vm.findSymbol().symbolValue = vm.reg_genericB
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_genericB
 
 		// List operations
 		case IT_AppendListRegA:
@@ -140,10 +140,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load variable to a register
 		case IT_LoadRegA:
-			vm.reg_genericA = vm.findSymbol().symbolValue
+			vm.reg_genericA = vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 		case IT_LoadRegB:
-			vm.reg_genericB = vm.findSymbol().symbolValue
+			vm.reg_genericB = vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 		// Enter scope
 		case IT_PushScope:
@@ -170,23 +170,23 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Declare variables
 		case IT_DeclareBool:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Bool, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Bool, nil}, nil}})
 
 		case IT_DeclareInt:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Int, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Int, nil}, nil}})
 
 		case IT_DeclareFloat:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_Float, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Float, nil}, nil}})
 
 		case IT_DeclareString:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, VariableSymbol{parser.DataType{parser.DT_String, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_String, nil}, nil}})
 
 		case IT_DeclareList:
 			id := instruction.InstructionValue[0]
 			vm.instructionIndex++
 			dataType := parser.DataType{parser.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}
 
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(id, &Symbol{ST_Variable, VariableSymbol{dataType, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(id, &Symbol{ST_Variable, &VariableSymbol{dataType, nil}})
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 

@@ -58,95 +58,98 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	// Data types to string
 	case BIF_BoolToString:
 		vm.reg_argumentPointer--
-		vm.reg_genericA = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer].(bool))
+		vm.reg_genericD = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer].(bool))
 
 	case BIF_IntToString:
 		vm.reg_argumentPointer--
-		vm.reg_genericA = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer].(int64))
+		vm.reg_genericD = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer].(int64))
 
 	case BIF_FloatToString:
 		vm.reg_argumentPointer--
-		vm.reg_genericA = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer].(float64))
+		vm.reg_genericD = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	// Data type to data type
 	case BIF_BoolToInt:
-		if vm.reg_genericA.(bool) {
-			vm.reg_genericA = INT_1
-		} else {
-			vm.reg_genericA = INT_0
-		}
 		vm.reg_argumentPointer--
 
+		if vm.stack_arguments[vm.reg_argumentPointer].(bool) {
+			vm.reg_genericD = INT_1
+		} else {
+			vm.reg_genericD = INT_0
+		}
+
 	case BIF_IntToFloat:
-		vm.reg_genericA = float64(vm.reg_genericA.(int64))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = float64(vm.stack_arguments[vm.reg_argumentPointer].(int64))
 
 	// Rounding floats
 	case BIF_Floor:
-		vm.reg_genericA = math.Floor(vm.reg_genericA.(float64))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = math.Floor(vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	case BIF_FloorToInt:
-		vm.reg_genericA = int64(vm.reg_genericA.(float64))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = int64(vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	case BIF_Ceil:
-		vm.reg_genericA = math.Ceil(vm.reg_genericA.(float64))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = math.Ceil(vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	case BIF_CeilToInt:
-		vm.reg_genericA = int64(math.Ceil(vm.reg_genericA.(float64)))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = int64(math.Ceil(vm.stack_arguments[vm.reg_argumentPointer].(float64)))
 
 	case BIF_Round:
-		vm.reg_genericA = math.Round(vm.reg_genericA.(float64))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = math.Round(vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	case BIF_RoundToInt:
-		vm.reg_genericA = int64(math.Round(vm.reg_genericA.(float64)))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = int64(math.Round(vm.stack_arguments[vm.reg_argumentPointer].(float64)))
 
 	// Absolute values
 	case BIF_AbsInt:
+		vm.reg_argumentPointer--
 		if vm.reg_genericA.(int64) < 0 {
-			vm.reg_genericA = -vm.reg_genericA.(int64)
+			vm.reg_genericD = -vm.stack_arguments[vm.reg_argumentPointer].(int64)
 		}
 
 	case BIF_AbsFloat:
-		vm.reg_genericA = math.Abs(vm.reg_genericA.(float64))
+		vm.reg_argumentPointer--
+		vm.reg_genericD = math.Abs(vm.stack_arguments[vm.reg_argumentPointer].(float64))
 
 	// Reading from terminal
 	case BIF_ReadLine:
-		vm.reg_genericA, _ = vm.reader.ReadString('\n')
-		vm.reg_genericA = vm.reg_genericA.(string)[:len(vm.reg_genericA.(string))-1]
+		vm.reg_genericD, _ = vm.reader.ReadString('\n')
+		vm.reg_genericD = vm.reg_genericD.(string)[:len(vm.reg_genericD.(string))-1]
 
 	case BIF_ReadChar:
 		char, _, _ := vm.reader.ReadRune()
-		vm.reg_genericA = fmt.Sprintf("%c", char)
+		vm.reg_genericD = fmt.Sprintf("%c", char)
 
 	// String functions
 	case BIF_Length:
-		vm.reg_genericA = len(vm.reg_genericA.(string))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = len(vm.stack_arguments[vm.reg_argumentPointer].(string))
 
 	case BIF_ToLower:
-		vm.reg_genericA = strings.ToLower(vm.reg_genericA.(string))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = strings.ToLower(vm.stack_arguments[vm.reg_argumentPointer].(string))
 
 	case BIF_ToUpper:
-		vm.reg_genericA = strings.ToUpper(vm.reg_genericA.(string))
 		vm.reg_argumentPointer--
+		vm.reg_genericD = strings.ToUpper(vm.stack_arguments[vm.reg_argumentPointer].(string))
 
 	// Random numbers
 	case BIF_RandomInt:
-		vm.reg_genericA = int64(rand.Uint64())
+		vm.reg_genericD = int64(rand.Uint64())
 
 	case BIF_RandomFloat:
-		vm.reg_genericA = rand.Float64()
+		vm.reg_genericD = rand.Float64()
 
 	case BIF_RandomRangeInt:
 		vm.reg_argumentPointer -= 2
-		vm.reg_genericA = rand.Int63n(vm.stack_arguments[vm.reg_argumentPointer+1].(int64)-vm.stack_arguments[vm.reg_argumentPointer].(int64)+1) + vm.stack_arguments[vm.reg_argumentPointer].(int64)
+		vm.reg_genericD = rand.Int63n(vm.stack_arguments[vm.reg_argumentPointer+1].(int64)-vm.stack_arguments[vm.reg_argumentPointer].(int64)+1) + vm.stack_arguments[vm.reg_argumentPointer].(int64)
 
 	// Trace
 	case BIF_Trace:

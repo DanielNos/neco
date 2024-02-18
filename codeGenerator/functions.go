@@ -71,7 +71,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	// Try to look up built-in function
 	builtInFunction, exists := builtInFunctions[identifier]
 
-	// Function exists
+	// It's a built-in function
 	if exists {
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
 		// Function is exit()
