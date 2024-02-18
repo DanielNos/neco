@@ -130,7 +130,7 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	// String functions
 	case BIF_Length:
 		vm.reg_argumentPointer--
-		vm.reg_genericD = len(vm.stack_arguments[vm.reg_argumentPointer].(string))
+		vm.reg_genericD = int64(len(vm.stack_arguments[vm.reg_argumentPointer].(string)))
 
 	case BIF_ToLower:
 		vm.reg_argumentPointer--

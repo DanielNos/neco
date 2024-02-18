@@ -129,7 +129,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_AppendListRegA:
 
 		case IT_SetListRegA:
-			vm.findSymbol().symbolValue.([]interface{})[vm.reg_genericA.(int64)] = vm.reg_genericB
+			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericA.(int64)] = vm.reg_genericB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
@@ -182,11 +182,8 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_String, nil}, nil}})
 
 		case IT_DeclareList:
-			id := instruction.InstructionValue[0]
 			vm.instructionIndex++
-			dataType := parser.DataType{parser.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}
-
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(id, &Symbol{ST_Variable, &VariableSymbol{dataType, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}, []interface{}{}}})
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
