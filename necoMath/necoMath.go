@@ -13,12 +13,3 @@ func PowerInt64(base, exponent int64) int64 {
 
 	return result
 }
-
-func FactorialInt64(base int64) int64 {
-	var result int64 = 1
-	for base > 1 {
-		result *= base
-		base--
-	}
-	return result
-}
