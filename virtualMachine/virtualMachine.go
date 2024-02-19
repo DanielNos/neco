@@ -36,11 +36,12 @@ type VirtualMachine struct {
 	functions []int
 
 	// Public registers and stack
-	reg_genericA interface{} // Operation A
-	reg_genericB interface{} // Operation B
-	reg_genericC interface{} // Operation Store
-	reg_genericD interface{} // Function Return
-	reg_genericE interface{} // List
+	reg_operationA     interface{} // A) Operation A
+	reg_operationB     interface{} // B) Operation B
+	reg_operationStore interface{} // C) Operation Store
+	reg_list           interface{} // D) List
+	reg_funcReturnA    interface{} // E) Function Return
+	reg_funcReturnB    interface{} // F) Function error return
 
 	reg_argumentPointer int
 	stack_arguments     []interface{}
@@ -113,30 +114,30 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load list element
 		case IT_LoadListValueRegA:
-			vm.reg_genericA = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericA.(int64)]
+			vm.reg_operationA = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationA.(int64)]
 
 		case IT_LoadListValueRegB:
-			vm.reg_genericB = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericB.(int64)]
+			vm.reg_operationB = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationB.(int64)]
 
 		// Store register to a variable
 		case IT_StoreRegA:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_genericA
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationA
 
 		case IT_StoreRegB:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_genericB
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationB
 
 		// List operations
 		case IT_AppendListRegA:
 
 		case IT_SetListAtAToB:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericA.(int64)] = vm.reg_genericB
+			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationA.(int64)] = vm.reg_operationB
 
 		// Load constant to register
 		case IT_LoadConstRegA:
-			vm.reg_genericA = vm.Constants[instruction.InstructionValue[0]]
+			vm.reg_operationA = vm.Constants[instruction.InstructionValue[0]]
 
 		case IT_LoadConstRegB:
-			vm.reg_genericB = vm.Constants[instruction.InstructionValue[0]]
+			vm.reg_operationB = vm.Constants[instruction.InstructionValue[0]]
 
 		case IT_LoadConstArgStack:
 			vm.stack_arguments[vm.reg_argumentPointer] = vm.Constants[instruction.InstructionValue[0]]
@@ -144,10 +145,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load variable to a register
 		case IT_LoadRegA:
-			vm.reg_genericA = vm.findSymbol().symbolValue.(*VariableSymbol).value
+			vm.reg_operationA = vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 		case IT_LoadRegB:
-			vm.reg_genericB = vm.findSymbol().symbolValue.(*VariableSymbol).value
+			vm.reg_operationB = vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 		case IT_LoadArgStack:
 			vm.stack_arguments[vm.reg_argumentPointer] = vm.findSymbol().symbolValue.(*VariableSymbol).value
@@ -197,89 +198,89 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Swap generic registers
 		case IT_SwapAB:
-			vm.reg_genericA, vm.reg_genericB = vm.reg_genericB, vm.reg_genericA
+			vm.reg_operationA, vm.reg_operationB = vm.reg_operationB, vm.reg_operationA
 
 		// Copy registers to registers
 		case IT_CopyRegAToC:
-			vm.reg_genericC = vm.reg_genericA
+			vm.reg_operationStore = vm.reg_operationA
 
 		case IT_CopyRegBToC:
-			vm.reg_genericC = vm.reg_genericB
+			vm.reg_operationStore = vm.reg_operationB
 
 		case IT_CopyRegCToA:
-			vm.reg_genericA = vm.reg_genericC
+			vm.reg_operationA = vm.reg_operationStore
 
 		case IT_CopyRegCToB:
-			vm.reg_genericB = vm.reg_genericC
+			vm.reg_operationB = vm.reg_operationStore
 
 		case IT_CopyRegAToD:
-			vm.reg_genericD = vm.reg_genericA
+			vm.reg_funcReturnA = vm.reg_operationA
 
 		case IT_CopyRegDToA:
-			vm.reg_genericA = vm.reg_genericD
+			vm.reg_operationA = vm.reg_funcReturnA
 
 		case IT_CopyRegDToB:
-			vm.reg_genericB = vm.reg_genericD
+			vm.reg_operationB = vm.reg_funcReturnA
 
 		case IT_CopyRegAToE:
-			vm.reg_genericE = vm.reg_genericA
+			vm.reg_list = vm.reg_operationA
 
 		case IT_CopyRegEToA:
-			vm.reg_genericA = vm.reg_genericE
+			vm.reg_operationA = vm.reg_list
 
 		case IT_CopyRegEToB:
-			vm.reg_genericB = vm.reg_genericE
+			vm.reg_operationB = vm.reg_list
 
 		// Push register to stack
 		case IT_PushRegAToArgStack:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_genericA
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationA
 			vm.reg_argumentPointer++
 
 		case IT_PushRegBToArgStack:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_genericB
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationB
 			vm.reg_argumentPointer++
 
 		// Integer operations
 		case IT_IntAdd:
-			vm.reg_genericA = vm.reg_genericA.(int64) + vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) + vm.reg_operationB.(int64)
 
 		case IT_IntSubtract:
-			vm.reg_genericA = vm.reg_genericA.(int64) - vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) - vm.reg_operationB.(int64)
 
 		case IT_IntMultiply:
-			vm.reg_genericA = vm.reg_genericA.(int64) * vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) * vm.reg_operationB.(int64)
 
 		case IT_IntDivide:
-			vm.reg_genericA = vm.reg_genericA.(int64) / vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) / vm.reg_operationB.(int64)
 
 		case IT_IntPower:
-			vm.reg_genericA = necoMath.PowerInt64(vm.reg_genericA.(int64), vm.reg_genericB.(int64))
+			vm.reg_operationA = necoMath.PowerInt64(vm.reg_operationA.(int64), vm.reg_operationB.(int64))
 
 		case IT_IntModulo:
-			vm.reg_genericA = vm.reg_genericA.(int64) % vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) % vm.reg_operationB.(int64)
 
 		// Float operations
 		case IT_FloatAdd:
-			vm.reg_genericA = vm.reg_genericA.(float64) + vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) + vm.reg_operationB.(float64)
 
 		case IT_FloatSubtract:
-			vm.reg_genericA = vm.reg_genericA.(float64) - vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) - vm.reg_operationB.(float64)
 
 		case IT_FloatMultiply:
-			vm.reg_genericA = vm.reg_genericA.(float64) * vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) * vm.reg_operationB.(float64)
 
 		case IT_FloatDivide:
-			vm.reg_genericA = vm.reg_genericA.(float64) / vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) / vm.reg_operationB.(float64)
 
 		case IT_FloatPower:
-			vm.reg_genericA = math.Pow(vm.reg_genericA.(float64), vm.reg_genericB.(float64))
+			vm.reg_operationA = math.Pow(vm.reg_operationA.(float64), vm.reg_operationB.(float64))
 
 		case IT_FloatModulo:
-			vm.reg_genericA = math.Mod(vm.reg_genericA.(float64), vm.reg_genericB.(float64))
+			vm.reg_operationA = math.Mod(vm.reg_operationA.(float64), vm.reg_operationB.(float64))
 
 		// String operations
 		case IT_StringConcat:
-			vm.reg_genericA = fmt.Sprintf("%s%s", vm.reg_genericA, vm.reg_genericB)
+			vm.reg_operationA = fmt.Sprintf("%s%s", vm.reg_operationA, vm.reg_operationB)
 
 		// Return from a function
 		case IT_Return:
@@ -292,34 +293,34 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Comparison instructions
 		case IT_Equal:
-			vm.reg_genericA = vm.reg_genericA == vm.reg_genericB
+			vm.reg_operationA = vm.reg_operationA == vm.reg_operationB
 
 		case IT_IntLower:
-			vm.reg_genericA = vm.reg_genericA.(int64) < vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) < vm.reg_operationB.(int64)
 
 		case IT_FloatLower:
-			vm.reg_genericA = vm.reg_genericA.(float64) < vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) < vm.reg_operationB.(float64)
 
 		case IT_IntGreater:
-			vm.reg_genericA = vm.reg_genericA.(int64) > vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) > vm.reg_operationB.(int64)
 
 		case IT_FloatGreater:
-			vm.reg_genericA = vm.reg_genericA.(float64) > vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) > vm.reg_operationB.(float64)
 
 		case IT_IntLowerEqual:
-			vm.reg_genericA = vm.reg_genericA.(int64) <= vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) <= vm.reg_operationB.(int64)
 
 		case IT_FloatLowerEqual:
-			vm.reg_genericA = vm.reg_genericA.(float64) <= vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) <= vm.reg_operationB.(float64)
 
 		case IT_IntGreaterEqual:
-			vm.reg_genericA = vm.reg_genericA.(int64) >= vm.reg_genericB.(int64)
+			vm.reg_operationA = vm.reg_operationA.(int64) >= vm.reg_operationB.(int64)
 
 		case IT_FloatGreaterEqual:
-			vm.reg_genericA = vm.reg_genericA.(float64) >= vm.reg_genericB.(float64)
+			vm.reg_operationA = vm.reg_operationA.(float64) >= vm.reg_operationB.(float64)
 
 		case IT_Not:
-			vm.reg_genericA = !vm.reg_genericA.(bool)
+			vm.reg_operationA = !vm.reg_operationA.(bool)
 
 			// Jumps
 		case IT_JumpBack:
@@ -329,22 +330,22 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.instructionIndex += instruction.InstructionValue[0]
 
 		case IT_JumpIfTrue:
-			if vm.reg_genericA.(bool) {
+			if vm.reg_operationA.(bool) {
 				vm.instructionIndex += instruction.InstructionValue[0]
 			}
 
 		// Put bools in registers
 		case IT_SetRegATrue:
-			vm.reg_genericA = true
+			vm.reg_operationA = true
 
 		case IT_SetRegAFalse:
-			vm.reg_genericA = false
+			vm.reg_operationA = false
 
 		case IT_SetRegBTrue:
-			vm.reg_genericA = true
+			vm.reg_operationA = true
 
 		case IT_SetRegBFalse:
-			vm.reg_genericA = false
+			vm.reg_operationA = false
 
 		// Scopes
 		case IT_PushScopeUnnamed:
@@ -359,10 +360,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// List operations
 		case IT_CreateListRegE:
-			vm.reg_genericE = []interface{}{}
+			vm.reg_list = []interface{}{}
 
 		case IT_AppendRegAListE:
-			vm.reg_genericE = append(vm.reg_genericE.([]interface{}), vm.reg_genericA)
+			vm.reg_list = append(vm.reg_list.([]interface{}), vm.reg_operationA)
 
 		// Ignore line offsets
 		case IT_LineOffset:
