@@ -120,7 +120,10 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 
 	// Reading from terminal
 	case BIF_ReadLine:
-		vm.reg_funcReturnA, _ = vm.reader.ReadString('\n')
+		vm.reg_funcReturnA, vm.reg_funcReturnB = vm.reader.ReadString('\n')
+		if vm.reg_funcReturnB != nil {
+			vm.reg_funcReturnB = vm.reg_funcReturnB.(error).Error()
+		}
 		vm.reg_funcReturnA = vm.reg_funcReturnA.(string)[:len(vm.reg_funcReturnA.(string))-1]
 
 	case BIF_ReadChar:
