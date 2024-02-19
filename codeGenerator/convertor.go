@@ -25,17 +25,17 @@ var floatOperatorToInstruction = map[parser.NodeType]byte{
 }
 
 var logicalOperatorToIntInstruction = map[parser.NodeType]byte{
-	parser.NT_Lower:        VM.IT_LowerInt,
-	parser.NT_Greater:      VM.IT_GreaterInt,
-	parser.NT_LowerEqual:   VM.IT_LowerEqualInt,
-	parser.NT_GreaterEqual: VM.IT_GreaterEqualInt,
+	parser.NT_Lower:        VM.IT_IntLower,
+	parser.NT_Greater:      VM.IT_IntGreater,
+	parser.NT_LowerEqual:   VM.IT_IntLowerEqual,
+	parser.NT_GreaterEqual: VM.IT_IntGreaterEqual,
 }
 
 var logicalOperatorToFloatInstruction = map[parser.NodeType]byte{
-	parser.NT_Lower:        VM.IT_LowerFloat,
-	parser.NT_Greater:      VM.IT_GreaterFloat,
-	parser.NT_LowerEqual:   VM.IT_LowerEqualFloat,
-	parser.NT_GreaterEqual: VM.IT_GreaterEqualFloat,
+	parser.NT_Lower:        VM.IT_FloatLower,
+	parser.NT_Greater:      VM.IT_FloatGreater,
+	parser.NT_LowerEqual:   VM.IT_FloatLowerEqual,
+	parser.NT_GreaterEqual: VM.IT_FloatGreaterEqual,
 }
 
 func (cg *CodeGenerator) lineToInstruction(line byte) byte {

@@ -232,7 +232,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
 
 		// Generate list assign instruction
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListRegA, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtAToB, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
 
 	default:
 		panic("Unkown node.")

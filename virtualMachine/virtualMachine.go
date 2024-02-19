@@ -128,7 +128,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// List operations
 		case IT_AppendListRegA:
 
-		case IT_SetListRegA:
+		case IT_SetListAtAToB:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_genericA.(int64)] = vm.reg_genericB
 
 		// Load constant to register
@@ -138,12 +138,20 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_LoadConstRegB:
 			vm.reg_genericB = vm.Constants[instruction.InstructionValue[0]]
 
+		case IT_LoadConstArgStack:
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.Constants[instruction.InstructionValue[0]]
+			vm.reg_argumentPointer++
+
 		// Load variable to a register
 		case IT_LoadRegA:
 			vm.reg_genericA = vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 		case IT_LoadRegB:
 			vm.reg_genericB = vm.findSymbol().symbolValue.(*VariableSymbol).value
+
+		case IT_LoadArgStack:
+			vm.stack_arguments[vm.reg_argumentPointer] = vm.findSymbol().symbolValue.(*VariableSymbol).value
+			vm.reg_argumentPointer++
 
 		// Enter scope
 		case IT_PushScope:
@@ -286,28 +294,28 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_Equal:
 			vm.reg_genericA = vm.reg_genericA == vm.reg_genericB
 
-		case IT_LowerInt:
+		case IT_IntLower:
 			vm.reg_genericA = vm.reg_genericA.(int64) < vm.reg_genericB.(int64)
 
-		case IT_LowerFloat:
+		case IT_FloatLower:
 			vm.reg_genericA = vm.reg_genericA.(float64) < vm.reg_genericB.(float64)
 
-		case IT_GreaterInt:
+		case IT_IntGreater:
 			vm.reg_genericA = vm.reg_genericA.(int64) > vm.reg_genericB.(int64)
 
-		case IT_GreaterFloat:
+		case IT_FloatGreater:
 			vm.reg_genericA = vm.reg_genericA.(float64) > vm.reg_genericB.(float64)
 
-		case IT_LowerEqualInt:
+		case IT_IntLowerEqual:
 			vm.reg_genericA = vm.reg_genericA.(int64) <= vm.reg_genericB.(int64)
 
-		case IT_LowerEqualFloat:
+		case IT_FloatLowerEqual:
 			vm.reg_genericA = vm.reg_genericA.(float64) <= vm.reg_genericB.(float64)
 
-		case IT_GreaterEqualInt:
+		case IT_IntGreaterEqual:
 			vm.reg_genericA = vm.reg_genericA.(int64) >= vm.reg_genericB.(int64)
 
-		case IT_GreaterEqualFloat:
+		case IT_FloatGreaterEqual:
 			vm.reg_genericA = vm.reg_genericA.(float64) >= vm.reg_genericB.(float64)
 
 		case IT_Not:

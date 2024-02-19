@@ -31,7 +31,7 @@ func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) 
 		}
 
 		// Store argument in variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopArgStackVariable, []byte{byte(parameterCount - i)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopArgStackToVariable, []byte{byte(parameterCount - i)}})
 	}
 
 	// Generate function body

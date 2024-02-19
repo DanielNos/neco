@@ -21,17 +21,19 @@ const (
 	IT_StoreRegB
 
 	IT_AppendListRegA
-	IT_SetListRegA
+	IT_SetListAtAToB
 
 	IT_LoadConstRegA
 	IT_LoadConstRegB
+	IT_LoadConstArgStack
 
 	IT_LoadRegA
 	IT_LoadRegB
+	IT_LoadArgStack
 
 	IT_PushScope
 
-	IT_PopArgStackVariable
+	IT_PopArgStackToVariable
 
 	IT_Call
 	IT_JumpBack
@@ -74,14 +76,14 @@ const (
 	IT_Return
 
 	IT_Equal
-	IT_LowerInt
-	IT_LowerFloat
-	IT_GreaterInt
-	IT_GreaterFloat
-	IT_LowerEqualInt
-	IT_LowerEqualFloat
-	IT_GreaterEqualInt
-	IT_GreaterEqualFloat
+	IT_IntLower
+	IT_FloatLower
+	IT_IntGreater
+	IT_FloatGreater
+	IT_IntLowerEqual
+	IT_FloatLowerEqual
+	IT_IntGreaterEqual
+	IT_FloatGreaterEqual
 	IT_Not
 
 	IT_SetRegAFalse
@@ -108,24 +110,26 @@ var InstructionTypeToString = map[byte]string{
 	IT_JumpIfTrueEx: "JUMP_IF_TRUE_EX",
 
 	// 1 argument 1 byte
-	IT_CallBuiltInFunc: "CALL_BUILTIN_FUNC",
+	IT_CallBuiltInFunc: "CALL_BUILTIN",
 	IT_Halt:            "HALT",
 
 	IT_StoreRegA: "STORE_REG_A",
 	IT_StoreRegB: "STORE_REG_B",
 
 	IT_AppendListRegA: "APPEND_LIST_REG_A",
-	IT_SetListRegA:    "SET_LIST_REG_A",
+	IT_SetListAtAToB:  "SET_LIST_AT_A_TO_B",
 
-	IT_LoadConstRegA: "LOAD_CONST_REG_A",
-	IT_LoadConstRegB: "LOAD_CONST_REG_B",
+	IT_LoadConstRegA:     "LOAD_CONST_A",
+	IT_LoadConstRegB:     "LOAD_CONST_B",
+	IT_LoadConstArgStack: "LOAD_CONST_ARG",
 
-	IT_LoadRegA: "LOAD_REG_A",
-	IT_LoadRegB: "LOAD_REG_B",
+	IT_LoadRegA:     "LOAD_A",
+	IT_LoadRegB:     "LOAD_B",
+	IT_LoadArgStack: "LOAD_ARG",
 
 	IT_PushScope: "PUSH_SCOPE",
 
-	IT_PopArgStackVariable: "POP_ARG_STACK_VARIABLE",
+	IT_PopArgStackToVariable: "POP_ARG_TO_VAR",
 
 	IT_Call:       "CALL",
 	IT_JumpBack:   "JUMP_BACK",
@@ -134,20 +138,20 @@ var InstructionTypeToString = map[byte]string{
 
 	// 0 arguments
 	IT_SwapAB:      "SWAP_A_B",
-	IT_CopyRegAToC: "COPY_REG_A_TO_C",
-	IT_CopyRegBToC: "COPY_REG_B_TO_C",
-	IT_CopyRegCToA: "COPY_REG_C_TO_A",
-	IT_CopyRegCToB: "COPY_REG_C_TO_B",
-	IT_CopyRegAToD: "COPY_REG_A_TO_D",
-	IT_CopyRegDToA: "COPY_REG_D_TO_A",
-	IT_CopyRegDToB: "COPY_REG_D_TO_B",
-	IT_CopyRegAToE: "COPY_REG_A_TO_E",
-	IT_CopyRegEToA: "COPY_REG_E_TO_A",
-	IT_CopyRegEToB: "COPY_REG_E_TO_B",
+	IT_CopyRegAToC: "COPY_A_TO_C",
+	IT_CopyRegBToC: "COPY_B_TO_C",
+	IT_CopyRegCToA: "COPY_C_TO_A",
+	IT_CopyRegCToB: "COPY_C_TO_B",
+	IT_CopyRegAToD: "COPY_A_TO_D",
+	IT_CopyRegDToA: "COPY_D_TO_A",
+	IT_CopyRegDToB: "COPY_D_TO_B",
+	IT_CopyRegAToE: "COPY_A_TO_E",
+	IT_CopyRegEToA: "COPY_E_TO_A",
+	IT_CopyRegEToB: "COPY_E_TO_B",
 
-	IT_PushRegAToArgStack: "PUSH_REG_A_ARG_STACK",
-	IT_PushRegBToArgStack: "PUSH_REG_B_ARG_STACK",
-	IT_PopArgStackRegA:    "POP_ARG_STACK_REG_A",
+	IT_PushRegAToArgStack: "PUSH_A_TO_ARG",
+	IT_PushRegBToArgStack: "PUSH_B_TO_ARG",
+	IT_PopArgStackRegA:    "POP_ARG_TO_A",
 
 	IT_IntAdd:      "INT_ADD",
 	IT_IntSubtract: "INT_SUB",
@@ -165,35 +169,35 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_StringConcat: "STRING_CONCAT",
 
-	IT_DeclareBool:   "DECLARE_BOOL",
-	IT_DeclareInt:    "DECLARE_INT",
-	IT_DeclareFloat:  "DECLARE_FLOAT",
-	IT_DeclareString: "DECLARE_STRING",
-	IT_DeclareList:   "DECLARE_LIST",
+	IT_DeclareBool:   "DECL_BOOL",
+	IT_DeclareInt:    "DECL_INT",
+	IT_DeclareFloat:  "DECL_FLOAT",
+	IT_DeclareString: "DECL_STRING",
+	IT_DeclareList:   "DECL_LIST",
 
 	IT_Return: "RETURN",
 
 	IT_Equal:             "EQUAL",
-	IT_LowerInt:          "LOWER_INT",
-	IT_GreaterInt:        "GREATER_INT",
-	IT_LowerEqualInt:     "LOWER_EQUAL_INT",
-	IT_GreaterEqualInt:   "GREATER_EQUAL_INT",
-	IT_LowerFloat:        "LOWER_FLOAT",
-	IT_GreaterFloat:      "GREATER_FLOAT",
-	IT_LowerEqualFloat:   "LOWER_EQUAL_FLOAT",
-	IT_GreaterEqualFloat: "GREATER_EQUAL_FLOAT",
+	IT_IntLower:          "INT_LOWER",
+	IT_IntGreater:        "INT_GREATER",
+	IT_IntLowerEqual:     "INT_LOWER_EQUAL",
+	IT_IntGreaterEqual:   "INT_GREATER_EQUAL",
+	IT_FloatLower:        "FLOAT_LOWER",
+	IT_FloatGreater:      "FLOAT_GREATER",
+	IT_FloatLowerEqual:   "FLOAT_LOWER_EQUAL",
+	IT_FloatGreaterEqual: "FLOAT_GREATER_EQUAL",
 	IT_Not:               "NOT",
 
-	IT_SetRegAFalse: "SET_REG_A_FALSE",
-	IT_SetRegATrue:  "SET_REG_A_TRUE",
-	IT_SetRegBFalse: "SET_REG_B_FALSE",
-	IT_SetRegBTrue:  "SET_REG_B_TRUE",
+	IT_SetRegAFalse: "SET_A_FALSE",
+	IT_SetRegATrue:  "SET_A_TRUE",
+	IT_SetRegBFalse: "SET_B_FALSE",
+	IT_SetRegBTrue:  "SET_B_TRUE",
 
 	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
 	IT_PopScope:         "POP_SCOPE",
 
-	IT_CreateListRegE:  "CREATE_LIST_REG_E",
-	IT_AppendRegAListE: "APPEND_REG_A_LIST_E",
+	IT_CreateListRegE:  "NEW_LIST_E",
+	IT_AppendRegAListE: "APPEND_A_TO_E",
 
 	IT_LineOffset: "LINE_OFFSET",
 }
