@@ -39,9 +39,10 @@ type VirtualMachine struct {
 	reg_operationA     interface{} // A) Operation A
 	reg_operationB     interface{} // B) Operation B
 	reg_operationStore interface{} // C) Operation Store
-	reg_list           interface{} // D) List
-	reg_funcReturnA    interface{} // E) Function Return
-	reg_funcReturnB    interface{} // F) Function error return
+	reg_listA          interface{} // D) List A
+	reg_listB          interface{} // E) List B
+	reg_funcReturnA    interface{} // F) Function Return
+	reg_funcReturnB    interface{} // G) Function error return
 
 	reg_argumentPointer int
 	stack_arguments     []interface{}
@@ -127,8 +128,6 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationB
 
 		// List operations
-		case IT_AppendListRegA:
-
 		case IT_SetListAtAToB:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationA.(int64)] = vm.reg_operationB
 
@@ -197,46 +196,46 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
 		// Swap generic registers
-		case IT_SwapAB:
+		case IT_SwapOperation:
 			vm.reg_operationA, vm.reg_operationB = vm.reg_operationB, vm.reg_operationA
 
 		// Copy registers to registers
-		case IT_CopyRegAToC:
+		case IT_CopyOpAToOpStore:
 			vm.reg_operationStore = vm.reg_operationA
 
-		case IT_CopyRegBToC:
+		case IT_CopyOpBToOpStore:
 			vm.reg_operationStore = vm.reg_operationB
 
-		case IT_CopyRegCToA:
+		case IT_CopyOpStoreToOpA:
 			vm.reg_operationA = vm.reg_operationStore
 
-		case IT_CopyRegCToB:
+		case IT_CopyOpStoreToOpB:
 			vm.reg_operationB = vm.reg_operationStore
 
-		case IT_CopyRegAToD:
+		case IT_CopyOpAToReturn:
 			vm.reg_funcReturnA = vm.reg_operationA
 
-		case IT_CopyRegDToA:
+		case IT_CopyReturnToOpA:
 			vm.reg_operationA = vm.reg_funcReturnA
 
-		case IT_CopyRegDToB:
+		case IT_CopyReturnToOpB:
 			vm.reg_operationB = vm.reg_funcReturnA
 
-		case IT_CopyRegAToE:
-			vm.reg_list = vm.reg_operationA
+		case IT_CopyOpAToListA:
+			vm.reg_listA = vm.reg_operationA
 
-		case IT_CopyRegEToA:
-			vm.reg_operationA = vm.reg_list
+		case IT_CopyListAToOpA:
+			vm.reg_operationA = vm.reg_listA
 
-		case IT_CopyRegEToB:
-			vm.reg_operationB = vm.reg_list
+		case IT_CopyListAToOpB:
+			vm.reg_operationB = vm.reg_listA
 
 		// Push register to stack
-		case IT_PushRegAToArgStack:
+		case IT_PushOpAToArg:
 			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationA
 			vm.reg_argumentPointer++
 
-		case IT_PushRegBToArgStack:
+		case IT_PushOpBToArg:
 			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationB
 			vm.reg_argumentPointer++
 
@@ -359,11 +358,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.reg_scopeIndex--
 
 		// List operations
-		case IT_CreateListRegE:
-			vm.reg_list = []interface{}{}
+		case IT_CreateListInListA:
+			vm.reg_listA = []interface{}{}
 
-		case IT_AppendRegAListE:
-			vm.reg_list = append(vm.reg_list.([]interface{}), vm.reg_operationA)
+		case IT_AppendOpAToListA:
+			vm.reg_listA = append(vm.reg_listA.([]interface{}), vm.reg_operationA)
 
 		// Ignore line offsets
 		case IT_LineOffset:

@@ -22,7 +22,7 @@ func Optimize(instructions []VM.Instruction) {
 		}
 
 		// Load constant directly do argument stack
-		if instructions[i].InstructionType == VM.IT_LoadConstRegA && instructions[i+1].InstructionType == VM.IT_PushRegAToArgStack {
+		if instructions[i].InstructionType == VM.IT_LoadConstRegA && instructions[i+1].InstructionType == VM.IT_PushOpAToArg {
 			instructions[i].InstructionType = VM.IT_LoadConstArgStack
 			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
 			i++
@@ -30,7 +30,7 @@ func Optimize(instructions []VM.Instruction) {
 		}
 
 		// Load variable directly do argument stack
-		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_PushRegAToArgStack {
+		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_PushOpAToArg {
 			instructions[i].InstructionType = VM.IT_LoadArgStack
 			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
 			i++
@@ -44,7 +44,7 @@ func Optimize(instructions []VM.Instruction) {
 		// 2 LOAD_REG_A        2   -->  2 LOAD_REG_A 2
 		// 3 COPY_REG_E_TO_B       -->
 
-		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_CopyRegAToE && instructions[i+2].InstructionType == VM.IT_LoadRegA && instructions[i+3].InstructionType == VM.IT_CopyRegEToB {
+		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_CopyOpAToListA && instructions[i+2].InstructionType == VM.IT_LoadRegA && instructions[i+3].InstructionType == VM.IT_CopyListAToOpB {
 			instructions[i].InstructionType = VM.IT_LoadRegB
 			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
 			instructions[i+3].InstructionType = IGNORE_INSTRUCTION

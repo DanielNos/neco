@@ -87,6 +87,6 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
 		cg.generateExpression(argument, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushRegAToArgStack, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushOpAToArg, NO_ARGS})
 	}
 }

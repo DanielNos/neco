@@ -18,9 +18,9 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)
 		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegDToA, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyReturnToOpA, NO_ARGS})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegDToB, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyReturnToOpB, NO_ARGS})
 		}
 
 	// Operators
@@ -72,25 +72,25 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// Lists
 	case parser.NT_List:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListRegE, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListInListA, NO_ARGS})
 
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
 			cg.generateExpression(node, true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendRegAListE, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendOpAToListA, NO_ARGS})
 		}
 
 		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToA, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpA, NO_ARGS})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpB, NO_ARGS})
 		}
 
 	// List values
 	case parser.NT_ListValue:
 		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegBToC, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpBToOpStore, NO_ARGS})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToOpStore, NO_ARGS})
 		}
 
 		cg.generateExpression(node.Value.(*parser.ListValueNode).Index, loadLeft)
@@ -103,9 +103,9 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		}
 
 		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToA, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpA, NO_ARGS})
 		}
 
 	default:
@@ -125,9 +125,9 @@ func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNo
 		// Operator on right and anything on left
 	} else {
 		cg.generateExpression(binaryNode.Right, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToC, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToOpStore, NO_ARGS})
 		cg.generateExpression(binaryNode.Left, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegCToB, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
 	}
 }
 

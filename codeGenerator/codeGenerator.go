@@ -191,7 +191,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		// Generate returned expression
 		if node.Value != nil {
 			cg.generateExpression(node.Value.(*parser.Node), true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToD, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToReturn, NO_ARGS})
 		}
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
 
@@ -223,13 +223,13 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_ListAssign:
 		// Generate assigned expression and store it in reg E
 		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegAToE, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToListA, NO_ARGS})
 
 		// Generate index expression
 		cg.generateExpression(node.Value.(*parser.ListAssignNode).IndexExpression, true)
 
 		// Move assigned expression from reg E to reg B
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyRegEToB, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpB, NO_ARGS})
 
 		// Generate list assign instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtAToB, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})

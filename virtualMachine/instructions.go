@@ -41,20 +41,20 @@ const (
 	IT_JumpIfTrue
 
 	// 0 arguments
-	IT_SwapAB
-	IT_CopyRegAToC
-	IT_CopyRegBToC
-	IT_CopyRegCToA
-	IT_CopyRegCToB
-	IT_CopyRegAToD
-	IT_CopyRegDToA
-	IT_CopyRegDToB
-	IT_CopyRegAToE
-	IT_CopyRegEToA
-	IT_CopyRegEToB
+	IT_SwapOperation
+	IT_CopyOpAToOpStore
+	IT_CopyOpBToOpStore
+	IT_CopyOpStoreToOpA
+	IT_CopyOpStoreToOpB
+	IT_CopyOpAToReturn
+	IT_CopyReturnToOpA
+	IT_CopyReturnToOpB
+	IT_CopyOpAToListA
+	IT_CopyListAToOpA
+	IT_CopyListAToOpB
 
-	IT_PushRegAToArgStack
-	IT_PushRegBToArgStack
+	IT_PushOpAToArg
+	IT_PushOpBToArg
 	IT_PopArgStackRegA
 
 	IT_IntAdd
@@ -94,112 +94,111 @@ const (
 	IT_PushScopeUnnamed
 	IT_PopScope
 
-	IT_CreateListRegE
-	IT_AppendRegAListE
+	IT_CreateListInListA
+	IT_AppendOpAToListA
 
 	IT_LineOffset
 )
 
 var InstructionTypeToString = map[byte]string{
 	// 2 arguments 2 bytes
-	IT_LoadListValueRegA: "LOAD_LIST_VAL_REG_A",
-	IT_LoadListValueRegB: "LOAD_LIST_VAL_REG_A",
+	IT_LoadListValueRegA: "load_list_at_OA_to_OA",
+	IT_LoadListValueRegB: "load_list_at_OB_to_OB",
 
 	// 1 argument 2 bytes
-	IT_JumpEx:       "JUMP_EX",
-	IT_JumpIfTrueEx: "JUMP_IF_TRUE_EX",
+	IT_JumpEx:       "jump_ex",
+	IT_JumpIfTrueEx: "jump_if_true_ex",
 
 	// 1 argument 1 byte
-	IT_CallBuiltInFunc: "CALL_BUILTIN",
-	IT_Halt:            "HALT",
+	IT_CallBuiltInFunc: "call_builtin",
+	IT_Halt:            "halt",
 
-	IT_StoreRegA: "STORE_REG_A",
-	IT_StoreRegB: "STORE_REG_B",
+	IT_StoreRegA: "store_OA",
+	IT_StoreRegB: "store_OB",
 
-	IT_AppendListRegA: "APPEND_LIST_REG_A",
-	IT_SetListAtAToB:  "SET_LIST_AT_A_TO_B",
+	IT_SetListAtAToB: "set_list_at_OA_to_OB",
 
-	IT_LoadConstRegA:     "LOAD_CONST_A",
-	IT_LoadConstRegB:     "LOAD_CONST_B",
-	IT_LoadConstArgStack: "LOAD_CONST_ARG",
+	IT_LoadConstRegA:     "load_const_OA",
+	IT_LoadConstRegB:     "load_const_OB",
+	IT_LoadConstArgStack: "load_const_ARG",
 
-	IT_LoadRegA:     "LOAD_A",
-	IT_LoadRegB:     "LOAD_B",
-	IT_LoadArgStack: "LOAD_ARG",
+	IT_LoadRegA:     "load_OA",
+	IT_LoadRegB:     "load_OB",
+	IT_LoadArgStack: "load_ARG",
 
-	IT_PushScope: "PUSH_SCOPE",
+	IT_PushScope: "push_scope",
 
-	IT_PopArgStackToVariable: "POP_ARG_TO_VAR",
+	IT_PopArgStackToVariable: "pop_ARG_store",
 
-	IT_Call:       "CALL",
-	IT_JumpBack:   "JUMP_BACK",
-	IT_Jump:       "JUMP",
-	IT_JumpIfTrue: "JUMP_IF_TRUE",
+	IT_Call:       "call",
+	IT_JumpBack:   "jump_back",
+	IT_Jump:       "jump",
+	IT_JumpIfTrue: "jump_if_true",
 
 	// 0 arguments
-	IT_SwapAB:      "SWAP_A_B",
-	IT_CopyRegAToC: "COPY_A_TO_C",
-	IT_CopyRegBToC: "COPY_B_TO_C",
-	IT_CopyRegCToA: "COPY_C_TO_A",
-	IT_CopyRegCToB: "COPY_C_TO_B",
-	IT_CopyRegAToD: "COPY_A_TO_D",
-	IT_CopyRegDToA: "COPY_D_TO_A",
-	IT_CopyRegDToB: "COPY_D_TO_B",
-	IT_CopyRegAToE: "COPY_A_TO_E",
-	IT_CopyRegEToA: "COPY_E_TO_A",
-	IT_CopyRegEToB: "COPY_E_TO_B",
+	IT_SwapOperation:    "swap_OA_OB",
+	IT_CopyOpAToOpStore: "copy_OA_to_OS",
+	IT_CopyOpBToOpStore: "copy_OB_to_OS",
+	IT_CopyOpStoreToOpA: "copy_OS_to_OA",
+	IT_CopyOpStoreToOpB: "copy_OS_to_OB",
+	IT_CopyOpAToReturn:  "copy_OA_to_RET",
+	IT_CopyReturnToOpA:  "copy_RET_to_OA",
+	IT_CopyReturnToOpB:  "copy_RET_to_OB",
+	IT_CopyOpAToListA:   "copy_OA_to_LA",
+	IT_CopyListAToOpA:   "copy_LA_to_OA",
+	IT_CopyListAToOpB:   "copy_LA_to_OB",
 
-	IT_PushRegAToArgStack: "PUSH_A_TO_ARG",
-	IT_PushRegBToArgStack: "PUSH_B_TO_ARG",
-	IT_PopArgStackRegA:    "POP_ARG_TO_A",
+	IT_PushOpAToArg:    "push_OA_to_ARG",
+	IT_PushOpBToArg:    "push_OB_to_ARG",
+	IT_PopArgStackRegA: "pop_ARG_to_OA",
 
-	IT_IntAdd:      "INT_ADD",
-	IT_IntSubtract: "INT_SUB",
-	IT_IntMultiply: "INT_MUL",
-	IT_IntDivide:   "INT_DIV",
-	IT_IntPower:    "INT_POW",
-	IT_IntModulo:   "INT_MOD",
+	IT_IntAdd:      "int_add",
+	IT_IntSubtract: "int_sub",
+	IT_IntMultiply: "int_mul",
+	IT_IntDivide:   "int_div",
+	IT_IntPower:    "int_pow",
+	IT_IntModulo:   "int_mod",
 
-	IT_FloatAdd:      "FLT_ADD",
-	IT_FloatSubtract: "FLT_SUB",
-	IT_FloatMultiply: "FLT_MUL",
-	IT_FloatDivide:   "FLT_DIV",
-	IT_FloatPower:    "FLT_POW",
-	IT_FloatModulo:   "FLT_MOD",
+	IT_FloatAdd:      "flt_add",
+	IT_FloatSubtract: "flt_sub",
+	IT_FloatMultiply: "flt_mul",
+	IT_FloatDivide:   "flt_div",
+	IT_FloatPower:    "flt_pow",
+	IT_FloatModulo:   "flt_mod",
 
-	IT_StringConcat: "STRING_CONCAT",
+	IT_StringConcat: "str_concat",
 
-	IT_DeclareBool:   "DECL_BOOL",
-	IT_DeclareInt:    "DECL_INT",
-	IT_DeclareFloat:  "DECL_FLOAT",
-	IT_DeclareString: "DECL_STRING",
-	IT_DeclareList:   "DECL_LIST",
+	IT_DeclareBool:   "decl_bool",
+	IT_DeclareInt:    "decl_int",
+	IT_DeclareFloat:  "decl_float",
+	IT_DeclareString: "decl_string",
+	IT_DeclareList:   "decl_list",
 
-	IT_Return: "RETURN",
+	IT_Return: "return",
 
-	IT_Equal:             "EQUAL",
-	IT_IntLower:          "INT_LOWER",
-	IT_IntGreater:        "INT_GREATER",
-	IT_IntLowerEqual:     "INT_LOWER_EQUAL",
-	IT_IntGreaterEqual:   "INT_GREATER_EQUAL",
-	IT_FloatLower:        "FLOAT_LOWER",
-	IT_FloatGreater:      "FLOAT_GREATER",
-	IT_FloatLowerEqual:   "FLOAT_LOWER_EQUAL",
-	IT_FloatGreaterEqual: "FLOAT_GREATER_EQUAL",
-	IT_Not:               "NOT",
+	IT_Equal:             "equal",
+	IT_IntLower:          "int_lower",
+	IT_IntGreater:        "int_greater",
+	IT_IntLowerEqual:     "int_lower_equal",
+	IT_IntGreaterEqual:   "int_greater_equal",
+	IT_FloatLower:        "float_lower",
+	IT_FloatGreater:      "float_greater",
+	IT_FloatLowerEqual:   "float_lower_equal",
+	IT_FloatGreaterEqual: "float_greater_equal",
+	IT_Not:               "not",
 
-	IT_SetRegAFalse: "SET_A_FALSE",
-	IT_SetRegATrue:  "SET_A_TRUE",
-	IT_SetRegBFalse: "SET_B_FALSE",
-	IT_SetRegBTrue:  "SET_B_TRUE",
+	IT_SetRegAFalse: "set_OA_false",
+	IT_SetRegATrue:  "set_OA_true",
+	IT_SetRegBFalse: "set_OB_false",
+	IT_SetRegBTrue:  "set_OB_true",
 
-	IT_PushScopeUnnamed: "PUSH_SCOPE_UNNAMED",
-	IT_PopScope:         "POP_SCOPE",
+	IT_PushScopeUnnamed: "push_scope_unnamed",
+	IT_PopScope:         "pop_scope",
 
-	IT_CreateListRegE:  "NEW_LIST_E",
-	IT_AppendRegAListE: "APPEND_A_TO_E",
+	IT_CreateListInListA: "new_list_LA",
+	IT_AppendOpAToListA:  "append_OA_to_LA",
 
-	IT_LineOffset: "LINE_OFFSET",
+	IT_LineOffset: "line_offset",
 }
 
 type Instruction struct {
