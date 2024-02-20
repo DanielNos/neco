@@ -13,6 +13,7 @@ const (
 	DT_Int
 	DT_Float
 	DT_String
+	DT_Any
 	DT_UserDefined
 	DT_List
 )
@@ -29,6 +30,8 @@ func (dt DType) String() string {
 		return "Float"
 	case DT_String:
 		return "String"
+	case DT_Any:
+		return "Any"
 	case DT_List:
 		return "List"
 	case DT_UserDefined:
@@ -62,7 +65,7 @@ type DataType struct {
 }
 
 func (vt DataType) Equals(other DataType) bool {
-	return vt.DType == other.DType && vt.SubType == other.SubType
+	return vt.DType != DT_NoType && other.DType != DT_Any && (vt.DType == DT_Any || other.DType == DT_Any) || vt.DType == other.DType && vt.SubType == other.SubType
 }
 
 func (dt DataType) String() string {

@@ -225,8 +225,8 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 				return DataType{DT_Bool, nil}
 			}
 
-			// Only + can be used on strings
-			if leftType.DType == DT_String && expression.NodeType != NT_Add {
+			// Only + can be used on strings and lists
+			if (leftType.DType == DT_String || leftType.DType == DT_List) && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}

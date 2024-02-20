@@ -546,12 +546,23 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Da
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
 
 		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
+			// Transform a += 1 to a = a + 1
 			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
-			p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}}})
+			newExpression := &Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}}}
+
+			p.GetExpressionType(newExpression)
+			visualize(newExpression, "", true)
+
+			p.appendScope(newExpression)
 		}
 
+		// Transform a += 1 to a = a + 1
 		variableNode := &Node{identifierTokens[len(identifierTokens)-1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens)-1].Value, expressionType}}
-		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}}}, expressionType
+		newExpression := &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}
+
+		p.GetExpressionType(newExpression)
+
+		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, newExpression}}, expressionType
 	}
 
 	// Assign nodes
