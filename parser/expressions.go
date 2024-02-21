@@ -100,7 +100,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 				p.consume()
 				// Normal variable
 			} else {
-				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).variableType}}
+				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
 			}
 		} else {
 			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
@@ -259,7 +259,7 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return expression.Value.(*ListValueNode).ListSymbol.variableType.SubType.(DataType)
+		return expression.Value.(*ListValueNode).ListSymbol.VariableType.SubType.(DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))

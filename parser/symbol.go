@@ -20,7 +20,7 @@ const (
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	variableType  DataType
+	VariableType  DataType
 	isInitialized bool
 	isConstant    bool
 }

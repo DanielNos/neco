@@ -63,10 +63,16 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		cg.generateExpressionArguments(binaryNode)
 
 		// Generate operator
-		if binaryNode.DType == parser.DT_Int {
-			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToIntInstruction[node.NodeType], NO_ARGS})
+		leftType := getExpressionType(binaryNode.Left)
+
+		// Compare ints
+		if leftType.DType == parser.DT_Int {
+			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToIntInstruction[node.NodeType], NO_ARGS})
+			// Compare floats
+		} else if leftType.DType == parser.DT_Float {
+			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToFloatInstruction[node.NodeType], NO_ARGS})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{logicalOperatorToFloatInstruction[node.NodeType], NO_ARGS})
+			panic("Can't generate comparision instruction on operator nodes.")
 		}
 
 	// Variables
@@ -100,9 +106,9 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier, loadLeft)
 		if loadLeft {
-			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListValueRegA
+			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListAtOpAToOpA
 		} else {
-			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListValueRegB
+			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListOpBToOpB
 		}
 
 		if loadLeft {
@@ -200,4 +206,35 @@ func (cg *CodeGenerator) findVariableIdentifier(variableName string) uint8 {
 	}
 
 	return identifier
+}
+
+func getExpressionType(expression *parser.Node) parser.DataType {
+	if expression.NodeType.IsOperator() {
+		// Unary operator
+		if expression.Value.(*parser.BinaryNode).Left == nil {
+			unaryType := getExpressionType(expression.Value.(*parser.BinaryNode).Right)
+			return unaryType
+		}
+
+		// Binary operator
+		leftType := getExpressionType(expression.Value.(*parser.BinaryNode).Left)
+		rightType := getExpressionType(expression.Value.(*parser.BinaryNode).Right)
+
+		return parser.DataType{max(leftType.DType, rightType.DType), nil}
+	}
+
+	switch expression.NodeType {
+	case parser.NT_Literal:
+		return parser.DataType{expression.Value.(*parser.LiteralNode).DType, nil}
+	case parser.NT_Variable:
+		return expression.Value.(*parser.VariableNode).DataType
+	case parser.NT_FunctionCall:
+		return *expression.Value.(*parser.FunctionCallNode).ReturnType
+	case parser.NT_List:
+		return expression.Value.(*parser.ListNode).DataType
+	case parser.NT_ListValue:
+		return expression.Value.(*parser.ListValueNode).ListSymbol.VariableType.SubType.(parser.DataType)
+	}
+
+	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))
 }

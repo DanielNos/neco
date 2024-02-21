@@ -40,7 +40,6 @@ type VirtualMachine struct {
 	reg_operationB     interface{} // B) Operation B
 	reg_operationStore interface{} // C) Operation Store
 	reg_listA          interface{} // D) List A
-	reg_listB          interface{} // E) List B
 	reg_funcReturnA    interface{} // F) Function Return
 	reg_funcReturnB    interface{} // G) Function error return
 
@@ -114,7 +113,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			os.Exit(int(instruction.InstructionValue[0]))
 
 		// Load list element
-		case IT_LoadListValueRegA:
+		case IT_LoadListAtOpAToOpA:
 			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 			if vm.reg_operationA.(int64) > int64(len(list.([]interface{}))-1) {
@@ -123,7 +122,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			}
 			vm.reg_operationA = list.([]interface{})[vm.reg_operationA.(int64)]
 
-		case IT_LoadListValueRegB:
+		case IT_LoadListOpBToOpB:
 			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
 
 			if vm.reg_operationB.(int64) > int64(len(list.([]interface{}))-1) {
@@ -133,10 +132,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.reg_operationB = list.([]interface{})[vm.reg_operationB.(int64)]
 
 		// Store register to a variable
-		case IT_StoreRegA:
+		case IT_StoreOpA:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationA
 
-		case IT_StoreRegB:
+		case IT_StoreOpB:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationB
 
 		// List operations

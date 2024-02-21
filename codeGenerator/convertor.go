@@ -24,14 +24,14 @@ var floatOperatorToInstruction = map[parser.NodeType]byte{
 	parser.NT_Modulo:   VM.IT_FloatModulo,
 }
 
-var logicalOperatorToIntInstruction = map[parser.NodeType]byte{
+var comparisonOperatorToIntInstruction = map[parser.NodeType]byte{
 	parser.NT_Lower:        VM.IT_IntLower,
 	parser.NT_Greater:      VM.IT_IntGreater,
 	parser.NT_LowerEqual:   VM.IT_IntLowerEqual,
 	parser.NT_GreaterEqual: VM.IT_IntGreaterEqual,
 }
 
-var logicalOperatorToFloatInstruction = map[parser.NodeType]byte{
+var comparisonOperatorToFloatInstruction = map[parser.NodeType]byte{
 	parser.NT_Lower:        VM.IT_FloatLower,
 	parser.NT_Greater:      VM.IT_FloatGreater,
 	parser.NT_LowerEqual:   VM.IT_FloatLowerEqual,

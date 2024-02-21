@@ -185,7 +185,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateExpression(assignNode.Expression, true)
 
 		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreRegA, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreOpA, []byte{identifier}})
 
 	// If statement
 	case parser.NT_If:

@@ -6,8 +6,8 @@ const (
 	IT_JumpIfTrueEx
 
 	// 1 argument 1 byte
-	IT_LoadListValueRegA
-	IT_LoadListValueRegB
+	IT_LoadListAtOpAToOpA
+	IT_LoadListOpBToOpB
 	IT_CallBuiltInFunc
 	IT_Halt
 
@@ -17,8 +17,8 @@ const (
 	IT_DeclareString
 	IT_DeclareList
 
-	IT_StoreRegA
-	IT_StoreRegB
+	IT_StoreOpA
+	IT_StoreOpB
 
 	IT_AppendListRegA
 	IT_SetListAtAToB
@@ -103,8 +103,8 @@ const (
 
 var InstructionTypeToString = map[byte]string{
 	// 2 arguments 2 bytes
-	IT_LoadListValueRegA: "load_list_at_OA_to_OA",
-	IT_LoadListValueRegB: "load_list_at_OB_to_OB",
+	IT_LoadListAtOpAToOpA: "load_list_at_OA_to_OA",
+	IT_LoadListOpBToOpB:   "load_list_at_OB_to_OB",
 
 	// 1 argument 2 bytes
 	IT_JumpEx:       "jump_ex",
@@ -114,8 +114,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_CallBuiltInFunc: "call_builtin",
 	IT_Halt:            "halt",
 
-	IT_StoreRegA: "store_OA",
-	IT_StoreRegB: "store_OB",
+	IT_StoreOpA: "store_OA",
+	IT_StoreOpB: "store_OB",
 
 	IT_SetListAtAToB: "set_list_at_OA_to_OB",
 

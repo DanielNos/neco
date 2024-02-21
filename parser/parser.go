@@ -324,7 +324,7 @@ func (p *Parser) parseIdentifier() *Node {
 					p.newError(p.peek().Position, fmt.Sprintf("Can't assign to constant variable %s.", identifier.Value))
 				}
 
-				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{symbol.value.(*VariableSymbol).variableType})
+				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{symbol.value.(*VariableSymbol).VariableType})
 
 				symbol.value.(*VariableSymbol).isInitialized = true
 			}
@@ -345,7 +345,7 @@ func (p *Parser) parseIdentifier() *Node {
 				p.newError(identifier.Position, fmt.Sprintf("Can't assign to %s. It is not a variable.", identifier.Value))
 				// Collect list type
 			} else {
-				listType = symbol.value.(*VariableSymbol).variableType
+				listType = symbol.value.(*VariableSymbol).VariableType
 			}
 		}
 
@@ -386,7 +386,7 @@ func (p *Parser) parseIdentifier() *Node {
 			p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
 			dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 		} else {
-			dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
+			dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).VariableType)
 		}
 
 		// Collect identifiers
@@ -408,7 +408,7 @@ func (p *Parser) parseIdentifier() *Node {
 				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers)-1]))
 				dataTypes = append(dataTypes, DataType{DT_NoType, nil})
 			} else {
-				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).variableType)
+				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).VariableType)
 			}
 
 			symbols = append(symbols, symbol)
