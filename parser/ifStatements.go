@@ -21,7 +21,7 @@ func (p *Parser) parseIfStatement() *Node {
 	ifs := []*IfStatement{{condition, body}}
 
 	for {
-		if p.peek().TokenType == lexer.TT_EndOfCommand {
+		if p.peek().TokenType == lexer.TT_EndOfCommand && p.peekNext().TokenType == lexer.TT_KW_elif {
 			p.consume()
 		}
 

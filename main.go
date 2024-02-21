@@ -266,13 +266,13 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 	return tree, &p
 }
 
-func compile(path string, showTokens, showTree, printInstruction, optimize bool) {
+func compile(path string, showTokens, showTree, printInstruction, dontOptimize bool) {
 	startTime := time.Now()
 
 	tree, p := analyze(path, showTokens, showTree, true)
 
 	// Generate code
-	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, optimize)
+	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, !dontOptimize)
 	instructions := codeGenerator.Generate()
 
 	// Generation failed

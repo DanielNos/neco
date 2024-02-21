@@ -70,6 +70,11 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 		0,
 	}
 
+	if !optimize {
+		logger.Warning("Byte code optimization disabled.")
+	}
+
+	// Enter root scope
 	codeGenerator.variableIdentifierCounters.Push(uint8(0))
 	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
 

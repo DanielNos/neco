@@ -21,7 +21,7 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		sn.consume()
 	}
 
-	// Collect expression
+	// Collect condition expression
 	if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
 	} else {
@@ -89,6 +89,7 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 			return
 			// Other tokens
 		} else if sn.peek().TokenType != lexer.TT_EndOfCommand {
+			sn.rewind()
 			return
 		}
 	}

@@ -21,7 +21,6 @@ const (
 	NT_StatementList
 	NT_VariableDeclare
 	NT_Assign
-	NT_Literal
 	NT_And
 	NT_Or
 	NT_Not
@@ -37,7 +36,6 @@ const (
 	NT_Greater
 	NT_LowerEqual
 	NT_GreaterEqual
-	NT_Variable
 	NT_FunctionDeclare
 	NT_FunctionCall
 	NT_Return
@@ -45,9 +43,11 @@ const (
 	NT_Loop
 	NT_For
 	NT_Break
-	NT_List
 	NT_ListValue
 	NT_ListAssign
+	NT_List
+	NT_Variable
+	NT_Literal
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -56,7 +56,6 @@ var NodeTypeToString = map[NodeType]string{
 	NT_StatementList:   "StatementList",
 	NT_VariableDeclare: "VariableDeclare",
 	NT_Assign:          "Assign",
-	NT_Literal:         "Literal",
 	NT_And:             "&",
 	NT_Or:              "|",
 	NT_Not:             "!",
@@ -72,7 +71,6 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Greater:         ">",
 	NT_LowerEqual:      "<=",
 	NT_GreaterEqual:    ">=",
-	NT_Variable:        "Variable",
 	NT_FunctionDeclare: "FunctionDeclare",
 	NT_FunctionCall:    "FunctionCall",
 	NT_Return:          "Return",
@@ -80,9 +78,11 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Loop:            "Loop",
 	NT_For:             "For",
 	NT_Break:           "Break",
-	NT_List:            "List",
 	NT_ListValue:       "ListValue",
 	NT_ListAssign:      "ListAssign",
+	NT_List:            "List",
+	NT_Variable:        "Variable",
+	NT_Literal:         "Literal",
 }
 
 func (nt NodeType) String() string {
@@ -229,6 +229,10 @@ func (nt NodeType) IsComparisonOperator() bool {
 
 func (nt NodeType) IsLogicOperator() bool {
 	return nt == NT_And || nt == NT_Or
+}
+
+func (nt NodeType) IsLeaf() bool {
+	return nt > NT_List
 }
 
 var operatorNodePrecedence = map[NodeType]int{

@@ -7,7 +7,13 @@ import (
 const IGNORE_INSTRUCTION byte = 255
 
 func Optimize(instructions []VM.Instruction) {
-	for i := 0; i < len(instructions)-1; i++ {
+	// Append instruction buffer to the end
+	for i := 0; i < 4; i++ {
+		instructions = append(instructions, VM.Instruction{255, []byte{}})
+	}
+
+	// Optimize instructions
+	for i := 0; i < len(instructions); i++ {
 		// Combine line offsets
 		if instructions[i].InstructionType == VM.IT_LineOffset && instructions[i+1].InstructionType == VM.IT_LineOffset {
 			instructions[i+1].InstructionValue[0] += instructions[i].InstructionValue[0]
@@ -50,6 +56,24 @@ func Optimize(instructions []VM.Instruction) {
 			instructions[i+3].InstructionType = IGNORE_INSTRUCTION
 			i += 3
 			continue
+		}
+	}
+
+	// Adjust jumps for removed instructions
+	for i := 0; i < len(instructions); i++ {
+		// Locate jump
+		if VM.IsJumpForward(instructions[i].InstructionType) {
+			// Calculate all removed instructions between jump and it's destination
+			reduction := 0
+
+			for j := i; j < i+int(instructions[i].InstructionValue[0]); j++ {
+				if instructions[j].InstructionType == IGNORE_INSTRUCTION {
+					reduction++
+				}
+			}
+
+			// Reduce jump by that amount
+			instructions[i].InstructionValue[0] -= byte(reduction)
 		}
 	}
 }

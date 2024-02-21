@@ -115,10 +115,22 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Load list element
 		case IT_LoadListValueRegA:
-			vm.reg_operationA = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationA.(int64)]
+			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
+
+			if vm.reg_operationA.(int64) > int64(len(list.([]interface{}))-1) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, vm.reg_operationA.(int64), len(list.([]interface{}))))
+			}
+			vm.reg_operationA = list.([]interface{})[vm.reg_operationA.(int64)]
 
 		case IT_LoadListValueRegB:
-			vm.reg_operationB = vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationB.(int64)]
+			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
+
+			if vm.reg_operationB.(int64) > int64(len(list.([]interface{}))-1) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, vm.reg_operationB.(int64), len(list.([]interface{}))))
+			}
+			vm.reg_operationB = list.([]interface{})[vm.reg_operationB.(int64)]
 
 		// Store register to a variable
 		case IT_StoreRegA:
@@ -321,7 +333,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_Not:
 			vm.reg_operationA = !vm.reg_operationA.(bool)
 
-			// Jumps
+		// Jumps
 		case IT_JumpBack:
 			vm.instructionIndex -= instruction.InstructionValue[0]
 
@@ -363,6 +375,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_AppendOpAToListA:
 			vm.reg_listA = append(vm.reg_listA.([]interface{}), vm.reg_operationA)
+
+		case IT_ListConcat:
+			vm.reg_operationA = append(vm.reg_operationA.([]interface{}), vm.reg_operationB.([]interface{})...)
 
 		// Ignore line offsets
 		case IT_LineOffset:

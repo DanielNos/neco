@@ -316,9 +316,11 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 	case lexer.TT_KW_loop: // Loop
 		sn.analyzeLoop()
+		return false
 
 	case lexer.TT_KW_while: // While loop
 		sn.analyzeWhileLoop()
+		return false
 
 	case lexer.TT_KW_for: // For loop
 		sn.analyzeForLoop()
@@ -337,6 +339,8 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		}
 
 	case lexer.TT_EndOfCommand: // Ignore EOCs
+		sn.consume()
+		return false
 
 	default:
 		// Collect line and print error
@@ -346,8 +350,9 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	}
 
 	// Collect tokens after statement
-	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_BraceClose {
-		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
+	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_DL_BracketClose {
+			sn.consume()
 			return true
 		}
 

@@ -14,6 +14,10 @@ func Visualize(tree *Node) {
 	}
 }
 
+func VisualizeNode(node *Node) {
+	visualize(node, "", true)
+}
+
 func visualize(node *Node, indent string, isLast bool) {
 	fmt.Print(indent)
 

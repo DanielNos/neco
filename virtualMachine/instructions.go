@@ -96,6 +96,7 @@ const (
 
 	IT_CreateListInListA
 	IT_AppendOpAToListA
+	IT_ListConcat
 
 	IT_LineOffset
 )
@@ -181,10 +182,10 @@ var InstructionTypeToString = map[byte]string{
 	IT_IntGreater:        "int_greater",
 	IT_IntLowerEqual:     "int_lower_equal",
 	IT_IntGreaterEqual:   "int_greater_equal",
-	IT_FloatLower:        "float_lower",
-	IT_FloatGreater:      "float_greater",
-	IT_FloatLowerEqual:   "float_lower_equal",
-	IT_FloatGreaterEqual: "float_greater_equal",
+	IT_FloatLower:        "flt_lower",
+	IT_FloatGreater:      "flt_greater",
+	IT_FloatLowerEqual:   "flt_lower_equal",
+	IT_FloatGreaterEqual: "flt_greater_equal",
 	IT_Not:               "not",
 
 	IT_SetRegAFalse: "set_OA_false",
@@ -197,6 +198,7 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_CreateListInListA: "new_list_LA",
 	IT_AppendOpAToListA:  "append_OA_to_LA",
+	IT_ListConcat:        "list_concat",
 
 	IT_LineOffset: "line_offset",
 }
@@ -209,4 +211,8 @@ type Instruction struct {
 type ExpandedInstruction struct {
 	InstructionType  byte
 	InstructionValue []int
+}
+
+func IsJumpForward(instructionType byte) bool {
+	return instructionType == IT_Jump || instructionType == IT_JumpEx || instructionType == IT_JumpIfTrue || instructionType == IT_JumpIfTrueEx
 }

@@ -33,6 +33,9 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		// Concatenate strings
 		if binaryNode.DType == parser.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
+			// Concatenate lists
+		} else if binaryNode.DType == parser.DT_List {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_ListConcat, NO_ARGS})
 			// Operation on ints
 		} else if binaryNode.DType == parser.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
@@ -115,11 +118,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNode) {
 	// Opearator on two leaf nodes
-	if (binaryNode.Left.NodeType == parser.NT_Variable || binaryNode.Left.NodeType == parser.NT_Literal) && (binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal) {
+	if binaryNode.Left.NodeType.IsLeaf() && binaryNode.Right.NodeType.IsLeaf() {
 		cg.generateExpression(binaryNode.Left, true)
 		cg.generateExpression(binaryNode.Right, false)
 		// Operator on left and leaf on right
-	} else if binaryNode.Right.NodeType == parser.NT_Variable || binaryNode.Right.NodeType == parser.NT_Literal {
+	} else if binaryNode.Right.NodeType.IsLeaf() {
 		cg.generateExpression(binaryNode.Left, true)
 		cg.generateExpression(binaryNode.Right, false)
 		// Operator on right and anything on left
@@ -134,7 +137,7 @@ func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNo
 func (cg *CodeGenerator) generateVariable(variableName string, loadLeft bool) {
 	identifier := cg.findVariableIdentifier(variableName)
 
-	// Load variable to correct regi
+	// Load variable to correct register
 	if loadLeft {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
 	} else {
