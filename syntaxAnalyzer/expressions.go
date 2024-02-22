@@ -53,7 +53,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			if sn.peek().TokenType == lexer.TT_DL_BracketClose {
 				sn.newError(sn.peek(), "Expected list index.")
 				return
-			} else { 
+			} else {
 				sn.analyzeExpression()
 			}
 
@@ -97,6 +97,12 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// List
 	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 		sn.analyzeList()
+
+		// Not end of expression
+		if sn.peek().TokenType.IsBinaryOperator() {
+			sn.consume()
+			sn.analyzeExpression()
+		}
 		return
 	}
 
