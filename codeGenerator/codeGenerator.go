@@ -251,28 +251,28 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 	}
 }
 
-func (cg *CodeGenerator) generateVariableDeclarator(dataType parser.DataType, passId bool) {
+func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, passId bool) {
 	args := NO_ARGS
 	if passId {
 		args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
 	}
 
 	switch dataType.DType {
-	case parser.DT_Bool:
+	case data.DT_Bool:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
-	case parser.DT_Int:
+	case data.DT_Int:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
-	case parser.DT_Float:
+	case data.DT_Float:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
-	case parser.DT_String:
+	case data.DT_String:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, args})
-	case parser.DT_List:
+	case data.DT_List:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
 
 		subType := dataType.SubType
 		for subType != nil {
-			cg.generateVariableDeclarator(subType.(parser.DataType), false)
-			subType = subType.(parser.DataType).SubType
+			cg.generateVariableDeclarator(subType.(data.DataType), false)
+			subType = subType.(data.DataType).SubType
 		}
 	}
 }

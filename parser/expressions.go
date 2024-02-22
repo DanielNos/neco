@@ -3,9 +3,9 @@ package parser
 import (
 	"fmt"
 	"math"
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/lexer"
-	"neco/necoMath"
+	VM "neco/virtualMachine"
 	"strconv"
 )
 
@@ -49,19 +49,19 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
 
 		// Combine - and int node
-		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == DT_Int {
+		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == data.DT_Int {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(int64)
 			left = right
 			// Combine - and float node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == DT_Float {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == data.DT_Float {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(float64)
 			left = right
 			// Combine ! and bool node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DType == DT_Bool {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DType == data.DT_Bool {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, DT_NoType}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, data.DT_NoType}}
 		}
 
 		// Identifiers
@@ -79,7 +79,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 				// Undeclared variable
 			} else {
 				p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
-				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, DataType{DT_NoType, nil}}}
+				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, data.DataType{data.DT_NoType, nil}}}
 			}
 			// Function call
 		} else if symbol.symbolType == ST_FunctionBucket {
@@ -103,7 +103,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
 			}
 		} else {
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, DataType{DT_NoType, nil}}}
+			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
 		}
 
 		// List
@@ -112,19 +112,19 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Collect edxpressions
 		expressions := []*Node{}
-		expressionType := DataType{DT_NoType, nil}
-		mismatchedTypes := false
+		expressionType := data.DataType{data.DT_NoType, nil}
+		mismatched := false
 
 		for p.peek().TokenType != lexer.TT_DL_BraceClose {
 			// Collect expression
 			expressions = append(expressions, p.parseExpressionRoot())
 
 			// Assign list type
-			if expressionType.DType == DT_NoType {
+			if expressionType.DType == data.DT_NoType {
 				expressionType = p.GetExpressionType(expressions[len(expressions)-1])
 				// Check if list expressions have all the same type
-			} else if !mismatchedTypes && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(expressionType) {
-				mismatchedTypes = true
+			} else if !mismatched && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(expressionType) {
+				mismatched = true
 				p.newError(getExpressionPosition(expressions[len(expressions)-1], 0, 0), "Lists can only contain values with the same data type.")
 			}
 
@@ -141,7 +141,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		p.consume()
 
-		left = &Node{startPosition, NT_List, &ListNode{expressions, DataType{DT_List, expressionType}}}
+		left = &Node{startPosition, NT_List, &ListNode{expressions, data.DataType{data.DT_List, expressionType}}}
 
 		// Invalid token
 	} else {
@@ -168,11 +168,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
 			right.Value.(*BinaryNode).Left = oldLeft
 
-			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, DT_NoType}}
+			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, data.DT_NoType}}
 			continue
 		}
 
-		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, DT_NoType}}
+		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, data.DT_NoType}}
 	}
 
 	return left
@@ -199,7 +199,7 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	}
 }
 
-func (p *Parser) GetExpressionType(expression *Node) DataType {
+func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
@@ -214,24 +214,24 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 		// Same type on both sides
 		if leftType.Equals(rightType) {
 			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.DType != DT_Bool || rightType.DType != DT_Bool) {
+			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return DataType{DT_Bool, nil}
+				return data.DataType{data.DT_Bool, nil}
 			}
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
-				expression.Value.(*BinaryNode).DType = DT_Bool
-				return DataType{DT_Bool, nil}
+				expression.Value.(*BinaryNode).DType = data.DT_Bool
+				return data.DataType{data.DT_Bool, nil}
 			}
 
 			// Only + can be used on strings and lists
-			if (leftType.DType == DT_String || leftType.DType == DT_List) && expression.NodeType != NT_Add {
+			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
 				return leftType
 			}
 
-			if leftType.DType != DT_NoType {
+			if leftType.DType != data.DT_NoType {
 				expression.Value.(*BinaryNode).DType = leftType.DType
 				return leftType
 			}
@@ -241,17 +241,17 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 		}
 
 		// Failed to get data type
-		if leftType.DType == DT_NoType || rightType.DType == DT_NoType {
-			return DataType{DT_NoType, nil}
+		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+			return data.DataType{data.DT_NoType, nil}
 		}
 
 		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-		return DataType{max(leftType.DType, rightType.DType), nil}
+		return data.DataType{max(leftType.DType, rightType.DType), nil}
 	}
 
 	switch expression.NodeType {
 	case NT_Literal:
-		return DataType{expression.Value.(*LiteralNode).DType, nil}
+		return data.DataType{expression.Value.(*LiteralNode).DType, nil}
 	case NT_Variable:
 		return expression.Value.(*VariableNode).DataType
 	case NT_FunctionCall:
@@ -259,7 +259,7 @@ func (p *Parser) GetExpressionType(expression *Node) DataType {
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return expression.Value.(*ListValueNode).ListSymbol.VariableType.SubType.(DataType)
+		return expression.Value.(*ListValueNode).ListSymbol.VariableType.SubType.(data.DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
@@ -275,17 +275,17 @@ func (p *Parser) collectConstants(expression *Node) {
 		literalNode := expression.Value.(*LiteralNode)
 
 		switch literalNode.DType {
-		case DT_Int:
+		case data.DT_Int:
 			p.IntConstants[literalNode.Value.(int64)] = -1
-		case DT_Float:
+		case data.DT_Float:
 			p.FloatConstants[literalNode.Value.(float64)] = -1
-		case DT_String:
+		case data.DT_String:
 			p.StringConstants[literalNode.Value.(string)] = -1
 		}
 	}
 }
 
-func getExpressionPosition(expression *Node, left, right uint) *dataStructures.CodePos {
+func getExpressionPosition(expression *Node, left, right uint) *data.CodePos {
 	// Binary node
 	if expression.NodeType.IsOperator() {
 		binaryNode := expression.Value.(*BinaryNode)
@@ -294,14 +294,14 @@ func getExpressionPosition(expression *Node, left, right uint) *dataStructures.C
 			leftPosition := getExpressionPosition(binaryNode.Left, left, right)
 			rightPosition := getExpressionPosition(binaryNode.Right, left, right)
 
-			return &dataStructures.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
+			return &data.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
 		}
 
 		expression = binaryNode.Left
 	}
 
 	// Check if node position is outside of bounds of max found position
-	position := dataStructures.CodePos{File: expression.Position.File, Line: expression.Position.Line, StartChar: left, EndChar: right}
+	position := data.CodePos{File: expression.Position.File, Line: expression.Position.Line, StartChar: left, EndChar: right}
 
 	if expression.Position.StartChar < left {
 		position.StartChar = expression.Position.StartChar
@@ -314,25 +314,25 @@ func getExpressionPosition(expression *Node, left, right uint) *dataStructures.C
 	return &position
 }
 
-func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *dataStructures.CodePos) *Node {
+func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *data.CodePos) *Node {
 	leftLiteral := left.Value.(*LiteralNode)
 	rightLiteral := right.Value.(*LiteralNode)
 
 	switch leftLiteral.DType {
 	// Booleans
-	case DT_Bool:
+	case data.DT_Bool:
 		switch parentNodeType {
 		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
 		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
 		case NT_And:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
 		case NT_Or:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
 		}
 	// Integers
-	case DT_Int:
+	case data.DT_Int:
 		var value LiteralValue = nil
 
 		// Arithmetic operations
@@ -346,13 +346,13 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		case NT_Divide:
 			value = leftLiteral.Value.(int64) / rightLiteral.Value.(int64)
 		case NT_Power:
-			value = necoMath.PowerInt64(leftLiteral.Value.(int64), rightLiteral.Value.(int64))
+			value = VM.PowerInt64(leftLiteral.Value.(int64), rightLiteral.Value.(int64))
 		case NT_Modulo:
 			value = leftLiteral.Value.(int64) % rightLiteral.Value.(int64)
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Int, value}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Int, value}}
 		}
 
 		// Comparison operators
@@ -372,11 +372,11 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Floats
-	case DT_Float:
+	case data.DT_Float:
 		var value LiteralValue = nil
 
 		// Arithmetic operations
@@ -396,7 +396,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Float, value}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Float, value}}
 		}
 
 		// Comparison operators
@@ -416,16 +416,16 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_Bool, value}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Strings
-	case DT_String:
+	case data.DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
+			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
 		}
 	}
 
 	// Invalid operation, can't combine
-	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, DT_NoType}}
+	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, data.DT_NoType}}
 }

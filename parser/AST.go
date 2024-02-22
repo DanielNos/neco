@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	data "neco/dataStructures"
 )
 
 func Visualize(tree *Node) {
@@ -89,7 +90,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		print(") ")
 
-		if functionDeclareNode.ReturnType.DType != DT_NoType {
+		if functionDeclareNode.ReturnType.DType != data.DT_NoType {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 

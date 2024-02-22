@@ -1,6 +1,9 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+	data "neco/dataStructures"
+)
 
 type Symbol struct {
 	symbolType SymbolType
@@ -20,7 +23,7 @@ const (
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	VariableType  DataType
+	VariableType  data.DataType
 	isInitialized bool
 	isConstant    bool
 }
@@ -28,7 +31,7 @@ type VariableSymbol struct {
 type FunctionSymbol struct {
 	number     int
 	parameters []Parameter
-	returnType DataType
+	returnType data.DataType
 	everCalled bool
 }
 

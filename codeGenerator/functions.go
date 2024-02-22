@@ -2,6 +2,7 @@ package codeGenerator
 
 import (
 	"fmt"
+	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -20,13 +21,13 @@ func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) 
 	for i := parameterCount - 1; i >= 0; i-- {
 		// Declare variable for argument
 		switch function.Parameters[i].DataType.DType {
-		case parser.DT_Bool:
+		case data.DT_Bool:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, NO_ARGS})
-		case parser.DT_Int:
+		case data.DT_Int:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, NO_ARGS})
-		case parser.DT_Float:
+		case data.DT_Float:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, NO_ARGS})
-		case parser.DT_String:
+		case data.DT_String:
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, NO_ARGS})
 		}
 

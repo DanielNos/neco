@@ -1,6 +1,7 @@
 package parser
 
 import (
+	data "neco/dataStructures"
 	"neco/lexer"
 )
 
@@ -37,7 +38,7 @@ func (p *Parser) parseIfStatement() *Node {
 			// Check condition type
 			elifConditionType := p.GetExpressionType(elifCondition)
 
-			if elifConditionType.DType != DT_Bool {
+			if elifConditionType.DType != data.DT_Bool {
 				conditionPosition := getExpressionPosition(elifCondition, elifCondition.Position.StartChar, elifCondition.Position.EndChar)
 				p.newError(conditionPosition, "Condition expression data type has to be Bool.")
 			}
@@ -88,7 +89,7 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	// Check condition type
 	conditionType := p.GetExpressionType(condition)
 
-	if conditionType.DType != DT_Bool {
+	if conditionType.DType != data.DT_Bool {
 		conditionPosition := getExpressionPosition(condition, condition.Position.StartChar, condition.Position.EndChar)
 		p.newError(conditionPosition, "Condition expression data type has to be Bool.")
 	}

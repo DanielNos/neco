@@ -3,7 +3,7 @@ package logger
 import (
 	"bufio"
 	"fmt"
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"os"
 
 	color "github.com/fatih/color"
@@ -111,11 +111,11 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	fmt.Fprintf(os.Stderr, "%s\n\n", message)
 }
 
-func ErrorCodePos(codePos *dataStructures.CodePos, message string) {
+func ErrorCodePos(codePos *data.CodePos, message string) {
 	ErrorPos(codePos.File, codePos.Line, codePos.StartChar, codePos.EndChar, message)
 }
 
-func Error2CodePos(codePos1, codePos2 *dataStructures.CodePos, message string) {
+func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 	// Print error line
 	lineString, err := readLine(*codePos1.File, codePos1.Line)
 

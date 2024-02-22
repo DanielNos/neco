@@ -4,11 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"math"
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
-	"neco/necoMath"
-	"neco/parser"
 	"os"
 )
 
@@ -19,12 +17,12 @@ const (
 	SYMBOL_MAP_SIZE         = 100
 )
 
-var InstructionToDataType = map[byte]parser.DType{
-	IT_DeclareBool:   parser.DT_Bool,
-	IT_DeclareInt:    parser.DT_Int,
-	IT_DeclareFloat:  parser.DT_Float,
-	IT_DeclareString: parser.DT_String,
-	IT_DeclareList:   parser.DT_List,
+var InstructionToDataType = map[byte]data.DType{
+	IT_DeclareBool:   data.DT_Bool,
+	IT_DeclareInt:    data.DT_Int,
+	IT_DeclareFloat:  data.DT_Float,
+	IT_DeclareString: data.DT_String,
+	IT_DeclareList:   data.DT_List,
 }
 
 type VirtualMachine struct {
@@ -54,7 +52,7 @@ type VirtualMachine struct {
 	stack_scopes   []string
 
 	reg_symbolIndex    int
-	stack_symbolTables *dataStructures.Stack
+	stack_symbolTables *data.Stack
 
 	reader    *bufio.Reader
 	firstLine int
@@ -73,7 +71,7 @@ func NewVirutalMachine() *VirtualMachine {
 		stack_scopes:   make([]string, stack_scopes_SIZE),
 
 		reg_symbolIndex:    0,
-		stack_symbolTables: dataStructures.NewStack(),
+		stack_symbolTables: data.NewStack(),
 
 		reader: bufio.NewReader(os.Stdin),
 	}
@@ -189,20 +187,20 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Declare variables
 		case IT_DeclareBool:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Bool, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Bool, nil}, nil}})
 
 		case IT_DeclareInt:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Int, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Int, nil}, nil}})
 
 		case IT_DeclareFloat:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_Float, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Float, nil}, nil}})
 
 		case IT_DeclareString:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_String, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_String, nil}, nil}})
 
 		case IT_DeclareList:
 			vm.instructionIndex++
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{parser.DataType{parser.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}, []interface{}{}}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}, []interface{}{}}})
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
@@ -264,7 +262,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.reg_operationA = vm.reg_operationA.(int64) / vm.reg_operationB.(int64)
 
 		case IT_IntPower:
-			vm.reg_operationA = necoMath.PowerInt64(vm.reg_operationA.(int64), vm.reg_operationB.(int64))
+			vm.reg_operationA = PowerInt64(vm.reg_operationA.(int64), vm.reg_operationB.(int64))
 
 		case IT_IntModulo:
 			vm.reg_operationA = vm.reg_operationA.(int64) % vm.reg_operationB.(int64)

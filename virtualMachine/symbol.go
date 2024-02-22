@@ -1,6 +1,6 @@
 package virtualMachine
 
-import "neco/parser"
+import data "neco/dataStructures"
 
 type SymbolType uint8
 
@@ -14,6 +14,6 @@ type Symbol struct {
 }
 
 type VariableSymbol struct {
-	dataType parser.DataType
+	dataType data.DataType
 	value    interface{}
 }

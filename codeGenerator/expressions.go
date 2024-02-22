@@ -2,6 +2,7 @@ package codeGenerator
 
 import (
 	"fmt"
+	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -29,13 +30,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 		// Generate operator
 		// Concatenate strings
-		if binaryNode.DType == parser.DT_String {
+		if binaryNode.DType == data.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
 			// Concatenate lists
-		} else if binaryNode.DType == parser.DT_List {
+		} else if binaryNode.DType == data.DT_List {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_ListConcat, NO_ARGS})
 			// Operation on ints
-		} else if binaryNode.DType == parser.DT_Int {
+		} else if binaryNode.DType == data.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
 			// Operation on floats
 		} else {
@@ -64,10 +65,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		leftType := getExpressionType(binaryNode.Left)
 
 		// Compare ints
-		if leftType.DType == parser.DT_Int {
+		if leftType.DType == data.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToIntInstruction[node.NodeType], NO_ARGS})
 			// Compare floats
-		} else if leftType.DType == parser.DT_Float {
+		} else if leftType.DType == data.DT_Float {
 			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToFloatInstruction[node.NodeType], NO_ARGS})
 		} else {
 			panic("Can't generate comparision instruction on operator nodes.")
@@ -159,7 +160,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 
 	switch literalNode.DType {
 	// Bool
-	case parser.DT_Bool:
+	case data.DT_Bool:
 		if loadLeft {
 			if literalNode.Value.(bool) {
 				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegATrue, NO_ARGS})
@@ -175,19 +176,19 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
 		}
 
 	// Int
-	case parser.DT_Int:
+	case data.DT_Int:
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.intConstants[literalNode.Value.(int64)])}})
 
 	// Float
-	case parser.DT_Float:
+	case data.DT_Float:
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
 	// String
-	case parser.DT_String:
+	case data.DT_String:
 		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
 	}
 }
 
-func getExpressionType(expression *parser.Node) parser.DataType {
+func getExpressionType(expression *parser.Node) data.DataType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*parser.BinaryNode).Left == nil {
@@ -199,12 +200,12 @@ func getExpressionType(expression *parser.Node) parser.DataType {
 		leftType := getExpressionType(expression.Value.(*parser.BinaryNode).Left)
 		rightType := getExpressionType(expression.Value.(*parser.BinaryNode).Right)
 
-		return parser.DataType{max(leftType.DType, rightType.DType), nil}
+		return data.DataType{max(leftType.DType, rightType.DType), nil}
 	}
 
 	switch expression.NodeType {
 	case parser.NT_Literal:
-		return parser.DataType{expression.Value.(*parser.LiteralNode).DType, nil}
+		return data.DataType{expression.Value.(*parser.LiteralNode).DType, nil}
 	case parser.NT_Variable:
 		return expression.Value.(*parser.VariableNode).DataType
 	case parser.NT_FunctionCall:
@@ -212,7 +213,7 @@ func getExpressionType(expression *parser.Node) parser.DataType {
 	case parser.NT_List:
 		return expression.Value.(*parser.ListNode).DataType
 	case parser.NT_ListValue:
-		return expression.Value.(*parser.ListValueNode).ListSymbol.VariableType.SubType.(parser.DataType)
+		return expression.Value.(*parser.ListValueNode).ListSymbol.VariableType.SubType.(data.DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))

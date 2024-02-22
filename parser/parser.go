@@ -3,12 +3,29 @@ package parser
 import (
 	"fmt"
 	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/errors"
 	"neco/lexer"
 	"neco/logger"
 	"os"
 	"strings"
 )
+
+var TokenTypeToDataType = map[lexer.TokenType]data.DType{
+	lexer.TT_KW_bool: data.DT_Bool,
+	lexer.TT_LT_Bool: data.DT_Bool,
+
+	lexer.TT_KW_int: data.DT_Int,
+	lexer.TT_LT_Int: data.DT_Int,
+
+	lexer.TT_KW_flt:   data.DT_Float,
+	lexer.TT_LT_Float: data.DT_Float,
+
+	lexer.TT_KW_str:    data.DT_String,
+	lexer.TT_LT_String: data.DT_String,
+
+	lexer.TT_KW_list: data.DT_List,
+}
 
 type Parser struct {
 	tokens []*lexer.Token
@@ -311,12 +328,12 @@ func (p *Parser) parseIdentifier() *Node {
 		// Undeclared symbol
 		if symbol == nil {
 			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{{DT_NoType, nil}})
+			expression, _ = p.parseAssign([]*lexer.Token{identifier}, []data.DataType{{data.DT_NoType, nil}})
 		} else {
 			// Assignment to function
 			if symbol.symbolType == ST_Function {
 				p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
-				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{{DT_NoType, nil}})
+				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []data.DataType{{data.DT_NoType, nil}})
 				// Assignment to variable
 			} else {
 				// Can't assign to constants
@@ -324,7 +341,7 @@ func (p *Parser) parseIdentifier() *Node {
 					p.newError(p.peek().Position, fmt.Sprintf("Can't assign to constant variable %s.", identifier.Value))
 				}
 
-				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []DataType{symbol.value.(*VariableSymbol).VariableType})
+				expression, _ = p.parseAssign([]*lexer.Token{identifier}, []data.DataType{symbol.value.(*VariableSymbol).VariableType})
 
 				symbol.value.(*VariableSymbol).isInitialized = true
 			}
@@ -334,7 +351,7 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Assign to list at index
 	if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-		var listType DataType = DataType{DT_NoType, nil}
+		var listType data.DataType = data.DataType{data.DT_NoType, nil}
 
 		// Undeclared symbol
 		if symbol == nil {
@@ -355,7 +372,7 @@ func (p *Parser) parseIdentifier() *Node {
 		p.consume()
 
 		// Index must be int
-		if !p.GetExpressionType(indexExpression).Equals(DataType{DT_Int, nil}) {
+		if !p.GetExpressionType(indexExpression).Equals(data.DataType{data.DT_Int, nil}) {
 			p.newError(getExpressionPosition(indexExpression, indexExpression.Position.StartChar, indexExpression.Position.EndChar), "Index expression has to be int.")
 		}
 
@@ -366,7 +383,7 @@ func (p *Parser) parseIdentifier() *Node {
 		assignedType := p.GetExpressionType(assignedExpression)
 
 		// Check if assigned expression has the correct type
-		if listType.DType != DT_NoType && !assignedType.Equals(listType.SubType.(DataType)) {
+		if listType.DType != data.DT_NoType && !assignedType.Equals(listType.SubType.(data.DataType)) {
 			expressionPosition := getExpressionPosition(assignedExpression, assignedExpression.Position.StartChar, assignedExpression.Position.EndChar)
 			p.newError(expressionPosition, fmt.Sprintf("Can't assign expression of type %s to %s.", assignedType, listType))
 		}
@@ -376,15 +393,15 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Assign to multiple variables
 	if p.peek().TokenType == lexer.TT_DL_Comma {
-		var dataTypes = []DataType{}
+		var dataTypes = []data.DataType{}
 
 		// Check symbol
 		if symbol == nil {
 			p.newError(identifier.Position, fmt.Sprintf("Use of undeclared variable %s.", identifier.Value))
-			dataTypes = append(dataTypes, DataType{DT_NoType, nil})
+			dataTypes = append(dataTypes, data.DataType{data.DT_NoType, nil})
 		} else if symbol.symbolType == ST_Function {
 			p.newError(identifier.Position, fmt.Sprintf("Can't assign to function %s.", identifier.Value))
-			dataTypes = append(dataTypes, DataType{DT_NoType, nil})
+			dataTypes = append(dataTypes, data.DataType{data.DT_NoType, nil})
 		} else {
 			dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).VariableType)
 		}
@@ -403,10 +420,10 @@ func (p *Parser) parseIdentifier() *Node {
 			// Check symbol
 			if symbol == nil {
 				p.newError(p.peekPrevious().Position, fmt.Sprintf("Use of undeclared variable %s.", identifiers[len(identifiers)-1]))
-				dataTypes = append(dataTypes, DataType{DT_NoType, nil})
+				dataTypes = append(dataTypes, data.DataType{data.DT_NoType, nil})
 			} else if symbol.symbolType == ST_Function {
 				p.newError(p.peekPrevious().Position, fmt.Sprintf("Can't assign to function %s.", identifiers[len(identifiers)-1]))
-				dataTypes = append(dataTypes, DataType{DT_NoType, nil})
+				dataTypes = append(dataTypes, data.DataType{data.DT_NoType, nil})
 			} else {
 				dataTypes = append(dataTypes, symbol.value.(*VariableSymbol).VariableType)
 			}
@@ -439,18 +456,18 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	startPosition := p.peek().Position
 
 	// Collect data type
-	variableType := DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+	variableType := data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
 
 	if p.peek().TokenType == lexer.TT_OP_Lower {
 		p.consume()
-		variableType.SubType = DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+		variableType.SubType = data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
 		p.consume()
 	}
 
 	// Collect identifiers
 	identifierTokens := []*lexer.Token{}
 	identifiers := []string{}
-	variableTypes := []DataType{}
+	variableTypes := []data.DataType{}
 
 	for p.peek().TokenType != lexer.TT_EndOfFile {
 		identifierTokens = append(identifierTokens, p.peek())
@@ -480,7 +497,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		// var has to be assigned to
-		if variableType.DType == DT_NoType {
+		if variableType.DType == data.DT_NoType {
 			startPosition.EndChar = p.peekPrevious().Position.EndChar
 			p.newError(startPosition, "Variables declared using keyword var have to have an expression assigned to them, so a data type can be derived from it.")
 		}
@@ -492,11 +509,11 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 		p.appendScope(node)
 
 		// Parse expression and collect type
-		var expressionType DataType
+		var expressionType data.DataType
 		declareNode, expressionType = p.parseAssign(identifierTokens, variableTypes)
 
 		// Change variable type if no was provided
-		if variableType.DType == DT_NoType {
+		if variableType.DType == data.DT_NoType {
 			variableType = expressionType
 			node.Value.(*VariableDeclareNode).DataType = expressionType
 		}
@@ -510,7 +527,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	return declareNode
 }
 
-func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []DataType) (*Node, DataType) {
+func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []data.DataType) (*Node, data.DataType) {
 	assign := p.consume()
 	expressionStart := p.peek().Position
 
@@ -524,13 +541,13 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []Da
 	expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
 
 	// Print errors
-	if expressionType.DType != DT_NoType {
+	if expressionType.DType != data.DT_NoType {
 		for i, identifier := range identifierTokens {
 			// Variable has a type and it's incompatible with expression
-			if variableTypes[i].DType != DT_NoType && !expressionType.Equals(variableTypes[i]) {
+			if variableTypes[i].DType != data.DT_NoType && !expressionType.Equals(variableTypes[i]) {
 
 				// Assign type to empty list literal
-				if variableTypes[i].DType == DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {
+				if variableTypes[i].DType == data.DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {
 					expression.Value.(*ListNode).DataType.SubType = variableTypes[i].SubType
 					continue
 				}

@@ -1,14 +1,14 @@
 package parser
 
 import (
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/lexer"
 )
 
 type NodeValue interface{}
 
 type Node struct {
-	Position *dataStructures.CodePos
+	Position *data.CodePos
 	NodeType NodeType
 	Value    NodeValue
 }
@@ -101,7 +101,7 @@ type ScopeNode struct {
 }
 
 type VariableDeclareNode struct {
-	DataType    DataType
+	DataType    data.DataType
 	Constant    bool
 	Identifiers []string
 }
@@ -114,31 +114,31 @@ type AssignNode struct {
 type LiteralValue interface{}
 
 type LiteralNode struct {
-	DType DType
+	DType data.DType
 	Value LiteralValue
 }
 
 type BinaryNode struct {
 	Left  *Node
 	Right *Node
-	DType DType
+	DType data.DType
 }
 
 type VariableNode struct {
 	Identifier string
-	DataType   DataType
+	DataType   data.DataType
 }
 
 type FunctionDeclareNode struct {
 	Number     int
 	Identifier string
 	Parameters []Parameter
-	ReturnType DataType
+	ReturnType data.DataType
 	Body       *Node
 }
 
 type Parameter struct {
-	DataType     DataType
+	DataType     data.DataType
 	Identifier   string
 	DefaultValue *Node
 }
@@ -147,8 +147,8 @@ type FunctionCallNode struct {
 	Number        int
 	Identifier    string
 	Arguments     []*Node
-	ArgumentTypes []DataType
-	ReturnType    *DataType
+	ArgumentTypes []data.DataType
+	ReturnType    *data.DataType
 }
 
 type IfNode struct {
@@ -170,7 +170,7 @@ type ForNode struct {
 
 type ListNode struct {
 	Nodes    []*Node
-	DataType DataType
+	DataType data.DataType
 }
 
 type ListValueNode struct {

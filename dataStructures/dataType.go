@@ -1,9 +1,6 @@
-package parser
+package dataStructures
 
-import (
-	"fmt"
-	"neco/lexer"
-)
+import "fmt"
 
 type DType uint8
 
@@ -39,24 +36,6 @@ func (dt DType) String() string {
 	}
 
 	return "[INVALID DATA TYPE]"
-}
-
-var TokenTypeToDataType = map[lexer.TokenType]DType{
-	lexer.TT_KW_var: DT_NoType,
-
-	lexer.TT_KW_bool: DT_Bool,
-	lexer.TT_LT_Bool: DT_Bool,
-
-	lexer.TT_KW_int: DT_Int,
-	lexer.TT_LT_Int: DT_Int,
-
-	lexer.TT_KW_flt:   DT_Float,
-	lexer.TT_LT_Float: DT_Float,
-
-	lexer.TT_KW_str:    DT_String,
-	lexer.TT_LT_String: DT_String,
-
-	lexer.TT_KW_list: DT_List,
 }
 
 type DataType struct {
