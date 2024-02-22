@@ -184,8 +184,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 		cg.generateExpression(assignNode.Expression, true)
 
-		identifier := cg.variableIdentifiers.Top.Value.(map[string]uint8)[assignNode.Identifier]
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreOpA, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreOpA, []byte{cg.findVariableIdentifier(assignNode.Identifier)}})
 
 	// If statement
 	case parser.NT_If:
@@ -202,11 +201,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Scope
 	case parser.NT_Scope:
-		cg.enterScope()
-
-		cg.generateStatements(node.Value.(*parser.ScopeNode))
-
-		cg.leaveScope()
+		cg.generateScope(node.Value.(*parser.ScopeNode))
 
 	// Loops
 	case parser.NT_Loop:
@@ -314,4 +309,24 @@ func updateJumpDistance(instruction *VM.Instruction, distance int, extendedInstr
 	} else {
 		instruction.InstructionValue[0] = byte(distance)
 	}
+}
+
+func (cg *CodeGenerator) findVariableIdentifier(identifier string) uint8 {
+	// Look for vairable in current scope
+	currentNode := cg.variableIdentifiers.Top
+	id, found := currentNode.Value.(map[string]uint8)[identifier]
+
+	// Find variable in lower scopes
+	for !found && currentNode != nil {
+		// Move to previous node and try to find variable
+		currentNode = currentNode.Previous
+		id, found = currentNode.Value.(map[string]uint8)[identifier]
+	}
+
+	// Couldn't find variable
+	if !found {
+		panic(fmt.Sprintf("Failed to find variable id: %s.", identifier))
+	}
+
+	return id
 }

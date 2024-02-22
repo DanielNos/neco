@@ -6,6 +6,7 @@ import (
 )
 
 func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
+	// Create slice for jump instructions and their positions so their destination can be set later
 	jumpInstructions := make([]*VM.Instruction, len(ifStatement.IfStatements))
 	jumpInstructionPositions := make([]int, len(ifStatement.IfStatements))
 
@@ -37,16 +38,16 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 
 	// Generate else if bodies
 	for i, statement := range ifStatement.IfStatements {
-		// Set elif's conditional jump destination to next instruction
+		// Set if's conditional jump destination to next instruction
 		updateJumpDistance(jumpInstructions[i], len(cg.instructions)-jumpInstructionPositions[i], VM.IT_JumpIfTrueEx)
 
-		// Generate elif's body
+		// Generate if's body
 		cg.generateScope(statement.Body.Value.(*parser.ScopeNode))
 
-		// Generate jump instruction to the end of elif bodies
+		// Generate jump instruction to the end of if bodies
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
 
-		// Store it and it's position in the same array replacing the previous values
+		// Store it and it's position in the same slice replacing the previous values
 		jumpInstructions[i] = &cg.instructions[len(cg.instructions)-1]
 		jumpInstructionPositions[i] = len(cg.instructions)
 	}
