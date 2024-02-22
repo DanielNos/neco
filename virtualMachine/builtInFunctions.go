@@ -49,11 +49,12 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	// Print functions
 	case BIF_Print:
 		vm.reg_argumentPointer--
-		fmt.Printf("%v", vm.stack_arguments[vm.reg_argumentPointer])
+		necoPrint(vm.stack_arguments[vm.reg_argumentPointer])
 
 	case BIF_PrintLine:
 		vm.reg_argumentPointer--
-		fmt.Printf("%v\n", vm.stack_arguments[vm.reg_argumentPointer])
+		necoPrint(vm.stack_arguments[vm.reg_argumentPointer])
+		println()
 
 	// Data types to string
 	case BIF_BoolToString:
@@ -163,4 +164,25 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		fmt.Printf("\"%v\"", vm.stack_scopes[vm.reg_scopeIndex-1])
 		println("]")
 	}
+}
+
+func necoPrint(value interface{}) {
+	if _, ok := value.([]interface{}); ok {
+		// Print list
+		print("{")
+		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
+			necoPrint(element)
+			print(", ")
+		}
+		necoPrint(value.([]interface{})[len(value.([]interface{}))-1])
+		print("}")
+
+	} else if _, ok := value.(string); ok {
+		// Print string
+		fmt.Printf("\"%v\"", value)
+	} else {
+		// Use default formatting for everything else
+		fmt.Printf("%v", value)
+	}
+
 }
