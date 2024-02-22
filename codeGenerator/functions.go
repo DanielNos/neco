@@ -76,9 +76,8 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
 		// Function is exit()
 	} else if functionCall.Identifier == "exit" {
-		// Rewrite is as halt instruction
+		// Convert exit function to halt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
-		// Normal function
 	} else {
 		panic("Unkown function.")
 	}

@@ -11,9 +11,7 @@ const (
 	BIF_Print = iota
 	BIF_PrintLine
 
-	BIF_BoolToString
-	BIF_IntToString
-	BIF_FloatToString
+	BIF_AnyToString
 
 	BIF_BoolToInt
 	BIF_IntToFloat
@@ -49,25 +47,17 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	// Print functions
 	case BIF_Print:
 		vm.reg_argumentPointer--
-		necoPrint(vm.stack_arguments[vm.reg_argumentPointer])
+		necoPrint(vm.stack_arguments[vm.reg_argumentPointer], true)
 
 	case BIF_PrintLine:
 		vm.reg_argumentPointer--
-		necoPrint(vm.stack_arguments[vm.reg_argumentPointer])
+		necoPrint(vm.stack_arguments[vm.reg_argumentPointer], true)
 		println()
 
 	// Data types to string
-	case BIF_BoolToString:
+	case BIF_AnyToString:
 		vm.reg_argumentPointer--
-		vm.reg_funcReturnA = fmt.Sprintf("%v", vm.stack_arguments[vm.reg_argumentPointer].(bool))
-
-	case BIF_IntToString:
-		vm.reg_argumentPointer--
-		vm.reg_funcReturnA = fmt.Sprintf("%d", vm.stack_arguments[vm.reg_argumentPointer].(int64))
-
-	case BIF_FloatToString:
-		vm.reg_argumentPointer--
-		vm.reg_funcReturnA = fmt.Sprintf("%f", vm.stack_arguments[vm.reg_argumentPointer].(float64))
+		vm.reg_funcReturnA = necoPrintString(vm.stack_arguments[vm.reg_argumentPointer], true)
 
 	// Data type to data type
 	case BIF_BoolToInt:
@@ -166,23 +156,42 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	}
 }
 
-func necoPrint(value interface{}) {
+func necoPrint(value interface{}, root bool) {
 	if _, ok := value.([]interface{}); ok {
 		// Print list
 		print("{")
 		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
-			necoPrint(element)
+			necoPrint(element, false)
 			print(", ")
 		}
-		necoPrint(value.([]interface{})[len(value.([]interface{}))-1])
+		necoPrint(value.([]interface{})[len(value.([]interface{}))-1], false)
 		print("}")
 
-	} else if _, ok := value.(string); ok {
+	} else if _, ok := value.(string); ok && !root {
 		// Print string
 		fmt.Printf("\"%v\"", value)
 	} else {
 		// Use default formatting for everything else
 		fmt.Printf("%v", value)
 	}
+}
 
+func necoPrintString(value interface{}, root bool) string {
+	if _, ok := value.([]interface{}); ok {
+		// Print list
+		str := "{"
+		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
+			str = fmt.Sprintf("%s%s, ", str, necoPrintString(element, false))
+		}
+		str = fmt.Sprintf("%s%s}", str, necoPrintString(value.([]interface{})[len(value.([]interface{}))-1], false))
+
+		return str
+
+	} else if _, ok := value.(string); ok && !root {
+		// Print string
+		return fmt.Sprintf("\"%v\"", value)
+	} else {
+		// Use default formatting for everything else
+		return fmt.Sprintf("%v", value)
+	}
 }

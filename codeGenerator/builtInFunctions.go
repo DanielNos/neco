@@ -6,9 +6,7 @@ var builtInFunctions = map[string]byte{
 	"print":     VM.BIF_Print,
 	"printLine": VM.BIF_PrintLine,
 
-	"str.Bool":  VM.BIF_BoolToString,
-	"str.Int":   VM.BIF_IntToString,
-	"str.Float": VM.BIF_FloatToString,
+	"str": VM.BIF_AnyToString,
 
 	"int.Bool": VM.BIF_BoolToInt,
 	"flt.Int":  VM.BIF_IntToFloat,
@@ -39,5 +37,4 @@ var builtInFunctions = map[string]byte{
 var overloadedBuiltInFunctions = map[string]struct{}{
 	"int": {},
 	"flt": {},
-	"str": {},
 }

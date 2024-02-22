@@ -65,7 +65,23 @@ type DataType struct {
 }
 
 func (vt DataType) Equals(other DataType) bool {
-	return vt.DType != DT_NoType && other.DType != DT_Any && (vt.DType == DT_Any || other.DType == DT_Any) || vt.DType == other.DType && vt.SubType == other.SubType
+	if vt.DType == DT_NoType || other.DType == DT_NoType {
+		return false
+	}
+
+	if vt.DType <= DT_String && other.DType <= DT_String {
+		return vt.DType == other.DType
+	}
+
+	if vt.DType == DT_Any {
+		return true
+	}
+
+	if vt.DType == DT_List && other.DType == DT_List {
+		return vt.SubType.(DataType).Equals(other.SubType.(DataType))
+	}
+
+	return false
 }
 
 func (dt DataType) String() string {
