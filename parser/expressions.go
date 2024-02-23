@@ -61,7 +61,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, data.DT_NoType}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, data.DataType{data.DT_NoType, nil}}}
 		}
 
 		// Identifiers
@@ -112,7 +112,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Collect edxpressions
 		expressions := []*Node{}
-		expressionType := data.DataType{data.DT_NoType, nil}
+		elementType := data.DataType{data.DT_NoType, nil}
 		mismatched := false
 
 		for p.peek().TokenType != lexer.TT_DL_BraceClose {
@@ -120,10 +120,10 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			expressions = append(expressions, p.parseExpressionRoot())
 
 			// Assign list type
-			if expressionType.DType == data.DT_NoType {
-				expressionType = p.GetExpressionType(expressions[len(expressions)-1])
+			if elementType.DType == data.DT_NoType {
+				elementType = p.GetExpressionType(expressions[len(expressions)-1])
 				// Check if list expressions have all the same type
-			} else if !mismatched && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(expressionType) {
+			} else if !mismatched && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(elementType) {
 				mismatched = true
 				p.newError(getExpressionPosition(expressions[len(expressions)-1], 0, 0), "Lists can only contain values with the same data type.")
 			}
@@ -141,8 +141,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		p.consume()
 
-		left = &Node{startPosition, NT_List, &ListNode{expressions, data.DataType{data.DT_List, expressionType}}}
-
+		left = &Node{startPosition, NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
 		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
@@ -168,11 +167,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
 			right.Value.(*BinaryNode).Left = oldLeft
 
-			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, data.DT_NoType}}
+			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, data.DataType{data.DT_NoType, nil}}}
 			continue
 		}
 
-		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, data.DT_NoType}}
+		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
 	}
 
 	return left
@@ -204,12 +203,17 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		// Unary operator
 		if expression.Value.(*BinaryNode).Left == nil {
 			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
-			expression.Value.(*BinaryNode).DType = unaryType.DType
+			expression.Value.(*BinaryNode).DataType = unaryType
 			return unaryType
 		}
 
 		leftType := p.GetExpressionType(expression.Value.(*BinaryNode).Left)
 		rightType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
+
+		// Error in one of types
+		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+			return data.DataType{data.DT_NoType, nil}
+		}
 
 		// Same type on both sides
 		if leftType.Equals(rightType) {
@@ -221,23 +225,30 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
-				expression.Value.(*BinaryNode).DType = data.DT_Bool
+				expression.Value.(*BinaryNode).DataType = data.DataType{data.DT_Bool, nil}
 				return data.DataType{data.DT_Bool, nil}
 			}
 
 			// Only + can be used on strings and lists
 			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
-				return leftType
+				return data.DataType{data.DT_NoType, nil}
 			}
 
+			// Return left type
 			if leftType.DType != data.DT_NoType {
-				expression.Value.(*BinaryNode).DType = leftType.DType
+				expression.Value.(*BinaryNode).DataType = leftType
 				return leftType
 			}
 
-			expression.Value.(*BinaryNode).DType = rightType.DType
-			return rightType
+			// Return right type
+			if rightType.DType != data.DT_NoType {
+				expression.Value.(*BinaryNode).DataType = rightType
+				return rightType
+			}
+
+			// Neither have type
+			return leftType
 		}
 
 		// Failed to get data type
@@ -246,7 +257,8 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		}
 
 		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-		return data.DataType{max(leftType.DType, rightType.DType), nil}
+
+		return data.DataType{data.DT_NoType, nil}
 	}
 
 	switch expression.NodeType {
@@ -427,5 +439,5 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	}
 
 	// Invalid operation, can't combine
-	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, data.DT_NoType}}
+	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
 }

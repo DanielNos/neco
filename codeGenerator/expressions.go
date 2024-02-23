@@ -30,13 +30,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 		// Generate operator
 		// Concatenate strings
-		if binaryNode.DType == data.DT_String {
+		if binaryNode.DataType.DType == data.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
 			// Concatenate lists
-		} else if binaryNode.DType == data.DT_List {
+		} else if binaryNode.DataType.DType == data.DT_List {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_ListConcat, NO_ARGS})
 			// Operation on ints
-		} else if binaryNode.DType == data.DT_Int {
+		} else if binaryNode.DataType.DType == data.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
 			// Operation on floats
 		} else {

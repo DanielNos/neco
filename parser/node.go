@@ -119,9 +119,9 @@ type LiteralNode struct {
 }
 
 type BinaryNode struct {
-	Left  *Node
-	Right *Node
-	DType data.DType
+	Left     *Node
+	Right    *Node
+	DataType data.DataType
 }
 
 type VariableNode struct {

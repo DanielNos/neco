@@ -544,7 +544,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 	if expressionType.DType != data.DT_NoType {
 		for i, identifier := range identifierTokens {
 			// Variable has a type and it's incompatible with expression
-			if variableTypes[i].DType != data.DT_NoType && !expressionType.Equals(variableTypes[i]) {
+			if !expressionType.Equals(variableTypes[i]) {
 
 				// Assign type to empty list literal
 				if variableTypes[i].DType == data.DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {
@@ -565,7 +565,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
 			// Transform a += 1 to a = a + 1
 			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
-			newExpression := &Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}}}
+			newExpression := &Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType}}}}
 
 			p.GetExpressionType(newExpression)
 			visualize(newExpression, "", true)
@@ -575,7 +575,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 
 		// Transform a += 1 to a = a + 1
 		variableNode := &Node{identifierTokens[len(identifierTokens)-1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens)-1].Value, expressionType}}
-		newExpression := &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType.DType}}
+		newExpression := &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType}}
 
 		p.GetExpressionType(newExpression)
 
