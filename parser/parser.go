@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"neco/dataStructures"
 	data "neco/dataStructures"
 	"neco/errors"
 	"neco/lexer"
@@ -33,9 +32,9 @@ type Parser struct {
 	tokenIndex int
 
 	scopeCounter   int
-	scopeNodeStack *dataStructures.Stack
+	scopeNodeStack *data.Stack
 
-	stack_symbolTablestack *dataStructures.Stack
+	stack_symbolTablestack *data.Stack
 
 	functions     []*FunctionSymbol
 	functionIndex int
@@ -49,7 +48,7 @@ type Parser struct {
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, dataStructures.NewStack(), dataStructures.NewStack(), []*FunctionSymbol{}, 0, 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
+	return Parser{tokens, 0, 0, data.NewStack(), data.NewStack(), []*FunctionSymbol{}, 0, 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
 }
 
 func (p *Parser) peek() *lexer.Token {
@@ -81,7 +80,7 @@ func (p *Parser) appendScope(node *Node) {
 	p.scopeNodeStack.Top.Value.(*ScopeNode).Statements = append(p.scopeNodeStack.Top.Value.(*ScopeNode).Statements, node)
 }
 
-func (p *Parser) newError(position *dataStructures.CodePos, message string) {
+func (p *Parser) newError(position *data.CodePos, message string) {
 	if p.ErrorCount+p.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
@@ -95,7 +94,7 @@ func (p *Parser) newError(position *dataStructures.CodePos, message string) {
 	}
 }
 
-func (p *Parser) newErrorNoMessage(position *dataStructures.CodePos) {
+func (p *Parser) newErrorNoMessage(position *data.CodePos) {
 	if p.ErrorCount+p.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
@@ -538,7 +537,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 	expressionType := p.GetExpressionType(expression)
 
 	// Uncompatible data types
-	expressionPosition := dataStructures.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
+	expressionPosition := data.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
 
 	// Print errors
 	if expressionType.DType != data.DT_NoType {

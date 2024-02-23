@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"neco/dataStructures"
+
 	data "neco/dataStructures"
 	"neco/lexer"
 )
@@ -20,7 +20,7 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.consume()
 
 	// Move to body
-	var returnPosition *dataStructures.CodePos
+	var returnPosition *data.CodePos
 
 	for p.peek().TokenType != lexer.TT_EndOfCommand && p.peek().TokenType != lexer.TT_DL_BraceOpen {
 		if p.peek().TokenType == lexer.TT_KW_returns {
@@ -88,7 +88,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	// Collect return type
 	returnType := data.DataType{data.DT_NoType, nil}
-	var returnPosition *dataStructures.CodePos
+	var returnPosition *data.CodePos
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
 		returnPosition = p.consume().Position
