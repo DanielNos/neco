@@ -84,7 +84,8 @@ const (
 	IT_FloatLowerEqual
 	IT_IntGreaterEqual
 	IT_FloatGreaterEqual
-	IT_Not
+	IT_NotOpA
+	IT_NotOpB
 
 	IT_SetRegAFalse
 	IT_SetRegATrue
@@ -186,7 +187,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_FloatGreater:      "flt_greater",
 	IT_FloatLowerEqual:   "flt_lower_equal",
 	IT_FloatGreaterEqual: "flt_greater_equal",
-	IT_Not:               "not",
+	IT_NotOpA:            "not_OA",
+	IT_NotOpB:            "not_OB",
 
 	IT_SetRegAFalse: "set_OA_false",
 	IT_SetRegATrue:  "set_OA_true",

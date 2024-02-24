@@ -1,6 +1,9 @@
 package parser
 
-import "neco/lexer"
+import (
+	data "neco/dataStructures"
+	"neco/lexer"
+)
 
 func (p *Parser) parseLoop() *Node {
 	loopPosition := p.consume().Position
@@ -15,10 +18,11 @@ func (p *Parser) parseLoop() *Node {
 }
 
 func (p *Parser) parseWhile() *Node {
-	p.consume()
+	startPosition := p.consume().Position
 
 	// Collect condition
 	condition := p.parseCondition(true)
+	condition = &Node{condition.Position, NT_Not, &BinaryNode{nil, condition, data.DataType{data.DT_Bool, nil}}}
 
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
@@ -33,13 +37,14 @@ func (p *Parser) parseWhile() *Node {
 	ifBlock := &Node{condition.Position, NT_Scope, &ScopeNode{p.scopeCounter, []*Node{breakNode}}}
 	p.scopeCounter++
 
-	// Create and insert if node into loop body
-	ifStatement := &Node{condition.Position, NT_If, &IfNode{[]*IfStatement{{condition, ifBlock}}, nil}}
-	p.appendScope(ifStatement)
+	// Create and insert negated if node into loop body
+	p.appendScope(&Node{condition.Position, NT_If, &IfNode{[]*IfStatement{{condition, ifBlock}}, nil}})
 
 	body := p.parseScope(false, true).(*Node)
 
-	return body
+	p.leaveScope()
+
+	return &Node{startPosition, NT_Loop, body}
 }
 
 func (p *Parser) parseFor() *Node {

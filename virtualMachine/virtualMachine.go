@@ -327,8 +327,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_FloatGreaterEqual:
 			vm.reg_operationA = vm.reg_operationA.(float64) >= vm.reg_operationB.(float64)
 
-		case IT_Not:
+		case IT_NotOpA:
 			vm.reg_operationA = !vm.reg_operationA.(bool)
+
+		case IT_NotOpB:
+			vm.reg_operationA = !vm.reg_operationB.(bool)
 
 		// Jumps
 		case IT_JumpBack:
@@ -402,7 +405,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 	symbolTable := vm.stack_symbolTables.Top
 	value := symbolTable.Value.(*SymbolMap).Get(vm.Instructions[vm.instructionIndex].InstructionValue[0])
 
-	for value == nil {
+	for value == nil && symbolTable.Previous != nil {
 		symbolTable = symbolTable.Previous
 		value = symbolTable.Value.(*SymbolMap).Get(vm.Instructions[vm.instructionIndex].InstructionValue[0])
 	}

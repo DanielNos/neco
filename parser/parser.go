@@ -195,12 +195,10 @@ func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {
 	}
 
 	// Enter or use current scope
-	var scope *ScopeNode
-
 	if enterScope {
 		p.enterScope()
 	}
-	scope = p.scopeNodeStack.Top.Value.(*ScopeNode)
+	scope := p.scopeNodeStack.Top.Value.(*ScopeNode)
 
 	// Collect statements
 	for p.peek().TokenType != lexer.TT_EndOfFile {
@@ -254,8 +252,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 		// Pop scope
 		if p.scopeNodeStack.Size > 1 {
 			if enteredScope {
-				p.scopeNodeStack.Pop()
-				p.stack_symbolTablestack.Pop()
+				p.leaveScope()
 			}
 			p.consume()
 			// Root scope
@@ -542,8 +539,11 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 	// Print errors
 	if expressionType.DType != data.DT_NoType {
 		for i, identifier := range identifierTokens {
-			// Variable has a type and it's incompatible with expression
-			if !expressionType.Equals(variableTypes[i]) {
+			// Variable doesn't have type
+			if variableTypes[i].DType == data.DT_NoType {
+				variableTypes[i] = expressionType
+				// Variable has a type and it's incompatible with expression
+			} else if !expressionType.Equals(variableTypes[i]) {
 
 				// Assign type to empty list literal
 				if variableTypes[i].DType == data.DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {

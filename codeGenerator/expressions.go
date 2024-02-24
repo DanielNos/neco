@@ -53,7 +53,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})
 
 		if node.NodeType == parser.NT_NotEqual {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpA, NO_ARGS})
 		}
 
 	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
@@ -114,6 +114,14 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
 		} else {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpA, NO_ARGS})
+		}
+
+	case parser.NT_Not:
+		cg.generateExpression(node.Value.(*parser.BinaryNode).Right, loadLeft)
+		if loadLeft {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpA, NO_ARGS})
+		} else {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpB, NO_ARGS})
 		}
 
 	default:

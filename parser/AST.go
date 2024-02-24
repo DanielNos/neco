@@ -103,8 +103,8 @@ func visualize(node *Node, indent string, isLast bool) {
 		}
 
 	case NT_Scope:
-		println("Scope")
 		scopeNode := node.Value.(*ScopeNode)
+		fmt.Printf("Scope %d\n", scopeNode.Id)
 
 		for i, statement := range scopeNode.Statements {
 			visualize(statement, indent, i == len(scopeNode.Statements)-1)

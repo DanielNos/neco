@@ -210,7 +210,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// Break
 	case parser.NT_Break:
 		// Generate scope drops
-		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int); i++ {
+		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int)+1; i++ {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
 		}
 
