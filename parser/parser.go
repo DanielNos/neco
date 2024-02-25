@@ -448,17 +448,23 @@ func (p *Parser) parseIdentifier() *Node {
 	return p.parseFunctionCall(symbol, identifier)
 }
 
+func (p *Parser) parseType() data.DataType {
+	variableType := data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+
+	if variableType.DType == data.DT_List {
+		p.consume()
+		variableType.SubType = p.parseType()
+		p.consume()
+	}
+
+	return variableType
+}
+
 func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	startPosition := p.peek().Position
 
 	// Collect data type
-	variableType := data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
-
-	if p.peek().TokenType == lexer.TT_OP_Lower {
-		p.consume()
-		variableType.SubType = data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
-		p.consume()
-	}
+	variableType := p.parseType()
 
 	// Collect identifiers
 	identifierTokens := []*lexer.Token{}

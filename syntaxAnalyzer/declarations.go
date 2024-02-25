@@ -5,28 +5,42 @@ import (
 	"neco/lexer"
 )
 
-func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
+func (sn *SyntaxAnalyzer) analyzeListType() {
+	// Collect list
 	sn.consume()
 
-	// Check for a composite type
+	// Collect <
 	if sn.peek().TokenType == lexer.TT_OP_Lower {
 		sn.consume()
+	} else {
+		sn.newError(sn.peek(), "Expected opening < after list type.")
+	}
 
-		if !sn.peek().TokenType.IsVariableType() {
-			sn.newError(sn.peek(), "Expected subtype in composite data type.")
-
-			if sn.peek().TokenType != lexer.TT_OP_Greater {
-				sn.consume()
-			}
+	// Collect sub-type
+	if sn.peek().TokenType.IsVariableType() {
+		if sn.peek().TokenType == lexer.TT_KW_list {
+			sn.analyzeListType()
 		} else {
 			sn.consume()
 		}
+	} else {
+		sn.newError(sn.peek(), "Expected subtype in composite data type.")
+	}
 
-		if sn.peek().TokenType != lexer.TT_OP_Greater {
-			sn.newError(sn.peek(), "Expected closing > aftrer data type.")
-		} else {
-			sn.consume()
-		}
+	// Collect >
+	if sn.peek().TokenType == lexer.TT_OP_Greater {
+		sn.consume()
+	} else {
+		sn.newError(sn.peek(), "Expected closing > aftrer data type.")
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
+	// Collect type
+	if sn.peek().TokenType == lexer.TT_KW_list {
+		sn.analyzeListType()
+	} else {
+		sn.consume()
 	}
 
 	// Check identifier
