@@ -146,7 +146,7 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 }
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
-	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{File: &l.filePath, Line: startLine, StartChar: startChar, EndChar: l.charIndex}, tokenType, value})
+	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex}, tokenType, value})
 }
 
 func (l *Lexer) collectRestOfToken() {

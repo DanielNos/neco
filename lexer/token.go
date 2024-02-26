@@ -232,7 +232,7 @@ func (t *Token) TableString() string {
 		label = fmt.Sprintf("%s ", label)
 	}
 
-	position := fmt.Sprintf("%s %d:%d", *t.Position.File, t.Position.Line, t.Position.StartChar)
+	position := fmt.Sprintf("%s %d:%d", *t.Position.File, t.Position.StartLine, t.Position.StartChar)
 
 	for len(position) < 17 {
 		position = fmt.Sprintf("%s ", position)

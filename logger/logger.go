@@ -112,12 +112,12 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 }
 
 func ErrorCodePos(codePos *data.CodePos, message string) {
-	ErrorPos(codePos.File, codePos.Line, codePos.StartChar, codePos.EndChar, message)
+	ErrorPos(codePos.File, codePos.StartLine, codePos.StartChar, codePos.EndChar, message)
 }
 
 func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 	// Print error line
-	lineString, err := readLine(*codePos1.File, codePos1.Line)
+	lineString, err := readLine(*codePos1.File, codePos1.StartLine)
 
 	if err == nil {
 		color.Set(color.FgWhite)
@@ -163,7 +163,7 @@ func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 	fmt.Fprintf(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
-	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.Line, codePos1.StartChar)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.StartLine, codePos1.StartChar)
 
 	color.Set(color.FgHiWhite)
 	fmt.Fprintf(os.Stderr, "%s\n\n", message)

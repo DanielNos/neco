@@ -98,14 +98,14 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	}
 
 	// Generate functions
-	cg.line = statements[0].Position.Line
+	cg.line = statements[0].Position.StartLine
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(cg.line)}})
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclare {
-			if cg.line < node.Position.Line {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.Line - cg.line)}})
-				cg.line = node.Position.Line
+			if cg.line < node.Position.StartLine {
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+				cg.line = node.Position.StartLine
 			}
 
 			cg.generateFunction(node.Value.(*parser.FunctionDeclareNode))
@@ -164,9 +164,9 @@ func (cg *CodeGenerator) generateConstantIDs() {
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// If node line has changed, insert line offset instruction
-	if node.Position.Line > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.Line - cg.line)}})
-		cg.line = node.Position.Line
+	if node.Position.StartLine > cg.line {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+		cg.line = node.Position.StartLine
 	}
 
 	switch node.NodeType {

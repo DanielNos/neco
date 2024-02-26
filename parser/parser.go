@@ -540,7 +540,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 	expressionType := p.GetExpressionType(expression)
 
 	// Uncompatible data types
-	expressionPosition := data.CodePos{File: expressionStart.File, Line: expressionStart.Line, StartChar: expressionStart.StartChar, EndChar: p.peekPrevious().Position.EndChar}
+	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
 	// Print errors
 	if expressionType.DType != data.DT_NoType {

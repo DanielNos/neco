@@ -255,7 +255,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 				// End of expression
 				if sn.peek().TokenType == lexer.TT_EndOfCommand {
-					sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
+					sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 					break
 				}
 
@@ -274,13 +274,13 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			// Expression
 			startChar := sn.peek().Position.StartChar
 			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
+			sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 		}
 
 	case lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 		startChar := sn.peek().Position.StartChar
 		sn.analyzeExpression()
-		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
+		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
 
 	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list: // Variable declarations
 		sn.analyzeVariableDeclaration(false)
@@ -346,7 +346,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		// Collect line and print error
 		startChar := sn.peek().Position.StartChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
+		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
 	}
 
 	// Collect tokens after statement
@@ -358,7 +358,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 		startChar := sn.peek().Position.StartChar
 		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().Position.Line, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
+		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
 	}
 	sn.consume()
 

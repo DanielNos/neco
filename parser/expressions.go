@@ -306,14 +306,14 @@ func getExpressionPosition(expression *Node, left, right uint) *data.CodePos {
 			leftPosition := getExpressionPosition(binaryNode.Left, left, right)
 			rightPosition := getExpressionPosition(binaryNode.Right, left, right)
 
-			return &data.CodePos{File: leftPosition.File, Line: leftPosition.Line, StartChar: leftPosition.StartChar, EndChar: rightPosition.EndChar}
+			return &data.CodePos{leftPosition.File, leftPosition.StartLine, leftPosition.EndLine, leftPosition.StartChar, rightPosition.EndChar}
 		}
 
 		expression = binaryNode.Left
 	}
 
 	// Check if node position is outside of bounds of max found position
-	position := data.CodePos{File: expression.Position.File, Line: expression.Position.Line, StartChar: left, EndChar: right}
+	position := data.CodePos{expression.Position.File, expression.Position.StartLine, expression.Position.EndLine, left, right}
 
 	if expression.Position.StartChar < left {
 		position.StartChar = expression.Position.StartChar
