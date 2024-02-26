@@ -23,13 +23,13 @@ func printHelp() {
 
 	color.Set(color.Reset)
 	println("build [target]")
-	println("                 -to --tokens       Prints lexed tokens.")
-	println("                 -tr --tree         Draws abstract syntax tree.")
-	println("                 -i --instructions  Prints generated instructions.")
-	println("                 -d --dontOptimize  Compiler won't optimize byte code.")
+	println("                 -to --tokens        Prints lexed tokens.")
+	println("                 -tr --tree          Draws abstract syntax tree.")
+	println("                 -i  --instructions  Prints generated instructions.")
+	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
 	println("\nrun [target]")
-	println("\nanalyze [target] -to --tokens   Prints lexed tokens.")
-	println("                 -tr --tree     Draws abstract syntax tree.")
+	println("\nanalyze [target] -to --tokens  Prints lexed tokens.")
+	println("                 -tr --tree    Draws abstract syntax tree.")
 }
 
 func printTokens(tokens []*lexer.Token) {
@@ -135,7 +135,7 @@ func processArguments() (string, string, []bool) {
 			logger.Fatal(errors.INVALID_FLAGS, "No target specified.")
 		}
 		target = args[1]
-	case "help":
+	case "help", "--help", "-h":
 		printHelp()
 		os.Exit(0)
 	default:

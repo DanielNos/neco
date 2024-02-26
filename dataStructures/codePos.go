@@ -3,12 +3,13 @@ package dataStructures
 import "fmt"
 
 type CodePos struct {
-	File *string
-	Line uint
+	File      *string
+	StartLine uint
+	EndLine   uint
 	StartChar uint
-	EndChar uint
+	EndChar   uint
 }
 
 func (cp CodePos) String() string {
-	return fmt.Sprintf("%s %d:%d", *cp.File, cp.Line, cp.StartChar)
+	return fmt.Sprintf("%s %d:%d %d:%d", *cp.File, cp.StartLine, cp.StartChar, cp.EndLine, cp.EndChar)
 }
