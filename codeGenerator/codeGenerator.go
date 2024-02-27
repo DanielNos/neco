@@ -269,10 +269,8 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, pass
 	case data.DT_List:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
 
-		subType := dataType.SubType
-		for subType != nil {
-			cg.generateVariableDeclarator(subType.(data.DataType), false)
-			subType = subType.(data.DataType).SubType
+		if dataType.SubType != nil {
+			cg.generateVariableDeclarator(dataType.SubType.(data.DataType), false)
 		}
 	}
 }

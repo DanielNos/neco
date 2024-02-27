@@ -80,6 +80,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// Lists
 	case parser.NT_List:
+		// Create list in ListA
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListInListA, NO_ARGS})
 
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
@@ -95,21 +96,27 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// List values
 	case parser.NT_ListValue:
+		// OpB to OpStore
 		if loadLeft {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpBToOpStore, NO_ARGS})
 		} else {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToOpStore, NO_ARGS})
 		}
 
+		// Generate index expression to OpA/OpB
 		cg.generateExpression(node.Value.(*parser.ListValueNode).Index, loadLeft)
 
+		// Create variable load instruction
 		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier, loadLeft)
+
+		// Change it's type to LoadListAtOpAToOpA/LoadListAtOpBToOpB
 		if loadLeft {
 			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListAtOpAToOpA
 		} else {
 			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListOpBToOpB
 		}
 
+		// Return data from OpStore to OpA/OpB
 		if loadLeft {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
 		} else {
