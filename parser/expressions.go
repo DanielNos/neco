@@ -112,21 +112,17 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Collect edxpressions
 		expressions := []*Node{}
+		expressionTypes := map[data.DataType]int{}
 		elementType := data.DataType{data.DT_NoType, nil}
-		mismatched := false
 
 		for p.peek().TokenType != lexer.TT_DL_BraceClose {
 			// Collect expression
 			expressions = append(expressions, p.parseExpressionRoot())
+			p.newError(expressions[len(expressions)-1].Position, "INF0")
 
 			// Assign list type
-			if elementType.DType == data.DT_NoType {
-				elementType = p.GetExpressionType(expressions[len(expressions)-1])
-				// Check if list expressions have all the same type
-			} else if !mismatched && !p.GetExpressionType(expressions[len(expressions)-1]).Equals(elementType) {
-				mismatched = true
-				p.newError(getExpressionPosition(expressions[len(expressions)-1], 0, 0), "Lists can only contain values with the same data type.")
-			}
+			elementType = p.GetExpressionType(expressions[len(expressions)-1])
+			expressionTypes[elementType] += 1
 
 			// Consume comma
 			if p.peek().TokenType == lexer.TT_DL_Comma {
@@ -139,9 +135,30 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			}
 		}
 
-		p.consume()
+		// More than one type in list
+		if len(expressionTypes) != 1 {
+			// Find type with lowest count
+			lowestCount := 999999
+			lowestType := data.DataType{}
 
-		left = &Node{startPosition, NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
+			for t, count := range expressionTypes {
+				if count < lowestCount {
+					lowestCount = count
+					lowestType = t
+				}
+			}
+
+			// Find it's expression and print error
+			for _, expression := range expressions {
+				if p.GetExpressionType(expression).Equals(lowestType) {
+					p.newError(expression.Position, "List can't contain elements of multiple data types.")
+					break
+				}
+			}
+		}
+
+		left = &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
+		fmt.Printf("Created list: %+v\n", left)
 		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
@@ -155,7 +172,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Combine two literals into single node
 		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DType == right.Value.(*LiteralNode).DType {
-			left = combineLiteralNodes(left, right, nodeType, operator.Position)
+			left = combineLiteralNodes(left, right, nodeType)
 			continue
 		}
 
@@ -167,11 +184,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
 			right.Value.(*BinaryNode).Left = oldLeft
 
-			left = &Node{operator.Position, nodeType, &BinaryNode{right, left, data.DataType{data.DT_NoType, nil}}}
+			left = &Node{left.Position.SetEndPos(right.Position), nodeType, &BinaryNode{right, left, data.DataType{data.DT_NoType, nil}}}
 			continue
 		}
 
-		left = &Node{operator.Position, nodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+		left = &Node{left.Position.SetEndPos(right.Position), nodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
 	}
 
 	return left
@@ -297,36 +314,7 @@ func (p *Parser) collectConstants(expression *Node) {
 	}
 }
 
-func getExpressionPosition(expression *Node, left, right uint) *data.CodePos {
-	// Binary node
-	if expression.NodeType.IsOperator() {
-		binaryNode := expression.Value.(*BinaryNode)
-
-		if binaryNode.Left != nil {
-			leftPosition := getExpressionPosition(binaryNode.Left, left, right)
-			rightPosition := getExpressionPosition(binaryNode.Right, left, right)
-
-			return &data.CodePos{leftPosition.File, leftPosition.StartLine, leftPosition.EndLine, leftPosition.StartChar, rightPosition.EndChar}
-		}
-
-		expression = binaryNode.Left
-	}
-
-	// Check if node position is outside of bounds of max found position
-	position := data.CodePos{expression.Position.File, expression.Position.StartLine, expression.Position.EndLine, left, right}
-
-	if expression.Position.StartChar < left {
-		position.StartChar = expression.Position.StartChar
-	}
-
-	if expression.Position.EndChar > right {
-		position.EndChar = expression.Position.EndChar
-	}
-
-	return &position
-}
-
-func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosition *data.CodePos) *Node {
+func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	leftLiteral := left.Value.(*LiteralNode)
 	rightLiteral := right.Value.(*LiteralNode)
 
@@ -335,13 +323,13 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 	case data.DT_Bool:
 		switch parentNodeType {
 		case NT_Equal:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
 		case NT_NotEqual:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
 		case NT_And:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
 		case NT_Or:
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
 		}
 	// Integers
 	case data.DT_Int:
@@ -364,7 +352,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Int, value}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Int, value}}
 		}
 
 		// Comparison operators
@@ -384,7 +372,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, value}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Floats
@@ -408,7 +396,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Float, value}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Float, value}}
 		}
 
 		// Comparison operators
@@ -428,16 +416,16 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType, parentPosit
 		}
 
 		if value != nil {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_Bool, value}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Strings
 	case data.DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{parentPosition, NT_Literal, &LiteralNode{data.DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
 		}
 	}
 
 	// Invalid operation, can't combine
-	return &Node{parentPosition, parentNodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
 }

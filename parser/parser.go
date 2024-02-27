@@ -369,7 +369,7 @@ func (p *Parser) parseIdentifier() *Node {
 
 		// Index must be int
 		if !p.GetExpressionType(indexExpression).Equals(data.DataType{data.DT_Int, nil}) {
-			p.newError(getExpressionPosition(indexExpression, indexExpression.Position.StartChar, indexExpression.Position.EndChar), "Index expression has to be int.")
+			p.newError(indexExpression.Position, "Index expression has to be int.")
 		}
 
 		assignPosition := p.consume().Position
@@ -380,8 +380,7 @@ func (p *Parser) parseIdentifier() *Node {
 
 		// Check if assigned expression has the correct type
 		if listType.DType != data.DT_NoType && !assignedType.Equals(listType.SubType.(data.DataType)) {
-			expressionPosition := getExpressionPosition(assignedExpression, assignedExpression.Position.StartChar, assignedExpression.Position.EndChar)
-			p.newError(expressionPosition, fmt.Sprintf("Can't assign expression of type %s to %s.", assignedType, listType))
+			p.newError(assignedExpression.Position, fmt.Sprintf("Can't assign expression of type %s to %s.", assignedType, listType))
 		}
 
 		return &Node{assignPosition, NT_ListAssign, &ListAssignNode{identifier.Value, symbol.value.(*VariableSymbol), indexExpression, assignedExpression}}
@@ -494,7 +493,7 @@ func (p *Parser) parseVariableDeclare(constant bool) *Node {
 	}
 
 	// Create node
-	declareNode := &Node{startPosition, NT_VariableDeclare, &VariableDeclareNode{variableType, constant, identifiers}}
+	declareNode := &Node{startPosition.SetEndPos(identifierTokens[len(identifierTokens)-1].Position), NT_VariableDeclare, &VariableDeclareNode{variableType, constant, identifiers}}
 
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {

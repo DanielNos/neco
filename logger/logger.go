@@ -69,40 +69,28 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	// Print error line
 	lineString, err := readLine(*file, line)
 
+	fmt.Printf("%s %d %d to %d ", *file, line, startChar, endChar)
+
 	if err == nil {
 		color.Set(color.FgWhite)
 
-		if startChar == endChar {
-			endChar++
-		}
+		fmt.Fprint(os.Stderr, lineString[0:startChar-1])
 
-		// Print line of code with error
-		fmt.Fprint(os.Stderr, "\t\t")
-		fmt.Fprintf(os.Stderr, "%s", lineString)
-		fmt.Fprint(os.Stderr, "\n\t\t")
-
-		// Move to error token
-		var i uint
-		for i = 0; i < startChar-1; i++ {
-			if lineString[i] == '\t' {
-				fmt.Fprintf(os.Stderr, "\t")
-			} else {
-				fmt.Fprintf(os.Stderr, " ")
-			}
-		}
-
-		// Draw arrows under the error token
 		color.Set(color.FgHiRed)
-		for i = startChar; i < endChar; i++ {
-			fmt.Fprintf(os.Stderr, "^")
-		}
+		color.Set(color.Underline)
 
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, lineString[startChar-1:endChar-1])
+
+		color.Set(color.Reset)
+		color.Set(color.FgWhite)
+
+		fmt.Fprint(os.Stderr, lineString[endChar-1:])
+		fmt.Fprintln(os.Stderr)
 	}
 
 	// Print message
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR]   ")
+	fmt.Fprintf(os.Stderr, "\n[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)

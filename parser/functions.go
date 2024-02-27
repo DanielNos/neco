@@ -247,8 +247,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType data.DataType) bo
 				expressionType := p.GetExpressionType(statement.Value.(*Node))
 
 				if !returnType.Equals(expressionType) {
-					position := getExpressionPosition(statement.Value.(*Node), statement.Value.(*Node).Position.StartChar, statement.Value.(*Node).Position.EndChar)
-					p.newError(position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
+					p.newError(statement.Value.(*Node).Position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
 				}
 			}
 

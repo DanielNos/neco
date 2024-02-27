@@ -10,6 +10,10 @@ type CodePos struct {
 	EndChar   uint
 }
 
+func (cp CodePos) SetEndPos(endPosition *CodePos) *CodePos {
+	return &CodePos{cp.File, cp.StartLine, cp.StartChar, endPosition.EndLine, endPosition.EndChar}
+}
+
 func (cp CodePos) String() string {
 	return fmt.Sprintf("%s %d:%d %d:%d", *cp.File, cp.StartLine, cp.StartChar, cp.EndLine, cp.EndChar)
 }
