@@ -118,7 +118,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		for p.peek().TokenType != lexer.TT_DL_BraceClose {
 			// Collect expression
 			expressions = append(expressions, p.parseExpressionRoot())
-			p.newError(expressions[len(expressions)-1].Position, "INF0")
+			//p.newError(expressions[len(expressions)-1].Position, "INF0")
 
 			// Assign list type
 			elementType = p.GetExpressionType(expressions[len(expressions)-1])
@@ -158,7 +158,6 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		}
 
 		left = &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
-		fmt.Printf("Created list: %+v\n", left)
 		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))

@@ -69,8 +69,6 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	// Print error line
 	lineString, err := readLine(*file, line)
 
-	fmt.Printf("%s %d %d to %d ", *file, line, startChar, endChar)
-
 	if err == nil {
 		color.Set(color.FgWhite)
 
@@ -79,12 +77,12 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 		color.Set(color.FgHiRed)
 		color.Set(color.Underline)
 
-		fmt.Fprint(os.Stderr, lineString[startChar-1:endChar-1])
+		fmt.Fprint(os.Stderr, lineString[startChar-1:endChar])
 
 		color.Set(color.Reset)
 		color.Set(color.FgWhite)
 
-		fmt.Fprint(os.Stderr, lineString[endChar-1:])
+		fmt.Fprint(os.Stderr, lineString[endChar:])
 		fmt.Fprintln(os.Stderr)
 	}
 

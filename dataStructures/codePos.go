@@ -11,7 +11,7 @@ type CodePos struct {
 }
 
 func (cp CodePos) SetEndPos(endPosition *CodePos) *CodePos {
-	return &CodePos{cp.File, cp.StartLine, cp.StartChar, endPosition.EndLine, endPosition.EndChar}
+	return &CodePos{cp.File, cp.StartLine, endPosition.EndLine, cp.StartChar, endPosition.EndChar}
 }
 
 func (cp CodePos) String() string {

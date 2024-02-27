@@ -146,7 +146,7 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 }
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
-	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex}, tokenType, value})
+	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex - 1}, tokenType, value})
 }
 
 func (l *Lexer) collectRestOfToken() {
@@ -302,15 +302,16 @@ func (l *Lexer) lexRune() {
 			delimiter, isDelimiter := DELIMITERS[l.currRune]
 
 			if isDelimiter {
-				l.newTokenFrom(l.lineIndex, l.charIndex, delimiter, "")
+				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, delimiter, "")
 			} else {
 				// Invalid character
 				if !unicode.IsSpace(l.currRune) && l.currRune != EOF {
 					l.token.WriteRune(l.currRune)
 					l.newError(l.lineIndex, l.charIndex, true, fmt.Sprintf("Invalid character \"%c\".", l.currRune))
 				}
+				l.advance()
 			}
-			l.advance()
 		}
 	}
 }
