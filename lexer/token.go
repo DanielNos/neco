@@ -226,19 +226,34 @@ func (t *Token) String() string {
 }
 
 func (t *Token) TableString() string {
-	label := fmt.Sprintf("%v", t.TokenType)
+	// Print file
+	message := fmt.Sprintf("%s  ", *t.Position.File)
 
-	for len(label) < 14 {
-		label = fmt.Sprintf("%s ", label)
+	if t.Position.StartLine < 10 {
+		message = fmt.Sprintf(" %s", message)
 	}
 
-	position := fmt.Sprintf("%s %d:%d", *t.Position.File, t.Position.StartLine, t.Position.StartChar)
+	// Print start line and char
+	message = fmt.Sprintf("%s%d:%d  ", message, t.Position.StartLine, t.Position.StartChar)
 
-	for len(position) < 17 {
-		position = fmt.Sprintf("%s ", position)
+	if t.Position.StartChar < 10 {
+		message = fmt.Sprintf("%s ", message)
 	}
 
-	message := fmt.Sprintf("%s %s %s", position, label, t.Value)
+	// Print end line and char
+	message = fmt.Sprintf("%s%d:%d", message, t.Position.EndLine, t.Position.EndChar)
 
-	return message
+	if t.Position.EndChar < 10 {
+		message = fmt.Sprintf("%s ", message)
+	}
+
+	// Print token type
+	message = fmt.Sprintf("%s  %s", message, t.TokenType)
+
+	for len(message) < 39 {
+		message = fmt.Sprintf("%s ", message)
+	}
+
+	// Print token value
+	return fmt.Sprintf("%s%s", message, t.Value)
 }

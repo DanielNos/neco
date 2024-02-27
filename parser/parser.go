@@ -94,7 +94,7 @@ func (p *Parser) newError(position *data.CodePos, message string) {
 	}
 }
 
-func (p *Parser) newErrorNoMessage(position *data.CodePos) {
+func (p *Parser) newErrorNoMessage() {
 	if p.ErrorCount+p.totalErrorCount == 0 {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
@@ -557,7 +557,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 					continue
 				}
 
-				p.newErrorNoMessage(&expressionPosition)
+				p.newErrorNoMessage()
 				logger.Error2CodePos(identifierTokens[i].Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable %s of type %s.", expressionType, identifier, variableTypes[i]))
 			}
 		}
