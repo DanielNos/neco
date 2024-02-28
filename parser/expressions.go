@@ -20,7 +20,7 @@ func (p *Parser) parseExpressionRoot() *Node {
 }
 
 func (p *Parser) parseExpression(currentPrecedence int) *Node {
-	var left *Node
+	var left *Node = nil
 
 	// Literal
 	if p.peek().TokenType.IsLiteral() {
@@ -93,11 +93,20 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 			identifierToken := p.consume()
 
-			// Value from a list
+			// List element
 			if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-				p.consume()
-				left = &Node{identifierToken.Position, NT_ListValue, &ListValueNode{identifierToken.Value, symbol.value.(*VariableSymbol), p.parseExpressionRoot()}}
-				p.consume()
+				// Consume index
+				for p.peek().TokenType == lexer.TT_DL_BracketOpen {
+					p.consume()
+					if left == nil {
+						variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
+						left = &Node{identifierToken.Position, NT_ListValue, &BinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
+					} else {
+						left = &Node{identifierToken.Position, NT_ListValue, &BinaryNode{left, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
+					}
+
+					p.consume()
+				}
 				// Normal variable
 			} else {
 				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
@@ -118,7 +127,6 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		for p.peek().TokenType != lexer.TT_DL_BraceClose {
 			// Collect expression
 			expressions = append(expressions, p.parseExpressionRoot())
-			//p.newError(expressions[len(expressions)-1].Position, "INF0")
 
 			// Assign list type
 			elementType = p.GetExpressionType(expressions[len(expressions)-1])
@@ -287,7 +295,7 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return expression.Value.(*ListValueNode).ListSymbol.VariableType.SubType.(data.DataType)
+		return p.GetExpressionType(expression.Value.(*BinaryNode).Left)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))

@@ -48,19 +48,23 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			}
 			// List index
 		} else if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
-			sn.consume()
-
-			if sn.peek().TokenType == lexer.TT_DL_BracketClose {
-				sn.newError(sn.peek(), "Expected list index.")
-				return
-			} else {
-				sn.analyzeExpression()
-			}
-
-			if sn.peek().TokenType != lexer.TT_DL_BracketClose {
-				sn.newError(sn.peek(), "Expected closing bracket.")
-			} else {
+			for sn.peek().TokenType == lexer.TT_DL_BracketOpen {
 				sn.consume()
+
+				// Index expression
+				if sn.peek().TokenType == lexer.TT_DL_BracketClose {
+					sn.newError(sn.peek(), "Expected list index.")
+					return
+				} else {
+					sn.analyzeExpression()
+				}
+
+				// Closing bracket
+				if sn.peek().TokenType != lexer.TT_DL_BracketClose {
+					sn.newError(sn.peek(), "Expected closing bracket.")
+				} else {
+					sn.consume()
+				}
 			}
 		}
 

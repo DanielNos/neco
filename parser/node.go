@@ -173,12 +173,6 @@ type ListNode struct {
 	DataType data.DataType
 }
 
-type ListValueNode struct {
-	Identifier string
-	ListSymbol *VariableSymbol
-	Index      *Node
-}
-
 type ListAssignNode struct {
 	Identifier         string
 	ListSymbol         *VariableSymbol

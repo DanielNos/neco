@@ -168,16 +168,6 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_SetListAtPrevToCurr:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.stack.Pop().(int64)] = vm.stack.Pop()
 
-		case IT_LoadListAt:
-			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
-
-			if (*vm.stack.Top()).(int64) > int64(len(list.([]interface{}))-1) {
-				vm.traceLine()
-				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, (*vm.stack.Top()).(int64), len(list.([]interface{}))))
-			}
-
-			vm.stack.Push(list.([]interface{})[vm.stack.Pop().(int64)])
-
 		// Load and store
 		case IT_LoadConst:
 			vm.stack.Push(vm.Constants[instruction.InstructionValue[0]])
@@ -326,6 +316,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_AppendToList:
 			vm.stack.size--
 			vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]interface{}), vm.stack.items[vm.stack.size])
+
+		case IT_IndexList:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]interface{})[vm.stack.items[vm.stack.size].(int64)]
 
 		// Ignore line offsets
 		case IT_LineOffset:

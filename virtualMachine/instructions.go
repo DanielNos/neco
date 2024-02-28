@@ -20,7 +20,6 @@ const (
 	IT_DeclareList
 
 	IT_SetListAtPrevToCurr
-	IT_LoadListAt
 
 	IT_LoadConst
 	IT_LoadConstToList
@@ -70,6 +69,7 @@ const (
 
 	IT_CreateList
 	IT_AppendToList
+	IT_IndexList
 
 	IT_LineOffset
 )
@@ -94,7 +94,6 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareList:   "decl_list",
 
 	IT_SetListAtPrevToCurr: "set_list",
-	IT_LoadListAt:          "load_list_at",
 
 	IT_LoadConst:       "load_const",
 	IT_LoadConstToList: "append_const_list",
@@ -144,6 +143,7 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_CreateList:   "new_list",
 	IT_AppendToList: "append_list",
+	IT_IndexList:    "index_list",
 
 	IT_LineOffset: "line_offset",
 }

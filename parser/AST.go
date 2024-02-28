@@ -171,10 +171,11 @@ func visualize(node *Node, indent string, isLast bool) {
 		}
 
 	case NT_ListValue:
-		listValue := node.Value.(*ListValueNode)
+		println("ListIndex")
+		listValue := node.Value.(*BinaryNode)
 
-		fmt.Printf("%s[...]\n", listValue.Identifier)
-		visualize(listValue.Index, indent, true)
+		visualize(listValue.Left, indent, false)
+		visualize(listValue.Right, indent, true)
 
 	case NT_ListAssign:
 		listAssign := node.Value.(*ListAssignNode)

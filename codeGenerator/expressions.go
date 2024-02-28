@@ -85,14 +85,14 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 	// List values
 	case parser.NT_ListValue:
-		// Generate index expressio
-		cg.generateExpression(node.Value.(*parser.ListValueNode).Index)
+		// Generate list expression
+		cg.generateExpression(node.Value.(*parser.BinaryNode).Left)
 
-		// Create variable load instruction
-		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier)
+		// Generate index expression
+		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
 
-		// Change it's type to LoadListAt
-		cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListAt
+		// Generate LoadListAt instruction
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_IndexList, NO_ARGS})
 
 	case parser.NT_Not:
 		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
@@ -164,7 +164,7 @@ func getExpressionType(expression *parser.Node) data.DataType {
 	case parser.NT_List:
 		return expression.Value.(*parser.ListNode).DataType
 	case parser.NT_ListValue:
-		return expression.Value.(*parser.ListValueNode).ListSymbol.VariableType.SubType.(data.DataType)
+		return getExpressionType(expression.Value.(*parser.BinaryNode).Left)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))
