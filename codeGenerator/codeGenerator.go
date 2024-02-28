@@ -113,7 +113,7 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 	}
 
 	// Optimize instructions
-	if !cg.optimize {
+	if cg.optimize {
 		codeOptimizer.Optimize(cg.instructions)
 	}
 
@@ -182,9 +182,9 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Assign:
 		assignNode := node.Value.(*parser.AssignNode)
 
-		cg.generateExpression(assignNode.Expression, true)
+		cg.generateExpression(assignNode.Expression)
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreOpA, []byte{cg.findVariableIdentifier(assignNode.Identifier)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{cg.findVariableIdentifier(assignNode.Identifier)}})
 
 	// If statement
 	case parser.NT_If:
@@ -194,8 +194,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Return:
 		// Generate returned expression
 		if node.Value != nil {
-			cg.generateExpression(node.Value.(*parser.Node), true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToReturn, NO_ARGS})
+			cg.generateExpression(node.Value.(*parser.Node))
 		}
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
 
@@ -221,18 +220,14 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
 
 	case parser.NT_ListAssign:
-		// Generate assigned expression and store it in reg E
-		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToListA, NO_ARGS})
-
 		// Generate index expression
-		cg.generateExpression(node.Value.(*parser.ListAssignNode).IndexExpression, true)
+		cg.generateExpression(node.Value.(*parser.ListAssignNode).IndexExpression)
 
-		// Move assigned expression from reg E to reg B
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpB, NO_ARGS})
+		// Generate assigned expression
+		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression)
 
 		// Generate list assign instruction
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtAToB, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtPrevToCurr, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
 
 	default:
 		panic("Unkown node.")

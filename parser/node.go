@@ -231,10 +231,6 @@ func (nt NodeType) IsLogicOperator() bool {
 	return nt == NT_And || nt == NT_Or
 }
 
-func (nt NodeType) IsLeaf() bool {
-	return nt > NT_List
-}
-
 var operatorNodePrecedence = map[NodeType]int{
 	NT_And: 0,
 	NT_Or:  0,

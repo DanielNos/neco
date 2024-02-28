@@ -8,10 +8,10 @@ const IGNORE_INSTRUCTION byte = 255
 
 func Optimize(instructions []VM.Instruction) {
 	// Append instruction buffer to the end
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 2; i++ {
 		instructions = append(instructions, VM.Instruction{255, []byte{}})
 	}
-
+	
 	// Optimize instructions
 	for i := 0; i < len(instructions); i++ {
 		// Combine line offsets
@@ -27,34 +27,10 @@ func Optimize(instructions []VM.Instruction) {
 			continue
 		}
 
-		// Load constant directly do argument stack
-		if instructions[i].InstructionType == VM.IT_LoadConstRegA && instructions[i+1].InstructionType == VM.IT_PushOpAToArg {
-			instructions[i].InstructionType = VM.IT_LoadConstArgStack
-			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
-			i++
-			continue
-		}
-
-		// Load variable directly do argument stack
-		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_PushOpAToArg {
-			instructions[i].InstructionType = VM.IT_LoadArgStack
-			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
-			i++
-			continue
-		}
-
-		// Optimize expression safe swapping
-
-		// 0 LOAD_REG_A        1   -->  0 LOAD_REG_B 1
-		// 1 COPY_REG_A_TO_E       -->
-		// 2 LOAD_REG_A        2   -->  2 LOAD_REG_A 2
-		// 3 COPY_REG_E_TO_B       -->
-
-		if instructions[i].InstructionType == VM.IT_LoadRegA && instructions[i+1].InstructionType == VM.IT_CopyOpAToListA && instructions[i+2].InstructionType == VM.IT_LoadRegA && instructions[i+3].InstructionType == VM.IT_CopyListAToOpB {
-			instructions[i].InstructionType = VM.IT_LoadRegB
-			instructions[i+1].InstructionType = IGNORE_INSTRUCTION
-			instructions[i+3].InstructionType = IGNORE_INSTRUCTION
-			i += 3
+		// Load const directly to list
+		if instructions[i].InstructionType == VM.IT_LoadConst && instructions[i+1].InstructionType == VM.IT_AppendToList {
+			instructions[i].InstructionType = VM.IT_LoadConstToList
+			instructions[i+1].InstructionType = 255
 			continue
 		}
 	}

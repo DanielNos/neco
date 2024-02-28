@@ -32,7 +32,7 @@ func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) 
 		}
 
 		// Store argument in variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopArgStackToVariable, []byte{byte(parameterCount - i)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{byte(parameterCount - i)}})
 	}
 
 	// Generate function body
@@ -86,7 +86,6 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 
 func (cg *CodeGenerator) generateArguments(arguments []*parser.Node) {
 	for _, argument := range arguments {
-		cg.generateExpression(argument, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushOpAToArg, NO_ARGS})
+		cg.generateExpression(argument)
 	}
 }

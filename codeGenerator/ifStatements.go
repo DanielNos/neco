@@ -13,7 +13,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	// Generate else if conditions and jumps
 	for i, statement := range ifStatement.IfStatements {
 		// Generate condition expression
-		cg.generateExpression(statement.Condition, true)
+		cg.generateExpression(statement.Condition)
 		// Generate conditional jump
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
 

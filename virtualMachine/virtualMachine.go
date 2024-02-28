@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	stack_arguments_SIZE    = 100
+	STACK_SIZE              = 1024
 	STACK_RETURN_INDEX_SIZE = 1024
 	stack_scopes_SIZE       = 100
 	SYMBOL_MAP_SIZE         = 100
@@ -33,16 +33,7 @@ type VirtualMachine struct {
 
 	functions []int
 
-	// Public registers and stack
-	reg_operationA     interface{} // A) Operation A
-	reg_operationB     interface{} // B) Operation B
-	reg_operationStore interface{} // C) Operation Store
-	reg_listA          interface{} // D) List A
-	reg_funcReturnA    interface{} // F) Function Return
-	reg_funcReturnB    interface{} // G) Function error return
-
-	reg_argumentPointer int
-	stack_arguments     []interface{}
+	stack *Stack
 
 	// Private stacks
 	reg_returnIndex     int
@@ -62,7 +53,7 @@ func NewVirutalMachine() *VirtualMachine {
 	virtualMachine := &VirtualMachine{
 		instructionIndex: 0,
 
-		stack_arguments: make([]interface{}, stack_arguments_SIZE),
+		stack: NewStack(STACK_SIZE),
 
 		reg_returnIndex:     0,
 		stack_returnIndexes: make([]int, STACK_RETURN_INDEX_SIZE),
@@ -98,78 +89,25 @@ func (vm *VirtualMachine) Execute(filePath string) {
 	for vm.instructionIndex < len(vm.Instructions) {
 		instruction := vm.Instructions[vm.instructionIndex]
 
+		//fmt.Printf("%s %v %v\n", InstructionTypeToString[instruction.InstructionType], instruction.InstructionValue, vm.stack.items[:vm.stack.size])
+
 		switch instruction.InstructionType {
 
 		// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
 
-		// Call built-in function
-		case IT_CallBuiltInFunc:
-			vm.callBuiltInFunction(instruction.InstructionValue[0])
+		// Jumps
+		case IT_Jump:
+			vm.instructionIndex += instruction.InstructionValue[0]
 
-		// Halt
-		case IT_Halt:
-			os.Exit(int(instruction.InstructionValue[0]))
-
-		// Load list element
-		case IT_LoadListAtOpAToOpA:
-			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
-
-			if vm.reg_operationA.(int64) > int64(len(list.([]interface{}))-1) {
-				vm.traceLine()
-				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, vm.reg_operationA.(int64), len(list.([]interface{}))))
+		case IT_JumpIfTrue:
+			if vm.stack.Pop().(bool) {
+				vm.instructionIndex += instruction.InstructionValue[0]
 			}
-			vm.reg_operationA = list.([]interface{})[vm.reg_operationA.(int64)]
 
-		case IT_LoadListOpBToOpB:
-			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
+		case IT_JumpBack:
+			vm.instructionIndex -= instruction.InstructionValue[0]
 
-			if vm.reg_operationB.(int64) > int64(len(list.([]interface{}))-1) {
-				vm.traceLine()
-				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, vm.reg_operationB.(int64), len(list.([]interface{}))))
-			}
-			vm.reg_operationB = list.([]interface{})[vm.reg_operationB.(int64)]
-
-		// Store register to a variable
-		case IT_StoreOpA:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationA
-
-		case IT_StoreOpB:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.reg_operationB
-
-		// List operations
-		case IT_SetListAtAToB:
-			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.reg_operationA.(int64)] = vm.reg_operationB
-
-		// Load constant to register
-		case IT_LoadConstRegA:
-			vm.reg_operationA = vm.Constants[instruction.InstructionValue[0]]
-
-		case IT_LoadConstRegB:
-			vm.reg_operationB = vm.Constants[instruction.InstructionValue[0]]
-
-		case IT_LoadConstArgStack:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.Constants[instruction.InstructionValue[0]]
-			vm.reg_argumentPointer++
-
-		// Load variable to a register
-		case IT_LoadRegA:
-			vm.reg_operationA = vm.findSymbol().symbolValue.(*VariableSymbol).value
-
-		case IT_LoadRegB:
-			vm.reg_operationB = vm.findSymbol().symbolValue.(*VariableSymbol).value
-
-		case IT_LoadArgStack:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.findSymbol().symbolValue.(*VariableSymbol).value
-			vm.reg_argumentPointer++
-
-		// Enter scope
-		case IT_PushScope:
-			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
-			vm.reg_scopeIndex++
-
-			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
-
-		// Call a function
+		// Call functions
 		case IT_Call:
 			// Push return adress to stack
 			vm.stack_returnIndexes[vm.reg_returnIndex] = vm.instructionIndex + 1
@@ -184,6 +122,19 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			// Jump to function
 			vm.instructionIndex = vm.functions[instruction.InstructionValue[0]] - 1
 			continue
+
+		case IT_CallBuiltInFunc:
+			vm.callBuiltInFunction(instruction.InstructionValue[0])
+
+		case IT_PushScope:
+			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
+			vm.reg_scopeIndex++
+
+			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
+
+		// Halt
+		case IT_Halt:
+			os.Exit(int(instruction.InstructionValue[0]))
 
 		// Declare variables
 		case IT_DeclareBool:
@@ -200,95 +151,106 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_DeclareList:
 			vm.instructionIndex++
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_List, InstructionToDataType[vm.Instructions[vm.instructionIndex+1].InstructionType]}, []interface{}{}}})
+
+			dataType := data.DataType{data.DT_List, nil}
+			endType := &dataType.SubType
+
+			for vm.Instructions[vm.instructionIndex].InstructionType == IT_DeclareList {
+				dataType = data.DataType{data.DT_List, dataType}
+				vm.instructionIndex++
+			}
+
+			*endType = InstructionToDataType[vm.Instructions[vm.instructionIndex].InstructionType]
+
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []interface{}{}}})
+
+		// Set and load list at index
+		case IT_SetListAtPrevToCurr:
+			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.stack.Pop().(int64)] = vm.stack.Pop()
+
+		case IT_LoadListAt:
+			list := vm.findSymbol().symbolValue.(*VariableSymbol).value
+
+			if (*vm.stack.Top()).(int64) > int64(len(list.([]interface{}))-1) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: Index out of range. Index: %d, list size: %d.", vm.firstLine, (*vm.stack.Top()).(int64), len(list.([]interface{}))))
+			}
+
+			vm.stack.Push(list.([]interface{})[vm.stack.Pop().(int64)])
+
+		// Load and store
+		case IT_LoadConst:
+			vm.stack.Push(vm.Constants[instruction.InstructionValue[0]])
+
+		case IT_LoadConstToList:
+			(*vm.stack.Top()) = append((*vm.stack.Top()).([]interface{}), vm.Constants[instruction.InstructionValue[0]])
+
+		case IT_Load:
+			vm.stack.Push(vm.findSymbol().symbolValue.(*VariableSymbol).value)
+
+		case IT_Store:
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.stack.Pop()
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
-		// Swap generic registers
-		case IT_SwapOperation:
-			vm.reg_operationA, vm.reg_operationB = vm.reg_operationB, vm.reg_operationA
-
-		// Copy registers to registers
-		case IT_CopyOpAToOpStore:
-			vm.reg_operationStore = vm.reg_operationA
-
-		case IT_CopyOpBToOpStore:
-			vm.reg_operationStore = vm.reg_operationB
-
-		case IT_CopyOpStoreToOpA:
-			vm.reg_operationA = vm.reg_operationStore
-
-		case IT_CopyOpStoreToOpB:
-			vm.reg_operationB = vm.reg_operationStore
-
-		case IT_CopyOpAToReturn:
-			vm.reg_funcReturnA = vm.reg_operationA
-
-		case IT_CopyReturnToOpA:
-			vm.reg_operationA = vm.reg_funcReturnA
-
-		case IT_CopyReturnToOpB:
-			vm.reg_operationB = vm.reg_funcReturnA
-
-		case IT_CopyOpAToListA:
-			vm.reg_listA = vm.reg_operationA
-
-		case IT_CopyListAToOpA:
-			vm.reg_operationA = vm.reg_listA
-
-		case IT_CopyListAToOpB:
-			vm.reg_operationB = vm.reg_listA
-
-		// Push register to stack
-		case IT_PushOpAToArg:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationA
-			vm.reg_argumentPointer++
-
-		case IT_PushOpBToArg:
-			vm.stack_arguments[vm.reg_argumentPointer] = vm.reg_operationB
-			vm.reg_argumentPointer++
-
 		// Integer operations
 		case IT_IntAdd:
-			vm.reg_operationA = vm.reg_operationA.(int64) + vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) + vm.stack.items[vm.stack.size].(int64)
 
 		case IT_IntSubtract:
-			vm.reg_operationA = vm.reg_operationA.(int64) - vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) - vm.stack.items[vm.stack.size].(int64)
 
 		case IT_IntMultiply:
-			vm.reg_operationA = vm.reg_operationA.(int64) * vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) * vm.stack.items[vm.stack.size].(int64)
 
 		case IT_IntDivide:
-			vm.reg_operationA = vm.reg_operationA.(int64) / vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) / vm.stack.items[vm.stack.size].(int64)
 
 		case IT_IntPower:
-			vm.reg_operationA = PowerInt64(vm.reg_operationA.(int64), vm.reg_operationB.(int64))
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = PowerInt64(vm.stack.items[vm.stack.size-1].(int64), vm.stack.items[vm.stack.size].(int64))
 
 		case IT_IntModulo:
-			vm.reg_operationA = vm.reg_operationA.(int64) % vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) % vm.stack.items[vm.stack.size].(int64)
 
 		// Float operations
 		case IT_FloatAdd:
-			vm.reg_operationA = vm.reg_operationA.(float64) + vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) + vm.stack.items[vm.stack.size].(float64)
 
 		case IT_FloatSubtract:
-			vm.reg_operationA = vm.reg_operationA.(float64) - vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) - vm.stack.items[vm.stack.size].(float64)
 
 		case IT_FloatMultiply:
-			vm.reg_operationA = vm.reg_operationA.(float64) * vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) * vm.stack.items[vm.stack.size].(float64)
 
 		case IT_FloatDivide:
-			vm.reg_operationA = vm.reg_operationA.(float64) / vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) / vm.stack.items[vm.stack.size].(float64)
 
 		case IT_FloatPower:
-			vm.reg_operationA = math.Pow(vm.reg_operationA.(float64), vm.reg_operationB.(float64))
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = math.Pow(vm.stack.items[vm.stack.size-1].(float64), vm.stack.items[vm.stack.size].(float64))
 
 		case IT_FloatModulo:
-			vm.reg_operationA = math.Mod(vm.reg_operationA.(float64), vm.reg_operationB.(float64))
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = math.Mod(vm.stack.items[vm.stack.size-1].(float64), vm.stack.items[vm.stack.size].(float64))
 
-		// String operations
+		// Concatenations
 		case IT_StringConcat:
-			vm.reg_operationA = fmt.Sprintf("%s%s", vm.reg_operationA, vm.reg_operationB)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = fmt.Sprintf("%s%s", vm.stack.items[vm.stack.size-1].(string), vm.stack.items[vm.stack.size].(string))
+
+		case IT_ListConcat:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]interface{}), vm.stack.items[vm.stack.size].([]interface{})...)
 
 		// Return from a function
 		case IT_Return:
@@ -301,62 +263,50 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		// Comparison instructions
 		case IT_Equal:
-			vm.reg_operationA = vm.reg_operationA == vm.reg_operationB
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1] == vm.stack.items[vm.stack.size]
 
 		case IT_IntLower:
-			vm.reg_operationA = vm.reg_operationA.(int64) < vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) < vm.stack.items[vm.stack.size].(int64)
 
 		case IT_FloatLower:
-			vm.reg_operationA = vm.reg_operationA.(float64) < vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) < vm.stack.items[vm.stack.size].(float64)
 
 		case IT_IntGreater:
-			vm.reg_operationA = vm.reg_operationA.(int64) > vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) > vm.stack.items[vm.stack.size].(int64)
 
 		case IT_FloatGreater:
-			vm.reg_operationA = vm.reg_operationA.(float64) > vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) > vm.stack.items[vm.stack.size].(float64)
 
 		case IT_IntLowerEqual:
-			vm.reg_operationA = vm.reg_operationA.(int64) <= vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) <= vm.stack.items[vm.stack.size].(int64)
 
 		case IT_FloatLowerEqual:
-			vm.reg_operationA = vm.reg_operationA.(float64) <= vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) <= vm.stack.items[vm.stack.size].(float64)
 
 		case IT_IntGreaterEqual:
-			vm.reg_operationA = vm.reg_operationA.(int64) >= vm.reg_operationB.(int64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(int64) >= vm.stack.items[vm.stack.size].(int64)
 
 		case IT_FloatGreaterEqual:
-			vm.reg_operationA = vm.reg_operationA.(float64) >= vm.reg_operationB.(float64)
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(float64) >= vm.stack.items[vm.stack.size].(float64)
 
-		case IT_NotOpA:
-			vm.reg_operationA = !vm.reg_operationA.(bool)
+		case IT_Not:
+			vm.stack.Push(!vm.stack.Pop().(bool))
 
-		case IT_NotOpB:
-			vm.reg_operationA = !vm.reg_operationB.(bool)
+		// Push boolens
+		case IT_PushTrue:
+			vm.stack.Push(true)
 
-		// Jumps
-		case IT_JumpBack:
-			vm.instructionIndex -= instruction.InstructionValue[0]
-
-		case IT_Jump:
-			vm.instructionIndex += instruction.InstructionValue[0]
-
-		case IT_JumpIfTrue:
-			if vm.reg_operationA.(bool) {
-				vm.instructionIndex += instruction.InstructionValue[0]
-			}
-
-		// Put bools in registers
-		case IT_SetRegATrue:
-			vm.reg_operationA = true
-
-		case IT_SetRegAFalse:
-			vm.reg_operationA = false
-
-		case IT_SetRegBTrue:
-			vm.reg_operationA = true
-
-		case IT_SetRegBFalse:
-			vm.reg_operationA = false
+		case IT_PushFalse:
+			vm.stack.Push(false)
 
 		// Scopes
 		case IT_PushScopeUnnamed:
@@ -370,14 +320,12 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.reg_scopeIndex--
 
 		// List operations
-		case IT_CreateListInListA:
-			vm.reg_listA = []interface{}{}
+		case IT_CreateList:
+			vm.stack.Push([]interface{}{})
 
-		case IT_AppendOpAToListA:
-			vm.reg_listA = append(vm.reg_listA.([]interface{}), vm.reg_operationA)
-
-		case IT_ListConcat:
-			vm.reg_operationA = append(vm.reg_operationA.([]interface{}), vm.reg_operationB.([]interface{})...)
+		case IT_AppendToList:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]interface{}), vm.stack.items[vm.stack.size])
 
 		// Ignore line offsets
 		case IT_LineOffset:

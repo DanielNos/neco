@@ -7,20 +7,15 @@ import (
 	VM "neco/virtualMachine"
 )
 
-func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
+func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	switch node.NodeType {
 	// Literal
 	case parser.NT_Literal:
-		cg.generateLiteral(node, loadLeft)
+		cg.generateLiteral(node)
 
 	// Function call
 	case parser.NT_FunctionCall:
 		cg.generateFunctionCall(node)
-		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyReturnToOpA, NO_ARGS})
-		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyReturnToOpB, NO_ARGS})
-		}
 
 	// Operators
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
@@ -53,7 +48,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})
 
 		if node.NodeType == parser.NT_NotEqual {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpA, NO_ARGS})
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
 		}
 
 	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
@@ -76,60 +71,32 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 
 	// Variables
 	case parser.NT_Variable:
-		cg.generateVariable(node.Value.(*parser.VariableNode).Identifier, loadLeft)
+		cg.generateVariable(node.Value.(*parser.VariableNode).Identifier)
 
 	// Lists
 	case parser.NT_List:
 		// Create list in ListA
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateListInListA, NO_ARGS})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateList, NO_ARGS})
 
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
-			cg.generateExpression(node, true)
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendOpAToListA, NO_ARGS})
-		}
-
-		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpA, NO_ARGS})
-		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyListAToOpB, NO_ARGS})
+			cg.generateExpression(node)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendToList, NO_ARGS})
 		}
 
 	// List values
 	case parser.NT_ListValue:
-		// OpB to OpStore
-		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpBToOpStore, NO_ARGS})
-		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToOpStore, NO_ARGS})
-		}
-
-		// Generate index expression to OpA/OpB
-		cg.generateExpression(node.Value.(*parser.ListValueNode).Index, loadLeft)
+		// Generate index expressio
+		cg.generateExpression(node.Value.(*parser.ListValueNode).Index)
 
 		// Create variable load instruction
-		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier, loadLeft)
+		cg.generateVariable(node.Value.(*parser.ListValueNode).Identifier)
 
-		// Change it's type to LoadListAtOpAToOpA/LoadListAtOpBToOpB
-		if loadLeft {
-			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListAtOpAToOpA
-		} else {
-			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListOpBToOpB
-		}
-
-		// Return data from OpStore to OpA/OpB
-		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
-		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpA, NO_ARGS})
-		}
+		// Change it's type to LoadListAt
+		cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_LoadListAt
 
 	case parser.NT_Not:
-		cg.generateExpression(node.Value.(*parser.BinaryNode).Right, loadLeft)
-		if loadLeft {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpA, NO_ARGS})
-		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_NotOpB, NO_ARGS})
-		}
+		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
@@ -137,69 +104,38 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node, loadLeft bool) {
 }
 
 func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNode) {
-	// Opearator on two leaf nodes
-	if binaryNode.Left.NodeType.IsLeaf() && binaryNode.Right.NodeType.IsLeaf() {
-		cg.generateExpression(binaryNode.Left, true)
-		cg.generateExpression(binaryNode.Right, false)
-		// Operator on left and leaf on right
-	} else if binaryNode.Right.NodeType.IsLeaf() {
-		cg.generateExpression(binaryNode.Left, true)
-		cg.generateExpression(binaryNode.Right, false)
-		// Operator on right and anything on left
-	} else {
-		cg.generateExpression(binaryNode.Right, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpAToOpStore, NO_ARGS})
-		cg.generateExpression(binaryNode.Left, true)
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CopyOpStoreToOpB, NO_ARGS})
-	}
+	cg.generateExpression(binaryNode.Left)
+	cg.generateExpression(binaryNode.Right)
 }
 
-func (cg *CodeGenerator) generateVariable(variableName string, loadLeft bool) {
+func (cg *CodeGenerator) generateVariable(variableName string) {
 	identifier := cg.findVariableIdentifier(variableName)
-
-	// Load variable to correct register
-	if loadLeft {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegA, []byte{identifier}})
-	} else {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadRegB, []byte{identifier}})
-	}
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Load, []byte{identifier}})
 }
 
-func (cg *CodeGenerator) generateLiteral(node *parser.Node, loadLeft bool) {
+func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	literalNode := node.Value.(*parser.LiteralNode)
-
-	instruction := VM.IT_LoadConstRegA
-	if !loadLeft {
-		instruction = VM.IT_LoadConstRegB
-	}
 
 	switch literalNode.DType {
 	// Bool
 	case data.DT_Bool:
-		if loadLeft {
-			if literalNode.Value.(bool) {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegATrue, NO_ARGS})
-			} else {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegAFalse, NO_ARGS})
-			}
+		if literalNode.Value.(bool) {
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushTrue, NO_ARGS})
 		} else {
-			if literalNode.Value.(bool) {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegBTrue, NO_ARGS})
-			} else {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetRegBFalse, NO_ARGS})
-			}
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushFalse, NO_ARGS})
 		}
 
 	// Int
 	case data.DT_Int:
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.intConstants[literalNode.Value.(int64)])}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[literalNode.Value.(int64)])}})
 
 	// Float
 	case data.DT_Float:
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
+
 	// String
 	case data.DT_String:
-		cg.instructions = append(cg.instructions, VM.Instruction{instruction, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
 	}
 }
 

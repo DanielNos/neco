@@ -179,12 +179,27 @@ func (ir *InstructionReader) readInstructions() {
 			// 1 argument 1 byte instruction
 		} else if instructionType <= IT_JumpIfTrue {
 			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 
+			// Declare list instruction
 			if instructionType == IT_DeclareList {
+				// Add declare list instruction with id argument
+				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 				ir.byteIndex++
+
+				// Add list instructions without arguments
+				for ir.bytes[ir.byteIndex] == IT_DeclareList {
+					ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{IT_DeclareList, NO_ARGS})
+					ir.byteIndex++
+				}
+
+				// Add inner-most type instructions without arguments
 				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
+
+				// Normal instruction
+			} else {
+				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 			}
+
 			// 0 argument instruction
 		} else if instructionType < IT_LineOffset {
 			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, NO_ARGS})
