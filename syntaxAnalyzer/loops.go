@@ -73,19 +73,26 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 		sn.consume()
 	}
 
-	// Check condition
+	// Check init statement
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
-		// Missing condition
+		// Missing init statement
 		if sn.peek().Value == "" {
-			sn.newError(sn.peek(), "Expected for loop initialization statement, found \"\\n\" instead.")
+			sn.newError(sn.peek(), "For loop missing init statement.")
 			return
-			// No condition
 		} else {
 			sn.consume()
 		}
-		// Check condition statement
+		// No init statement
+	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
+		sn.newError(sn.consume(), "For loop missing condition and step statement.")
+		return
+		// Check init statement
 	} else {
 		sn.analyzeStatement(false)
+
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
+		}
 	}
 
 	// Check condition
@@ -95,7 +102,7 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 			sn.newError(sn.peek(), "For loop missing condition and step statement.")
 			return
 		} else {
-			sn.newError(sn.peek(), "For loop missing condition.")
+			sn.consume()
 		}
 		// No condition
 	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
@@ -104,26 +111,24 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 		// Check condition expression
 	} else {
 		sn.analyzeExpression()
+
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
+		}
 	}
 
-	// Check step
+	// Empty step
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 		// No step
 	} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-		return
-	}
-
-	sn.analyzeStatement(false)
-
-	// Check closing parenthesis
-	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
-	} else {
 		sn.consume()
+		// Check step
+	} else {
+		sn.analyzeStatement(false)
 	}
 
-	if sn.lookFor(lexer.TT_DL_BraceOpen, "for loop condition", "opening brace", false) {
+	if sn.lookFor(lexer.TT_DL_BraceOpen, "for loop header", "opening brace", false) {
 		sn.analyzeScope()
 	}
 }

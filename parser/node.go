@@ -41,7 +41,7 @@ const (
 	NT_Return
 	NT_If
 	NT_Loop
-	NT_For
+	NT_ForLoop
 	NT_Break
 	NT_ListValue
 	NT_ListAssign
@@ -76,7 +76,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Return:          "Return",
 	NT_If:              "If",
 	NT_Loop:            "Loop",
-	NT_For:             "For",
+	NT_ForLoop:         "For",
 	NT_Break:           "Break",
 	NT_ListValue:       "ListValue",
 	NT_ListAssign:      "ListAssign",
@@ -161,10 +161,8 @@ type IfStatement struct {
 	Body      *Node
 }
 
-type ForNode struct {
-	InitStatement *Node
-	Condition     *Node
-	StepStatement *Node
+type ForLoopNode struct {
+	InitStatement []*Node
 	Body          *Node
 }
 

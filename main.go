@@ -88,8 +88,14 @@ func printInstructions(instructions *[]VM.Instruction) {
 			print("     ")
 		}
 
+		// Print instruction number
+		if i < 10 {
+			print(" ")
+		}
+		fmt.Printf("%d   ", i)
+
 		// Print instruction name
-		fmt.Printf("%d   %s", i, VM.InstructionTypeToString[instruction.InstructionType])
+		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
 
 		j := len(VM.InstructionTypeToString[instruction.InstructionType])
 		for j < 25 {

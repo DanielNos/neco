@@ -149,14 +149,16 @@ func visualize(node *Node, indent string, isLast bool) {
 		println("loop")
 		visualize(node.Value.(*Node), indent, true)
 
-	case NT_For:
+	case NT_ForLoop:
 		println("for")
 
-		forNode := node.Value.(*ForNode)
+		forNode := node.Value.(*ForLoopNode)
 
-		visualize(forNode.InitStatement, indent, false)
-		visualize(forNode.Condition, indent, false)
-		visualize(forNode.StepStatement, indent, false)
+		fmt.Printf("%s├─ Init\n", indent)
+
+		for i, node := range forNode.InitStatement {
+			visualize(node, indent+"│  ", i == len(forNode.InitStatement)-1)
+		}
 		visualize(forNode.Body, indent, true)
 
 	case NT_Break:

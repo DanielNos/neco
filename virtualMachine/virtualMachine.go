@@ -13,7 +13,7 @@ import (
 const (
 	STACK_SIZE              = 1024
 	STACK_RETURN_INDEX_SIZE = 1024
-	STACK_SCOPES_SIZE       = 100
+	STACK_SCOPES_SIZE       = 256
 	SYMBOL_MAP_SIZE         = 100
 )
 
