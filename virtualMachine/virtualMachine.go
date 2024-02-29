@@ -86,10 +86,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 	vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
+	step := false
+
 	for vm.instructionIndex < len(vm.Instructions) {
 		instruction := vm.Instructions[vm.instructionIndex]
-
-		//fmt.Printf("%s %v %v\n", InstructionTypeToString[instruction.InstructionType], instruction.InstructionValue, vm.stack.items[:vm.stack.size])
 
 		switch instruction.InstructionType {
 
@@ -330,6 +330,17 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.firstLine, instruction.InstructionType))
 		}
 
+		if step {
+			fmt.Printf("Instrcution: %s %v\n", InstructionTypeToString[instruction.InstructionType], instruction.InstructionValue)
+			fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
+			print("Scope: {")
+			fmt.Printf("%s", vm.stack_scopes[0])
+			for _, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
+				fmt.Printf(", %s", scope)
+			}
+			println("}")
+			fmt.Scanln()
+		}
 		vm.instructionIndex++
 	}
 }

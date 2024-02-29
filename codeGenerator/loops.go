@@ -22,7 +22,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	cg.leaveScope()
 
 	// Generate jump instruction back to start
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition + 1)}})
 
 	// Set destinations of break jumps
 	instructionCount := len(cg.instructions)

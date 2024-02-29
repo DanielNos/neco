@@ -89,27 +89,23 @@ func printInstructions(instructions *[]VM.Instruction) {
 		}
 
 		// Print instruction name
-		if i < 10 {
-			print(" ")
-		}
 		fmt.Printf("%d   %s", i, VM.InstructionTypeToString[instruction.InstructionType])
 
-		i := len(VM.InstructionTypeToString[instruction.InstructionType])
-		for i < 25 {
+		j := len(VM.InstructionTypeToString[instruction.InstructionType])
+		for j < 25 {
 			print(" ")
-			i++
+			j++
 		}
 
 		// Print arguments
-		for i := 0; i < len(instruction.InstructionValue); i++ {
-			fmt.Printf("%d", instruction.InstructionValue[i])
+		if len(instruction.InstructionValue) != 0 {
+			fmt.Printf("%d", instruction.InstructionValue[0])
 
-			j := len(fmt.Sprintf("%d", instruction.InstructionValue[i]))
-			for j < 5 {
-				print(" ")
-				j++
+			if instruction.InstructionType == VM.IT_JumpBack {
+				fmt.Printf(" (%d)", i-int(instruction.InstructionValue[0])+1)
+			} else if instruction.InstructionType == VM.IT_Jump || instruction.InstructionType == VM.IT_JumpIfTrue {
+				fmt.Printf(" (%d)", i+int(instruction.InstructionValue[0])+1)
 			}
-
 		}
 
 		println()
