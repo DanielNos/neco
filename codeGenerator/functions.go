@@ -5,6 +5,7 @@ import (
 	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
+	"strings"
 )
 
 func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) {
@@ -79,6 +80,10 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	} else if functionCall.Identifier == "exit" {
 		// Convert exit function to halt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
+		// List length
+	} else if strings.HasPrefix(identifier, "length") {
+		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{VM.BIF_ListLength}})
+		// Unknown function
 	} else {
 		panic("Unkown function.")
 	}

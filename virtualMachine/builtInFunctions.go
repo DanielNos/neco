@@ -28,7 +28,9 @@ const (
 	BIF_ReadLine
 	BIF_ReadChar
 
-	BIF_Length
+	BIF_StringLength
+	BIF_ListLength
+
 	BIF_ToLower
 	BIF_ToUpper
 
@@ -104,10 +106,14 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		char, _, _ := vm.reader.ReadRune()
 		vm.stack.Push(fmt.Sprintf("%c", char))
 
-	// String functions
-	case BIF_Length:
+	// Lengths
+	case BIF_StringLength:
 		vm.stack.Push(int64(len(vm.stack.Pop().(string))))
 
+	case BIF_ListLength:
+		vm.stack.Push(int64(len(vm.stack.Pop().([]interface{}))))
+
+	// String functions
 	case BIF_ToLower:
 		vm.stack.Push(strings.ToLower(vm.stack.Pop().(string)))
 
