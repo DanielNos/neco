@@ -11,7 +11,7 @@ func Optimize(instructions []VM.Instruction) {
 	for i := 0; i < 2; i++ {
 		instructions = append(instructions, VM.Instruction{255, []byte{}})
 	}
-	
+
 	// Optimize instructions
 	for i := 0; i < len(instructions); i++ {
 		// Combine line offsets
@@ -43,6 +43,19 @@ func Optimize(instructions []VM.Instruction) {
 			reduction := 0
 
 			for j := i; j < i+int(instructions[i].InstructionValue[0]); j++ {
+				if instructions[j].InstructionType == IGNORE_INSTRUCTION {
+					reduction++
+				}
+			}
+
+			// Reduce jump by that amount
+			instructions[i].InstructionValue[0] -= byte(reduction)
+		} else if instructions[i].InstructionType == VM.IT_JumpBack {
+			// Calculate all removed instructions between jump and it's destination
+
+			reduction := 0
+
+			for j := i; j > i-int(instructions[i].InstructionValue[0]); j-- {
 				if instructions[j].InstructionType == IGNORE_INSTRUCTION {
 					reduction++
 				}
