@@ -13,7 +13,7 @@ import (
 const (
 	STACK_SIZE              = 1024
 	STACK_RETURN_INDEX_SIZE = 1024
-	stack_scopes_SIZE       = 100
+	STACK_SCOPES_SIZE       = 100
 	SYMBOL_MAP_SIZE         = 100
 )
 
@@ -59,7 +59,7 @@ func NewVirutalMachine() *VirtualMachine {
 		stack_returnIndexes: make([]int, STACK_RETURN_INDEX_SIZE),
 
 		reg_scopeIndex: 0,
-		stack_scopes:   make([]string, stack_scopes_SIZE),
+		stack_scopes:   make([]string, STACK_SCOPES_SIZE),
 
 		reg_symbolIndex:    0,
 		stack_symbolTables: data.NewStack(),
@@ -128,6 +128,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PushScope:
 			vm.stack_scopes[vm.reg_scopeIndex] = vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.reg_scopeIndex++
+
+			if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
+				vm.traceLine()
+				logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			}
 
 			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
@@ -301,6 +306,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PushScopeUnnamed:
 			vm.stack_scopes[vm.reg_scopeIndex] = ""
 			vm.reg_scopeIndex++
+
+			if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
+				vm.traceLine()
+				logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			}
 
 			vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
