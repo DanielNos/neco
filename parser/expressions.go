@@ -119,6 +119,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
 		startPosition := p.consume().Position
 
+		// Skip EOC
+		if p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
+
 		// Collect edxpressions
 		expressions := []*Node{}
 		expressionTypes := map[data.DataType]int{}
@@ -135,10 +140,12 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			// Consume comma
 			if p.peek().TokenType == lexer.TT_DL_Comma {
 				p.consume()
-			}
 
-			// Skip EOCs
-			for p.peek().TokenType == lexer.TT_EndOfCommand {
+				// Skip EOC
+				if p.peek().TokenType == lexer.TT_EndOfCommand {
+					p.consume()
+				}
+			} else if p.peek().TokenType == lexer.TT_EndOfCommand {
 				p.consume()
 			}
 		}

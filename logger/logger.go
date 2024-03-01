@@ -5,6 +5,7 @@ import (
 	"fmt"
 	data "neco/dataStructures"
 	"os"
+	"strings"
 
 	color "github.com/fatih/color"
 )
@@ -66,10 +67,11 @@ func Error(message string) {
 }
 
 func ErrorPos(file *string, line, startChar, endChar uint, message string) {
-	// Print error line
+	// Read line
 	lineString, err := readLine(*file, line)
 
-	if err == nil {
+	// Print line
+	if err == nil && len(strings.Trim(lineString, "\n \t")) != 0 {
 		color.Set(color.FgWhite)
 
 		fmt.Fprint(os.Stderr, lineString[0:startChar-1])
@@ -83,12 +85,12 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 		color.Set(color.FgWhite)
 
 		fmt.Fprint(os.Stderr, lineString[endChar:])
-		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, "\n")
 	}
 
 	// Print message
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "\n[ERROR]   ")
+	fmt.Fprintf(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
