@@ -27,6 +27,7 @@ func printHelp() {
 	println("                 -tr --tree          Draws abstract syntax tree.")
 	println("                 -i  --instructions  Prints generated instructions.")
 	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
+	println("                 -s  --silent        Doesn't produce info messages when possible.")
 	println("\nrun [target]")
 	println("\nanalyze [target] -to --tokens  Prints lexed tokens.")
 	println("                 -tr --tree    Draws abstract syntax tree.")
@@ -161,6 +162,8 @@ func processArguments() (string, string, []bool) {
 				flags[2] = true
 			case "--dontOptimize", "-d":
 				flags[3] = true
+			case "--silent", "-s":
+				logger.LoggingLevel = logger.LL_Error
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
 			}

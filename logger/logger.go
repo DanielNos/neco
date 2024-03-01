@@ -10,6 +10,14 @@ import (
 	color "github.com/fatih/color"
 )
 
+const (
+	LL_Info byte = iota
+	LL_Warning
+	LL_Error
+)
+
+var LoggingLevel byte = LL_Info
+
 func readLine(filePath string, lineIndex uint) (string, error) {
 	// Open file
 	file, err := os.Open(filePath)
@@ -36,6 +44,10 @@ func readLine(filePath string, lineIndex uint) (string, error) {
 }
 
 func Success(message string) {
+	if LoggingLevel > LL_Info {
+		return
+	}
+
 	color.Set(color.FgHiGreen)
 	fmt.Print("[SUCCESS] ")
 	color.Set(color.FgHiWhite)
@@ -44,6 +56,10 @@ func Success(message string) {
 }
 
 func Info(message string) {
+	if LoggingLevel > LL_Info {
+		return
+	}
+
 	color.Set(color.FgHiWhite)
 	fmt.Print("[INFO]    ")
 
@@ -51,6 +67,10 @@ func Info(message string) {
 }
 
 func Warning(message string) {
+	if LoggingLevel > LL_Warning {
+		return
+	}
+
 	color.Set(color.FgHiYellow)
 	fmt.Print("[WARNING] ")
 	color.Set(color.FgHiWhite)
