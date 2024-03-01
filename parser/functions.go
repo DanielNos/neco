@@ -222,9 +222,17 @@ func (p *Parser) parseArguments() ([]*Node, []data.DataType, bool) {
 	errorCount := p.ErrorCount
 	var argument *Node
 	for {
+		if p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
+
 		argument = p.parseExpressionRoot()
 		argumentTypes = append(argumentTypes, p.GetExpressionType(argument))
 		arguments = append(arguments, argument)
+
+		if p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			break

@@ -8,8 +8,7 @@ import (
 func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// No expression
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
-		sn.newError(sn.peek(), "Expected expression, found EOC instead.")
-		return
+		sn.consume()
 	}
 
 	// Operator

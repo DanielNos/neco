@@ -9,6 +9,10 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 	sn.consume()
 	sn.analyzeAruments()
 
+	if sn.peek().TokenType == lexer.TT_EndOfCommand {
+		sn.consume()
+	}
+
 	// Check closing parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected \")\" after function call arguments, found \"%s\" instead.", sn.peek()))
@@ -24,8 +28,13 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 
 func (sn *SyntaxAnalyzer) analyzeAruments() {
 	for sn.peek().TokenType != lexer.TT_EndOfFile {
-		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_EndOfCommand {
+		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return
+		}
+
+		// Consume EOC
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
 		}
 
 		sn.analyzeExpression()

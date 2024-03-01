@@ -22,6 +22,10 @@ func (p *Parser) parseExpressionRoot() *Node {
 func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	var left *Node = nil
 
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
 	// Literal
 	if p.peek().TokenType.IsLiteral() {
 		var literalValue LiteralValue
