@@ -340,7 +340,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		}
 
 		if false {
-			fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[instruction.InstructionType], instruction.InstructionValue)
+			fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[vm.Instructions[prevII].InstructionType], vm.Instructions[prevII].InstructionValue)
 			fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
 			print("Scope: {")
 			fmt.Printf("%s", vm.stack_scopes[0])

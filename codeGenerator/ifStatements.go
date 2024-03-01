@@ -59,6 +59,5 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	}
 
 	// Assign distance to the end to the jump instruction in else block
-	updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition, VM.IT_JumpEx)
-	jumpFromElse.InstructionValue[0] = byte(endPosition - jumpFromElsePosition)
+	updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition-1, VM.IT_JumpEx)
 }
