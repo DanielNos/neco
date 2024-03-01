@@ -113,25 +113,6 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 	}
 }
 
-func (sn *SyntaxAnalyzer) collectLine() string {
-	statement := ""
-
-	for sn.peek().TokenType != lexer.TT_EndOfFile {
-		if sn.peek().TokenType == lexer.TT_EndOfCommand && sn.peek().Value == "" || sn.peek().TokenType == lexer.TT_DL_BraceOpen {
-			if len(statement) != 0 {
-				return statement[1:]
-			}
-			return ""
-		}
-		statement = fmt.Sprintf("%s %s", statement, sn.consume())
-	}
-
-	if len(statement) != 0 {
-		return statement[1:]
-	}
-	return ""
-}
-
 func (sn *SyntaxAnalyzer) Analyze() {
 	// Check StartOfFile
 	if sn.peek().TokenType != lexer.TT_StartOfFile {
@@ -343,22 +324,31 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		return false
 
 	default:
-		// Collect line and print error
+		// Collect rest of line and print error
 		startChar := sn.peek().Position.StartChar
-		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Invalid statement \"%s\".", statement))
+
+		for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
+			sn.consume()
+		}
+
+		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peekPrevious().Position.EndChar, "Invalid statement.")
 	}
 
-	// Collect tokens after statement
+	// Remaining tokens after statement
 	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
 		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_DL_BracketClose {
 			sn.consume()
 			return true
 		}
 
-		startChar := sn.peek().Position.StartChar
-		statement := sn.collectLine()
-		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.EndChar, fmt.Sprintf("Unexpected token/s \"%s\" after statement.", statement))
+		// Collect toklens after statement
+		startPosition := sn.peek().Position
+
+		for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
+			sn.consume()
+		}
+
+		sn.newErrorFromTo(startPosition.StartLine, startPosition.StartChar, sn.peekPrevious().Position.EndChar, "Unexpected token/s after statement.")
 	}
 	sn.consume()
 
