@@ -114,7 +114,7 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	// Optimize instructions
 	if cg.optimize {
-		codeOptimizer.Optimize(cg.instructions)
+		codeOptimizer.Optimize(&cg.instructions)
 	}
 
 	return &cg.instructions

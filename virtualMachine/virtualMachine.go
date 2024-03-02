@@ -340,6 +340,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		}
 		vm.instructionIndex++
 
+		// Debug stepper
 		if false {
 			fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[vm.Instructions[prevII].InstructionType], vm.Instructions[prevII].InstructionValue)
 			fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
@@ -356,7 +357,6 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			fmt.Printf("Instrcution after: %d %s %v\n", vm.instructionIndex+1, InstructionTypeToString[vm.Instructions[vm.instructionIndex].InstructionType], vm.Instructions[vm.instructionIndex].InstructionValue)
 			fmt.Scanln()
 		}
-
 	}
 }
 
