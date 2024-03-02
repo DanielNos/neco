@@ -164,7 +164,7 @@ func getExpressionType(expression *parser.Node) data.DataType {
 	case parser.NT_List:
 		return expression.Value.(*parser.ListNode).DataType
 	case parser.NT_ListValue:
-		return getExpressionType(expression.Value.(*parser.BinaryNode).Left)
+		return getExpressionType(expression.Value.(*parser.BinaryNode).Left).SubType.(data.DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))

@@ -1,7 +1,6 @@
 package codeGenerator
 
 import (
-	"fmt"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -24,7 +23,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	cg.leaveScope()
 
 	// Generate jump instruction back to start
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition + 1)}})
+	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
 
 	// Set destinations of break jumps
 	instructionCount := len(cg.instructions)
@@ -72,10 +71,8 @@ func (cg *CodeGenerator) generateForLoop(forLoop *parser.ForLoopNode) {
 
 	// Set destinations of break jumps
 	instructionCount := len(cg.instructions)
-	fmt.Printf("END OF LOOP: %d %v\n", len(cg.instructions), cg.instructions[len(cg.instructions)-1])
 
 	for _, b := range cg.scopeBreaks.Pop().([]Break) {
-		fmt.Printf("DISTANCE: %d\n", instructionCount-b.instructionPosition)
 		updateJumpDistance(b.instruction, instructionCount-b.instructionPosition, VM.IT_JumpEx)
 	}
 	cg.loopScopeDepths.Pop()

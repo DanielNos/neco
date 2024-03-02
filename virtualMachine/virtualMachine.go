@@ -338,6 +338,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.traceLine()
 			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.firstLine, instruction.InstructionType))
 		}
+		vm.instructionIndex++
 
 		if false {
 			fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[vm.Instructions[prevII].InstructionType], vm.Instructions[prevII].InstructionValue)
@@ -352,9 +353,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				}
 			}
 			println("}")
+			fmt.Printf("Instrcution after: %d %s %v\n", vm.instructionIndex+1, InstructionTypeToString[vm.Instructions[vm.instructionIndex].InstructionType], vm.Instructions[vm.instructionIndex].InstructionValue)
 			fmt.Scanln()
 		}
-		vm.instructionIndex++
+
 	}
 }
 

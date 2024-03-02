@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	data "neco/dataStructures"
 	"neco/lexer"
 )
@@ -107,4 +108,96 @@ func (p *Parser) parseFor() *Node {
 	p.leaveScope()
 
 	return &Node{forPosition, NT_ForLoop, &ForLoopNode{initStatement, body}}
+}
+
+func (p *Parser) parseForEach() *Node {
+	startPosition := p.consume().Position
+
+	// Consume (
+	p.consume()
+	iteratorPosition := p.peek().Position
+
+	// Generate iterator index variable declaration
+	indexIdentifier := fmt.Sprintf("LOOP_ITERATOR_%d", p.tokenIndex)
+	p.appendScope(&Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{data.DataType{data.DT_Int, nil}, false, []string{indexIdentifier}}})
+
+	// Generate assignment of zero to iterator index variable
+	zeroLiteral := &Node{iteratorPosition, NT_Literal, &LiteralNode{data.DT_Int, int64(0)}}
+	p.IntConstants[0] = -1 // Store zero in constants
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{indexIdentifier, zeroLiteral}})
+
+	// Generate variable declaration for list size
+	sizeIdentifier := fmt.Sprintf("LIST_SIZE_%d", p.tokenIndex)
+	sizeDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{data.DataType{data.DT_Int, nil}, false, []string{sizeIdentifier}}}
+	p.appendScope(sizeDeclaration)
+
+	// Set list size variable to list size
+	functionCallNode := &FunctionCallNode{-1, "length", nil, nil, &data.DataType{data.DT_Int, nil}}
+	sizeFunctionCall := &Node{iteratorPosition, NT_FunctionCall, functionCallNode}
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{sizeIdentifier, sizeFunctionCall}})
+
+	// Enter loop scope
+	p.enterScope()
+
+	// Generate if break
+	indexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, data.DataType{data.DT_Int, nil}}}
+	sizeVaraible := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, data.DataType{data.DT_Int, nil}}}
+	condition := &Node{iteratorPosition, NT_Equal, &BinaryNode{indexVariable, sizeVaraible, data.DataType{data.DT_Bool, nil}}}
+	breakNode := &Node{iteratorPosition, NT_Break, nil}
+	ifBody := &Node{iteratorPosition, NT_Scope, &ScopeNode{-1, []*Node{breakNode}}}
+	ifStatement := &IfStatement{condition, ifBody}
+	ifNode := &Node{iteratorPosition, NT_If, &IfNode{[]*IfStatement{ifStatement}, nil}}
+	p.appendScope(ifNode)
+
+	// Collect iterator variable
+	iteratorType := p.parseType()
+	iteratorIdentifier := p.consume().Value
+
+	// Declare it and insert to scope
+	iteratorDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{iteratorType, false, []string{iteratorIdentifier}}}
+	p.appendScope(iteratorDeclaration)
+
+	// Insert it into symbol table
+	p.insertSymbol(iteratorIdentifier, &Symbol{ST_Variable, &VariableSymbol{iteratorType, true, false}})
+
+	// Consume in
+	p.consume()
+
+	// Collect enumerated expression
+	expression := p.parseExpressionRoot()
+	expressionType := p.GetExpressionType(expression)
+
+	if expressionType.DType != data.DT_NoType {
+		expressionType = expressionType.SubType.(data.DataType)
+	}
+
+	// Assign to iterated_expression[interator_index] to iterator
+	iteratorIndexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, data.DataType{data.DT_Int, nil}}}
+	indexExpression := &Node{iteratorPosition, NT_ListValue, &BinaryNode{expression, iteratorIndexVariable, expressionType}}
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{iteratorIdentifier, indexExpression}})
+
+	// Add enumerated expression to previous length() function call
+	functionCallNode.Arguments = []*Node{expression}
+	functionCallNode.ArgumentTypes = []data.DataType{expressionType}
+
+	// Consume )
+	p.consume()
+
+	// Collect body
+	body := p.parseScope(false, true).(*Node)
+
+	// Generate iterator_index + 1
+	oneLiteral := &Node{iteratorPosition, NT_Literal, &LiteralNode{data.DT_Int, int64(1)}}
+	p.IntConstants[1] = -1 // Store one in constants
+
+	addOne := &Node{iteratorPosition, NT_Add, &BinaryNode{iteratorIndexVariable, oneLiteral, data.DataType{data.DT_Int, nil}}}
+
+	// Insert iterator_index = iterator_index + 1
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{indexIdentifier, addOne}})
+
+	// Leave scope
+	p.leaveScope()
+
+	// Consume
+	return &Node{startPosition.SetEndPos(p.peekPrevious().Position), NT_Loop, body}
 }

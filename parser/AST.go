@@ -161,6 +161,14 @@ func visualize(node *Node, indent string, isLast bool) {
 		}
 		visualize(forNode.Body, indent, true)
 
+	case NT_ForEachLoop:
+		println("forEach")
+		forEach := node.Value.(*ForEachLoopNode)
+
+		visualize(forEach.Iterator, indent, false)
+		visualize(forEach.IteratedExpression, indent, false)
+		visualize(forEach.Body, indent, true)
+
 	case NT_Break:
 		println("break")
 

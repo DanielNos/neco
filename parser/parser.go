@@ -294,8 +294,9 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_KW_for:
 		return p.parseFor()
 
-	case lexer.TT_EndOfFile:
-		return nil
+	// ForEach
+	case lexer.TT_KW_forEach:
+		return p.parseForEach()
 
 	// Scope
 	case lexer.TT_DL_BraceOpen:
@@ -309,6 +310,10 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_EndOfCommand:
 		p.consume()
 		return p.parseStatement(enteredScope)
+
+	// Return no node for EndOfFile token
+	case lexer.TT_EndOfFile:
+		return nil
 	}
 
 	panic(fmt.Sprintf("%v Unexpected token %s \"%s\".", p.peek().Position, p.peek().TokenType, p.consume()))

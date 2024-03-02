@@ -37,12 +37,12 @@ func Optimize(instructions []VM.Instruction) {
 
 	// Adjust jumps for removed instructions
 	for i := 0; i < len(instructions); i++ {
-		// Locate jump
+		// Jump forward
 		if VM.IsJumpForward(instructions[i].InstructionType) {
 			// Calculate all removed instructions between jump and it's destination
 			reduction := 0
 
-			for j := i; j < i+int(instructions[i].InstructionValue[0]); j++ {
+			for j := i; j < i+int(instructions[i].InstructionValue[0])+1; j++ {
 				if instructions[j].InstructionType == IGNORE_INSTRUCTION {
 					reduction++
 				}
@@ -50,6 +50,8 @@ func Optimize(instructions []VM.Instruction) {
 
 			// Reduce jump by that amount
 			instructions[i].InstructionValue[0] -= byte(reduction)
+
+			// Jump back
 		} else if instructions[i].InstructionType == VM.IT_JumpBack {
 			// Calculate all removed instructions between jump and it's destination
 

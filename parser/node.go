@@ -42,12 +42,14 @@ const (
 	NT_If
 	NT_Loop
 	NT_ForLoop
+	NT_ForEachLoop
 	NT_Break
 	NT_ListValue
 	NT_ListAssign
 	NT_List
 	NT_Variable
 	NT_Literal
+	NT_Delete
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -77,12 +79,14 @@ var NodeTypeToString = map[NodeType]string{
 	NT_If:              "If",
 	NT_Loop:            "Loop",
 	NT_ForLoop:         "For",
+	NT_ForEachLoop:     "ForEach",
 	NT_Break:           "Break",
 	NT_ListValue:       "ListValue",
 	NT_ListAssign:      "ListAssign",
 	NT_List:            "List",
 	NT_Variable:        "Variable",
 	NT_Literal:         "Literal",
+	NT_Delete:          "Delete",
 }
 
 func (nt NodeType) String() string {
@@ -164,6 +168,12 @@ type IfStatement struct {
 type ForLoopNode struct {
 	InitStatement []*Node
 	Body          *Node
+}
+
+type ForEachLoopNode struct {
+	Iterator           *Node
+	IteratedExpression *Node
+	Body               *Node
 }
 
 type ListNode struct {
