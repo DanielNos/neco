@@ -4,6 +4,7 @@ import (
 	"fmt"
 	data "neco/dataStructures"
 	"neco/lexer"
+	"neco/logger"
 )
 
 func (p *Parser) parseLoop() *Node {
@@ -118,7 +119,7 @@ func (p *Parser) parseForEach() *Node {
 	iteratorPosition := p.peek().Position
 
 	// Generate iterator index variable declaration
-	indexIdentifier := fmt.Sprintf("LOOP_ITERATOR_%d", p.tokenIndex)
+	indexIdentifier := fmt.Sprintf("@LOOP_ITERATOR_%d", p.tokenIndex)
 	p.appendScope(&Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{data.DataType{data.DT_Int, nil}, false, []string{indexIdentifier}}})
 
 	// Generate assignment of zero to iterator index variable
@@ -127,7 +128,7 @@ func (p *Parser) parseForEach() *Node {
 	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{indexIdentifier, zeroLiteral}})
 
 	// Generate variable declaration for list size
-	sizeIdentifier := fmt.Sprintf("LIST_SIZE_%d", p.tokenIndex)
+	sizeIdentifier := fmt.Sprintf("@LIST_SIZE_%d", p.tokenIndex)
 	sizeDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{data.DataType{data.DT_Int, nil}, false, []string{sizeIdentifier}}}
 	p.appendScope(sizeDeclaration)
 
@@ -139,7 +140,7 @@ func (p *Parser) parseForEach() *Node {
 	// Enter loop scope
 	p.enterScope()
 
-	// Generate if break
+	// Generate: if (index == size) { break }
 	indexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, data.DataType{data.DT_Int, nil}}}
 	sizeVaraible := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, data.DataType{data.DT_Int, nil}}}
 	condition := &Node{iteratorPosition, NT_Equal, &BinaryNode{indexVariable, sizeVaraible, data.DataType{data.DT_Bool, nil}}}
@@ -150,7 +151,10 @@ func (p *Parser) parseForEach() *Node {
 	p.appendScope(ifNode)
 
 	// Collect iterator variable
+	typePosition := p.peek().Position
 	iteratorType := p.parseType()
+	typePosition = typePosition.SetEndPos(p.peekPrevious().Position)
+
 	iteratorIdentifier := p.consume().Value
 
 	// Declare it and insert to scope
@@ -165,20 +169,26 @@ func (p *Parser) parseForEach() *Node {
 
 	// Collect enumerated expression
 	expression := p.parseExpressionRoot()
-	expressionType := p.GetExpressionType(expression)
+	elementType := p.GetExpressionType(expression)
 
-	if expressionType.DType != data.DT_NoType {
-		expressionType = expressionType.SubType.(data.DataType)
+	if elementType.DType != data.DT_NoType {
+		elementType = elementType.SubType.(data.DataType)
+	}
+
+	// Check if list element can be assigned to iterator
+	if !iteratorType.Equals(elementType) {
+		logger.Error2CodePos(typePosition, expression.Position, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", elementType, iteratorType))
+		p.newErrorNoMessage()
 	}
 
 	// Assign to iterated_expression[interator_index] to iterator
 	iteratorIndexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, data.DataType{data.DT_Int, nil}}}
-	indexExpression := &Node{iteratorPosition, NT_ListValue, &BinaryNode{expression, iteratorIndexVariable, expressionType}}
+	indexExpression := &Node{iteratorPosition, NT_ListValue, &BinaryNode{expression, iteratorIndexVariable, elementType}}
 	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{iteratorIdentifier, indexExpression}})
 
 	// Add enumerated expression to previous length() function call
 	functionCallNode.Arguments = []*Node{expression}
-	functionCallNode.ArgumentTypes = []data.DataType{expressionType}
+	functionCallNode.ArgumentTypes = []data.DataType{elementType}
 
 	// Consume )
 	p.consume()
