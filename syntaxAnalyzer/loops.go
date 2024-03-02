@@ -36,11 +36,11 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 		sn.consume()
 	}
 
-	// Check list identifier
-	if sn.peek().TokenType != lexer.TT_Identifier {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
+	// Check enumerated expression
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_EndOfCommand {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected enumerated expression after keyword \"in\", found \"%s\" instead.", sn.peek()))
 	} else {
-		sn.consume()
+		sn.analyzeExpression()
 	}
 
 	// Check closing parenthesis
