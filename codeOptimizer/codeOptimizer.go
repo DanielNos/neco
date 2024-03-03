@@ -1,7 +1,6 @@
 package codeOptimizer
 
 import (
-	"fmt"
 	VM "neco/virtualMachine"
 )
 
@@ -25,7 +24,6 @@ func Optimize(instructions *[]VM.Instruction) {
 		// Zero distance jump
 		if (*instructions)[i].InstructionType == VM.IT_Jump && (*instructions)[i].InstructionValue[0] == 0 {
 			(*instructions)[i].InstructionType = 255
-			fmt.Printf("DELETED JUMP %d\n ", i)
 			continue
 		}
 

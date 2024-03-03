@@ -208,7 +208,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateLoop(node.Value.(*parser.Node))
 
 	case parser.NT_ForLoop:
-		cg.generateForLoop(node.Value.(*parser.ForLoopNode))
+		cg.generateForLoop(node)
 
 	// Break
 	case parser.NT_Break:

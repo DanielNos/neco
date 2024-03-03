@@ -108,7 +108,7 @@ func (p *Parser) parseFor() *Node {
 
 	p.leaveScope()
 
-	return &Node{forPosition, NT_ForLoop, &ForLoopNode{initStatement, body}}
+	return &Node{forPosition.SetEndPos(p.peekPrevious().Position), NT_ForLoop, &ForLoopNode{initStatement, body}}
 }
 
 func (p *Parser) parseForEach() *Node {
@@ -171,6 +171,7 @@ func (p *Parser) parseForEach() *Node {
 	expression := p.parseExpressionRoot()
 	elementType := p.GetExpressionType(expression)
 
+	// Set element type to list subtype (if type was derived)
 	if elementType.DType != data.DT_NoType {
 		elementType = elementType.SubType.(data.DataType)
 	}
