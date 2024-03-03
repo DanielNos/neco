@@ -90,6 +90,10 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	// Read line
 	lineString, err := readLine(*file, line)
 
+	if int(endChar) >= len(lineString) {
+		endChar--
+	}
+
 	// Print line
 	if err == nil && len(strings.Trim(lineString, "\n \t")) != 0 {
 		color.Set(color.FgWhite)
