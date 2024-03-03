@@ -45,6 +45,9 @@ const (
 	IT_FloatPower
 	IT_FloatModulo
 
+	IT_And
+	IT_Or
+
 	IT_StringConcat
 	IT_ListConcat
 
@@ -118,6 +121,9 @@ var InstructionTypeToString = map[byte]string{
 	IT_FloatDivide:   "flt_div",
 	IT_FloatPower:    "flt_pow",
 	IT_FloatModulo:   "flt_mod",
+
+	IT_And: "and",
+	IT_Or:  "or",
 
 	IT_StringConcat: "string_concat",
 	IT_ListConcat:   "list_concat",

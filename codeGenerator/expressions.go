@@ -38,11 +38,21 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 			cg.instructions = append(cg.instructions, VM.Instruction{floatOperatorToInstruction[node.NodeType], NO_ARGS})
 		}
 
+	// Logical operators
+	case parser.NT_And:
+		// Generate arguments
+		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_And, NO_ARGS})
+
+	case parser.NT_Or:
+		// Generate arguments
+		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Or, NO_ARGS})
+
 	// Comparison operators
 	case parser.NT_Equal, parser.NT_NotEqual:
 		// Generate arguments
-		binaryNode := node.Value.(*parser.BinaryNode)
-		cg.generateExpressionArguments(binaryNode)
+		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
 
 		// Generate operator
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})

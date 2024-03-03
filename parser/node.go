@@ -21,9 +21,9 @@ const (
 	NT_StatementList
 	NT_VariableDeclare
 	NT_Assign
+	NT_Not
 	NT_And
 	NT_Or
-	NT_Not
 	NT_Add
 	NT_Subtract
 	NT_Multiply
@@ -58,9 +58,9 @@ var NodeTypeToString = map[NodeType]string{
 	NT_StatementList:   "StatementList",
 	NT_VariableDeclare: "VariableDeclare",
 	NT_Assign:          "Assign",
-	NT_And:             "&",
-	NT_Or:              "|",
 	NT_Not:             "!",
+	NT_And:             "AND",
+	NT_Or:              "OR",
 	NT_Add:             "+",
 	NT_Subtract:        "-",
 	NT_Multiply:        "*",
@@ -218,7 +218,7 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 }
 
 func (n *Node) IsBinaryNode() bool {
-	return n.NodeType >= NT_Add && n.NodeType <= NT_GreaterEqual && n.NodeType != NT_Not && n.Value.(*BinaryNode).Left != nil
+	return n.NodeType >= NT_And && n.NodeType <= NT_GreaterEqual && n.NodeType != NT_Not && n.Value.(*BinaryNode).Left != nil
 }
 
 func (nt NodeType) IsOperator() bool {

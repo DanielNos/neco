@@ -237,6 +237,15 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack.size--
 			vm.stack.items[vm.stack.size-1] = math.Mod(vm.stack.items[vm.stack.size-1].(float64), vm.stack.items[vm.stack.size].(float64))
 
+		// Logical operations
+		case IT_And:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(bool) && vm.stack.items[vm.stack.size].(bool)
+
+		case IT_Or:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(bool) || vm.stack.items[vm.stack.size].(bool)
+
 		// Concatenations
 		case IT_StringConcat:
 			vm.stack.size--
