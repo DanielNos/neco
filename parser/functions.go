@@ -46,8 +46,9 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.scopeNodeStack.Pop()
 	p.stack_symbolTablestack.Pop()
 
+	// Store function name as a string constant for scope trace back
 	p.StringConstants[identifierToken.Value] = -1
-	return &Node{start, NT_FunctionDeclare, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
+	return &Node{start.SetEndPos(p.peekPrevious().Position), NT_FunctionDeclare, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
 }
 
 func (p *Parser) parseFunctionHeader() {

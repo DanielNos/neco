@@ -47,27 +47,27 @@ type CodeGenerator struct {
 
 func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
 	codeGenerator := &CodeGenerator{
-		outputFile,
-		tree,
-		optimize,
+		filePath: outputFile,
+		tree:     tree,
+		optimize: optimize,
 
-		intConstants,
-		floatConstants,
-		stringConstants,
-		make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
+		intConstants:    intConstants,
+		floatConstants:  floatConstants,
+		stringConstants: stringConstants,
+		constants:       make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
 
-		[]VM.Instruction{},
+		instructions: []VM.Instruction{},
 
-		data.NewStack(),
-		data.NewStack(),
+		variableIdentifierCounters: data.NewStack(),
+		variableIdentifiers:        data.NewStack(),
 
-		[]int{},
+		functions: []int{},
 
-		data.NewStack(),
-		data.NewStack(),
+		scopeBreaks:     data.NewStack(),
+		loopScopeDepths: data.NewStack(),
 
-		0,
-		0,
+		line:       0,
+		ErrorCount: 0,
 	}
 
 	if !optimize {
@@ -103,12 +103,13 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclare {
+			// Generate line offset if line changed
 			if cg.line < node.Position.StartLine {
 				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
 				cg.line = node.Position.StartLine
 			}
 
-			cg.generateFunction(node.Value.(*parser.FunctionDeclareNode))
+			cg.generateFunction(node)
 		}
 	}
 

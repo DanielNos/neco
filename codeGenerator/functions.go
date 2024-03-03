@@ -8,7 +8,9 @@ import (
 	"strings"
 )
 
-func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) {
+func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
+	function := functionNode.Value.(*parser.FunctionDeclareNode)
+
 	// Store start position
 	cg.functions = append(cg.functions, len(cg.instructions))
 
@@ -42,6 +44,12 @@ func (cg *CodeGenerator) generateFunction(function *parser.FunctionDeclareNode) 
 	// Leave scope
 	cg.variableIdentifierCounters.Pop()
 	cg.variableIdentifiers.Pop()
+
+	// Generate line offset of closing brace
+	if cg.line < functionNode.Position.EndLine {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(functionNode.Position.EndLine - cg.line)}})
+		cg.line = functionNode.Position.EndLine
+	}
 
 	// Return
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
