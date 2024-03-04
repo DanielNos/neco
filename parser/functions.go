@@ -16,8 +16,13 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	p.functionIndex++
 
 	// Enter scope
-	p.enterScope()
 	p.consume()
+	p.enterScope()
+
+	// Insert parameters to scope
+	for _, parameter := range function.parameters {
+		p.insertSymbol(parameter.Identifier, &Symbol{ST_Variable, &VariableSymbol{parameter.DataType, true, false}})
+	}
 
 	// Move to body
 	var returnPosition *data.CodePos

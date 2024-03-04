@@ -107,10 +107,6 @@ func (p *Parser) newErrorNoMessage() {
 	}
 }
 
-func (p *Parser) insertSymbol(key string, symbol *Symbol) {
-	p.stack_symbolTablestack.Top.Value.(symbolTable)[key] = symbol
-}
-
 func (p *Parser) enterScope() {
 	p.stack_symbolTablestack.Push(symbolTable{})
 	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})

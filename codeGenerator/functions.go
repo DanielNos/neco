@@ -2,7 +2,6 @@ package codeGenerator
 
 import (
 	"fmt"
-	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
 	"strings"
@@ -15,35 +14,30 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	cg.functions = append(cg.functions, len(cg.instructions))
 
 	// Push scope
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScope, []byte{byte(cg.stringConstants[function.Identifier])}})
-	cg.variableIdentifierCounters.Push(uint8(0))
-	cg.variableIdentifiers.Push(map[string]uint8{})
+	cg.enterScope()
 
 	// Pop arguments and store them as variables
 	parameterCount := len(function.Parameters)
 	for i := parameterCount - 1; i >= 0; i-- {
-		// Declare variable for argument
-		switch function.Parameters[i].DataType.DType {
-		case data.DT_Bool:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, NO_ARGS})
-		case data.DT_Int:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, NO_ARGS})
-		case data.DT_Float:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, NO_ARGS})
-		case data.DT_String:
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, NO_ARGS})
-		}
 
-		// Store argument in variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{byte(parameterCount - i)}})
+		// Declare variable for argument
+		identifier := cg.variableIdentifierCounters.Top.Value.(uint8)
+		cg.variableIdentifiers.Top.Value.(map[string]uint8)[function.Parameters[i].Identifier] = identifier
+
+		// Generate declaration instruction
+		cg.generateVariableDeclarator(function.Parameters[i].DataType, true)
+
+		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
+
+		// Store argument from stack in the variable
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{identifier}})
 	}
 
 	// Generate function body
 	cg.generateStatements(function.Body.Value.(*parser.ScopeNode))
 
 	// Leave scope
-	cg.variableIdentifierCounters.Pop()
-	cg.variableIdentifiers.Pop()
+	cg.leaveScope()
 
 	// Generate line offset of closing brace
 	if cg.line < functionNode.Position.EndLine {

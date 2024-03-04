@@ -37,6 +37,10 @@ type FunctionSymbol struct {
 
 type symbolTable map[string]*Symbol
 
+func (p *Parser) insertSymbol(key string, symbol *Symbol) {
+	p.stack_symbolTablestack.Top.Value.(symbolTable)[key] = symbol
+}
+
 func (p *Parser) findSymbol(identifier string) *Symbol {
 	stackNode := p.stack_symbolTablestack.Top
 
