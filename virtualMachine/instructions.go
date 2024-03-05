@@ -99,7 +99,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_SetListAtPrevToCurr: "set_list",
 
 	IT_LoadConst:       "load_const",
-	IT_LoadConstToList: "append_const_list",
+	IT_LoadConstToList: "append_const",
 	IT_Load:            "load",
 	IT_Store:           "store",
 

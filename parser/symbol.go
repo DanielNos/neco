@@ -35,6 +35,11 @@ type FunctionSymbol struct {
 	everCalled bool
 }
 
+type PropertySymbol struct {
+	number   int
+	dataType data.DataType
+}
+
 type symbolTable map[string]*Symbol
 
 func (p *Parser) insertSymbol(key string, symbol *Symbol) {

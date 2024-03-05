@@ -7,7 +7,7 @@ import (
 	"neco/lexer"
 )
 
-func (p *Parser) parseFunctionDeclare() *Node {
+func (p *Parser) parseFunctionDeclaration() *Node {
 	start := p.consume().Position
 	identifierToken := p.consume()
 
@@ -56,69 +56,10 @@ func (p *Parser) parseFunctionDeclare() *Node {
 	return &Node{start.SetEndPos(p.peekPrevious().Position), NT_FunctionDeclare, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
 }
 
-func (p *Parser) parseFunctionHeader() {
-	// Find bucket
-	identifierToken := p.consume()
-	symbol := p.findSymbol(identifierToken.Value)
-
-	// Enter scope
-	p.enterScope()
-	p.consume()
-
-	// Collect parameters
-	parameters := p.parseParameters()
-
-	// Function entry() can't have parameters
-	if identifierToken.Value == "entry" && len(parameters) != 0 {
-		// TODO: Display position of parameters
-		p.newError(identifierToken.Position, "Function entry() can't have any parameters.")
-	}
-
-	// Check for redeclaration
-	if symbol != nil {
-		// Redeclaration of entry()
-		if identifierToken.Value == "entry" {
-			p.newError(identifierToken.Position, "Function entry() can't be overloaded.")
-		}
-
-		// Create parameters id and look for a function using it
-		if symbol.symbolType == ST_FunctionBucket {
-			id := createParametersIdentifier(parameters)
-			if symbol.value.(symbolTable)[id] != nil {
-				p.newError(identifierToken.Position, fmt.Sprintf("Redeclaration of symbol %s.", identifierToken.Value))
-			}
-		}
-	}
-
-	p.consume()
-
-	// Collect return type
-	returnType := data.DataType{data.DT_NoType, nil}
-	var returnPosition *data.CodePos
-
-	if p.peek().TokenType == lexer.TT_KW_returns {
-		returnPosition = p.consume().Position
-		returnType.DType = TokenTypeToDataType[p.consume().TokenType]
-		returnPosition.EndChar = p.peekPrevious().Position.EndChar
-
-		// Function entry() can't have a return type
-		if identifierToken.Value == "entry" {
-			p.newError(returnPosition, "Function entry() can't have a return type.")
-		}
-	}
-
-	// Leave scope
-	p.scopeNodeStack.Pop()
-	p.stack_symbolTablestack.Pop()
-
-	// Insert function symbol
-	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType, identifierToken.Value == "entry"})
-	p.functions = append(p.functions, newSymbol.value.(*FunctionSymbol))
-}
-
 func (p *Parser) parseParameters() []Parameter {
 	var paremeters = []Parameter{}
 
+	// No parameters
 	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 		return paremeters
 	}

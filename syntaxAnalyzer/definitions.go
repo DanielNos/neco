@@ -58,10 +58,22 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
 			}
 
-			// , instead of ;
-			if sn.peek().TokenType == lexer.TT_DL_Comma {
-				sn.newError(sn.consume(), "Unexpected token \",\" after enum name. Did you want \";\"?")
-				continue
+			// More identifiers of same type
+			for sn.peek().TokenType == lexer.TT_DL_Comma {
+				sn.consume()
+
+				// No identifier
+				if sn.peek().TokenType != lexer.TT_Identifier {
+					sn.newError(sn.peek(), "Expected property identifier after comma.")
+
+					// End of property
+					if sn.peek().TokenType == lexer.TT_EndOfCommand {
+						continue
+					}
+					// Consume identifier
+				} else {
+					sn.consume()
+				}
 			}
 
 			// Tokens after identifier
