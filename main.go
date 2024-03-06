@@ -58,11 +58,11 @@ func printTokens(tokens []*lexer.Token) {
 }
 
 func printInstructions(instructions *[]VM.Instruction) {
-	line := int((*instructions)[0].InstructionValue[0]) - 1
+	line := int((*instructions)[0].InstructionValue[0])
 	linePadder := "  "
 	justChanged := true
 
-	for i, instruction := range *instructions {
+	for i, instruction := range (*instructions)[1:] {
 		// Skip removed instruction
 		if instruction.InstructionType == 255 {
 			continue
@@ -83,7 +83,7 @@ func printInstructions(instructions *[]VM.Instruction) {
 
 		// Print line number
 		if justChanged {
-			fmt.Printf("%s%d  ", linePadder, line)
+			fmt.Printf("%s%d ", linePadder, line)
 			justChanged = false
 		} else {
 			print("     ")
