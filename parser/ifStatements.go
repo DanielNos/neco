@@ -38,7 +38,7 @@ func (p *Parser) parseIfStatement() *Node {
 			// Check condition type
 			elifConditionType := p.GetExpressionType(elifCondition)
 
-			if elifConditionType.DType != data.DT_Bool {
+			if elifConditionType.DType != data.DT_NoType && elifConditionType.DType != data.DT_Bool {
 				p.newError(elifCondition.Position, "Condition expression data type has to be Bool.")
 			}
 
@@ -88,7 +88,7 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	// Check condition type
 	conditionType := p.GetExpressionType(condition)
 
-	if conditionType.DType != data.DT_Bool {
+	if conditionType.DType != data.DT_NoType && conditionType.DType != data.DT_Bool {
 		p.newError(condition.Position, "Condition expression data type has to be Bool.")
 	}
 

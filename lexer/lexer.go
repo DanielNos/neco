@@ -198,24 +198,24 @@ func (l *Lexer) lexRune() {
 		case '=':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Equal, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_Equal, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_Assign, "")
 			}
 		case '<':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_LowerEqual, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_LowerEqual, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Lower, "")
 			}
 		case '>':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_GreaterEqual, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_GreaterEqual, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Greater, "")
 			}
@@ -223,35 +223,35 @@ func (l *Lexer) lexRune() {
 		case '+':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_AddAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_AddAssign, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Add, "")
 			}
 		case '-':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_SubtractAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_SubtractAssign, "")
 			} else if l.currRune == '>' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_returns, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_returns, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Subtract, "")
 			}
 		case '*':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_MultiplyAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_MultiplyAssign, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Multiply, "")
 			}
 		case '/':
 			l.advance()
 			if l.currRune == '=' { // /=
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_DivideAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_DivideAssign, "")
 			} else if l.currRune == '/' { // //
 				l.advance()
 				l.skipComment()
@@ -264,24 +264,24 @@ func (l *Lexer) lexRune() {
 		case '^':
 			l.advance()
 			if l.currRune == '=' { // ^=
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_PowerAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_PowerAssign, "")
 			} else { // ^
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Power, "")
 			}
 		case '%':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_KW_ModuloAssign, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_KW_ModuloAssign, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Modulo, "")
 			}
 		case '!':
 			l.advance()
 			if l.currRune == '=' {
-				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_NotEqual, "")
 				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_NotEqual, "")
 			} else {
 				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Not, "")
 			}
