@@ -72,7 +72,7 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 			if variableTypes[i].DType == data.DT_NoType {
 				variableTypes[i] = expressionType
 				// Variable has a type and it's incompatible with expression
-			} else if !expressionType.Equals(variableTypes[i]) {
+			} else if !variableTypes[i].Equals(expressionType) {
 
 				// Assign type to empty list literal
 				if variableTypes[i].DType == data.DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {

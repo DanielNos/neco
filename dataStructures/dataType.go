@@ -1,6 +1,8 @@
 package dataStructures
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type DType uint8
 
@@ -74,6 +76,9 @@ func (vt DataType) Equals(other DataType) bool {
 
 	// Compare enum names
 	if vt.DType == DT_Enum && other.DType == DT_Enum {
+		if vt.SubType == nil || other.SubType == nil {
+			return true
+		}
 		return vt.SubType == other.SubType
 	}
 
@@ -84,6 +89,18 @@ func (dt DataType) String() string {
 	if dt.DType <= DT_Any {
 		return dt.DType.String()
 	} else if dt.DType <= DT_Struct {
+		return dt.SubType.(string)
+	} else {
+		return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
+	}
+}
+
+func (dt DataType) Signature() string {
+	if dt.DType <= DT_Any {
+		return dt.DType.String()
+	} else if dt.DType == DT_Enum {
+		return "Enum"
+	} else if dt.DType == DT_Struct {
 		return dt.SubType.(string)
 	} else {
 		return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))

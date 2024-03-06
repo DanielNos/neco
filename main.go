@@ -84,6 +84,9 @@ func printInstructions(instructions *[]VM.Instruction) {
 		// Print line number
 		if justChanged {
 			fmt.Printf("%s%d ", linePadder, line)
+			if line < 10 {
+				print(" ")
+			}
 			justChanged = false
 		} else {
 			print("     ")

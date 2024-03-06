@@ -68,7 +68,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	if overloaded {
 		// Add parameter types to identifier so it can be matched to correct function
 		for _, argumentType := range functionCall.ArgumentTypes {
-			identifier = fmt.Sprintf("%s.%s", identifier, argumentType)
+			identifier = fmt.Sprintf("%s.%s", identifier, argumentType.Signature())
 		}
 	}
 

@@ -14,6 +14,8 @@ const (
 	BIF_AnyToString
 
 	BIF_BoolToInt
+	BIF_EnumToInt
+
 	BIF_IntToFloat
 
 	BIF_Floor

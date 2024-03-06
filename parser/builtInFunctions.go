@@ -5,30 +5,39 @@ import data "neco/dataStructures"
 var NO_PARAMS = []Parameter{}
 
 func (p *Parser) insertBuiltInFunctions() {
+	// Prints
 	p.insertFunction("print", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_String, nil}, "text", nil}},
 		data.DataType{data.DT_NoType, nil}, true},
 	)
-
 	p.insertFunction("printLine", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_String, nil}, "text", nil}},
 		data.DataType{data.DT_NoType, nil}, true},
 	)
 
+	// To string
 	p.insertFunction("str", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Any, nil}, "value", nil}},
 		data.DataType{data.DT_String, nil}, true},
 	)
 
+	// To int
 	p.insertFunction("int", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Bool, nil}, "boolean", nil}},
 		data.DataType{data.DT_Int, nil}, true},
 	)
+	p.insertFunction("int", &FunctionSymbol{-1,
+		[]Parameter{{data.DataType{data.DT_Enum, nil}, "enum", nil}},
+		data.DataType{data.DT_Int, nil}, true},
+	)
+
+	// To float
 	p.insertFunction("flt", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Int, nil}, "integer", nil}},
 		data.DataType{data.DT_Float, nil}, true},
 	)
 
+	// Round/ceil/floor float
 	p.insertFunction("floor", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Float, nil}, "float", nil}},
 		data.DataType{data.DT_Float, nil}, true},
@@ -42,6 +51,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_Float, nil}, true},
 	)
 
+	// Round/ceil/floor to int
 	p.insertFunction("floorToInt", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Float, nil}, "float", nil}},
 		data.DataType{data.DT_Int, nil}, true},
@@ -55,6 +65,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_Int, nil}, true},
 	)
 
+	// Absolute values
 	p.insertFunction("abs", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Int, nil}, "integer", nil}},
 		data.DataType{data.DT_Int, nil}, true},
@@ -64,9 +75,11 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_Float, nil}, true},
 	)
 
+	// Reading text from terminal
 	p.insertFunction("readLine", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_String, nil}, true})
 	p.insertFunction("readChar", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_String, nil}, true})
 
+	// Length of strings
 	p.insertFunction("length", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_String, nil}, "string", nil}},
 		data.DataType{data.DT_Int, nil}, true},
@@ -76,6 +89,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_Int, nil}, true},
 	)
 
+	// String to upper/lower
 	p.insertFunction("toLower", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_String, nil}, "string", nil}},
 		data.DataType{data.DT_String, nil}, true},
@@ -85,6 +99,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_String, nil}, true},
 	)
 
+	// Random ints/floats
 	p.insertFunction("randomInt", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_Int, nil}, true})
 	p.insertFunction("randomFlt", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_Float, nil}, true})
 	p.insertFunction("randomRangeInt", &FunctionSymbol{-1,
@@ -92,13 +107,13 @@ func (p *Parser) insertBuiltInFunctions() {
 		data.DataType{data.DT_Int, false}, true},
 	)
 
+	// Exit
 	p.insertFunction("exit", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_Int, nil}, "exitCode", nil}},
 		data.DataType{data.DT_NoType, nil}, true},
 	)
 
-	p.insertFunction("line", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_NoType, nil}, true})
-
 	// Debug fucntions
+	p.insertFunction("line", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_NoType, nil}, true})
 	p.insertFunction("trace", &FunctionSymbol{-1, NO_PARAMS, data.DataType{data.DT_NoType, nil}, true})
 }
