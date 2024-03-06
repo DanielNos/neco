@@ -337,6 +337,12 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_IndexList:
 			vm.stack.size--
+
+			if int64(len(vm.stack.items[vm.stack.size-1].([]interface{})))-1 < vm.stack.items[vm.stack.size].(int64) {
+				vm.traceLine()
+				logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]interface{})), vm.stack.items[vm.stack.size].(int64)))
+			}
+
 			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]interface{})[vm.stack.items[vm.stack.size].(int64)]
 
 		// Ignore line offsets
