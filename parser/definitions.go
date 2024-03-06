@@ -104,7 +104,25 @@ func (p *Parser) parseEnum() {
 	constantIndex := int64(0)
 
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
-		constants[p.consume().Value] = int64(constantIndex)
+		// Collect identifier
+		constantIdentifier := p.consume().Value
+
+		// Change index
+		if p.peek().TokenType == lexer.TT_KW_Assign {
+			p.consume()
+
+			expression := p.parseExpressionRoot()
+
+			// New index can't be lower than current index
+			if expression.Value.(*LiteralNode).Value.(int64) < constantIndex {
+				p.newError(expression.Position, "Constant indexes can't be used for multiple enumerator constants.")
+			}
+
+			constantIndex = expression.Value.(*LiteralNode).Value.(int64)
+		}
+
+		// Store constant
+		constants[constantIdentifier] = int64(constantIndex)
 		constantIndex++
 
 		// Consume EOCs
