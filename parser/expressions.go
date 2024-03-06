@@ -28,6 +28,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 	// Literal
 	if p.peek().TokenType.IsLiteral() {
+		// Parse literal value from token value string
 		var literalValue LiteralValue
 
 		switch p.peek().TokenType {
@@ -70,54 +71,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
-		symbol := p.findSymbol(p.peek().Value)
-
-		// Undeclared symbol
-		if symbol == nil {
-			identifier := p.consume()
-
-			// Undeclared function
-			if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-				p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
-				left = p.parseFunctionCall(nil, identifier)
-				// Undeclared variable
-			} else {
-				p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
-				left = &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, data.DataType{data.DT_NoType, nil}}}
-			}
-			// Function call
-		} else if symbol.symbolType == ST_FunctionBucket {
-			left = p.parseFunctionCall(symbol, p.consume())
-			// Variable
-		} else if symbol.symbolType == ST_Variable {
-			// Uninitialized variable
-			if !symbol.value.(*VariableSymbol).isInitialized {
-				p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
-			}
-
-			identifierToken := p.consume()
-
-			// List element
-			if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-				// Consume index
-				for p.peek().TokenType == lexer.TT_DL_BracketOpen {
-					p.consume()
-					if left == nil {
-						variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-						left = &Node{identifierToken.Position, NT_ListValue, &BinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
-					} else {
-						left = &Node{identifierToken.Position, NT_ListValue, &BinaryNode{left, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
-					}
-
-					p.consume()
-				}
-				// Normal variable
-			} else {
-				left = &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-			}
-		} else {
-			left = &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
-		}
+		left = p.parseIdentifier()
 
 		// List
 	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
@@ -228,88 +182,65 @@ func operatorPrecedence(operator lexer.TokenType) int {
 		return 4
 	case lexer.TT_OP_Not:
 		return 5
+	case lexer.TT_OP_Dot:
+		return 6
 	default:
 		panic(fmt.Sprintf("Can't get operator precedence of token type %s.", operator))
 	}
 }
 
-func (p *Parser) GetExpressionType(expression *Node) data.DataType {
-	if expression.NodeType.IsOperator() {
-		// Unary operator
-		if expression.Value.(*BinaryNode).Left == nil {
-			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
-			expression.Value.(*BinaryNode).DataType = unaryType
-			return unaryType
+func (p *Parser) parseIdentifier() *Node {
+	symbol := p.findSymbol(p.peek().Value)
+
+	// Undeclared symbol
+	if symbol == nil {
+		identifier := p.consume()
+
+		// Undeclared function
+		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
+			p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
+			return p.parseFunctionCall(nil, identifier)
+			// Undeclared variable
+		} else {
+			p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
+			return &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, data.DataType{data.DT_NoType, nil}}}
+		}
+		// Function call
+	} else if symbol.symbolType == ST_FunctionBucket {
+		return p.parseFunctionCall(symbol, p.consume())
+		// Variable
+	} else if symbol.symbolType == ST_Variable {
+		// Uninitialized variable
+		if !symbol.value.(*VariableSymbol).isInitialized {
+			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
 		}
 
-		leftType := p.GetExpressionType(expression.Value.(*BinaryNode).Left)
-		rightType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
+		identifierToken := p.consume()
 
-		// Error in one of types
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
-			return data.DataType{data.DT_NoType, nil}
+		// List element
+		if p.peek().TokenType == lexer.TT_DL_BracketOpen {
+			// Consume index
+			for p.peek().TokenType == lexer.TT_DL_BracketOpen {
+				p.consume() // [
+				variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
+				listValue := &Node{identifierToken.Position, NT_ListValue, &BinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
+				p.consume() // ]
+
+				return listValue
+			}
+			// Normal variable
+		} else {
+			return &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
 		}
+		// Enum
+	} else if symbol.symbolType == ST_Enum {
+		identifierToken := p.consume()
+		p.consume() // .
 
-		// Same type on both sides
-		if leftType.Equals(rightType) {
-			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return data.DataType{data.DT_Bool, nil}
-			}
-
-			// Comparison operators return boolean
-			if expression.NodeType.IsComparisonOperator() {
-				expression.Value.(*BinaryNode).DataType = data.DataType{data.DT_Bool, nil}
-				return data.DataType{data.DT_Bool, nil}
-			}
-
-			// Only + can be used on strings and lists
-			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
-				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
-				return data.DataType{data.DT_NoType, nil}
-			}
-
-			// Return left type
-			if leftType.DType != data.DT_NoType {
-				expression.Value.(*BinaryNode).DataType = leftType
-				return leftType
-			}
-
-			// Return right type
-			if rightType.DType != data.DT_NoType {
-				expression.Value.(*BinaryNode).DataType = rightType
-				return rightType
-			}
-
-			// Neither have type
-			return leftType
-		}
-
-		// Failed to get data type
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
-			return data.DataType{data.DT_NoType, nil}
-		}
-
-		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-
-		return data.DataType{data.DT_NoType, nil}
+		return &Node{identifierToken.Position.SetEndPos(p.peek().Position), NT_Enum, &EnumNode{identifierToken.Value, symbol.value.(map[string]int64)[p.consume().Value]}}
 	}
 
-	switch expression.NodeType {
-	case NT_Literal:
-		return data.DataType{expression.Value.(*LiteralNode).DType, nil}
-	case NT_Variable:
-		return expression.Value.(*VariableNode).DataType
-	case NT_FunctionCall:
-		return *expression.Value.(*FunctionCallNode).ReturnType
-	case NT_List:
-		return expression.Value.(*ListNode).DataType
-	case NT_ListValue:
-		return p.GetExpressionType(expression.Value.(*BinaryNode).Left).SubType.(data.DataType)
-	}
-
-	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
+	return &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
 }
 
 func (p *Parser) collectConstants(expression *Node) {
@@ -446,4 +377,91 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 
 	// Invalid operation, can't combine
 	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+}
+
+func (p *Parser) GetExpressionType(expression *Node) data.DataType {
+	if expression.NodeType.IsOperator() {
+		// Unary operator
+		if expression.Value.(*BinaryNode).Left == nil {
+			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
+			expression.Value.(*BinaryNode).DataType = unaryType
+			return unaryType
+		}
+
+		leftType := p.GetExpressionType(expression.Value.(*BinaryNode).Left)
+		rightType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
+
+		// Error in one of types
+		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+			return data.DataType{data.DT_NoType, nil}
+		}
+
+		// Same type on both sides
+		if leftType.Equals(rightType) {
+			// Can't do operations on enums
+			if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
+				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
+				return data.DataType{data.DT_NoType, nil}
+			}
+
+			// Logic operators can be used only on booleans
+			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
+				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
+				return data.DataType{data.DT_Bool, nil}
+			}
+
+			// Comparison operators return boolean
+			if expression.NodeType.IsComparisonOperator() {
+				expression.Value.(*BinaryNode).DataType = data.DataType{data.DT_Bool, nil}
+				return data.DataType{data.DT_Bool, nil}
+			}
+
+			// Only + can be used on strings and lists
+			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
+				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
+				return data.DataType{DType: data.DT_NoType, SubType: nil}
+			}
+
+			// Return left type
+			if leftType.DType != data.DT_NoType {
+				expression.Value.(*BinaryNode).DataType = leftType
+				return leftType
+			}
+
+			// Return right type
+			if rightType.DType != data.DT_NoType {
+				expression.Value.(*BinaryNode).DataType = rightType
+				return rightType
+			}
+
+			// Neither have type
+			return leftType
+		}
+
+		// Failed to get data type
+		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+			return data.DataType{data.DT_NoType, nil}
+		}
+
+		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
+
+		return data.DataType{data.DT_NoType, nil}
+	}
+
+	switch expression.NodeType {
+	case NT_Literal:
+		return data.DataType{expression.Value.(*LiteralNode).DType, nil}
+	case NT_Variable:
+		return expression.Value.(*VariableNode).DataType
+	case NT_FunctionCall:
+		return *expression.Value.(*FunctionCallNode).ReturnType
+	case NT_List:
+		return expression.Value.(*ListNode).DataType
+	case NT_ListValue:
+		return p.GetExpressionType(expression.Value.(*BinaryNode).Left).SubType.(data.DataType)
+	case NT_Enum:
+		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
+	}
+
+	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
 }

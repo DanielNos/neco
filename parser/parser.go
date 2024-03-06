@@ -248,7 +248,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	// Identifier
 	case lexer.TT_Identifier:
-		return p.parseIdentifier()
+		return p.parseIdentifierStatement()
 
 	// Return
 	case lexer.TT_KW_return:
@@ -314,8 +314,29 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 }
 
 func (p *Parser) parseType() data.DataType {
-	variableType := data.DataType{TokenTypeToDataType[p.consume().TokenType], nil}
+	// Convert current token to data type
+	variableType := data.DataType{TokenTypeToDataType[p.peek().TokenType], nil}
 
+	// Token is not a data type keyword => it's enum or struct
+	if variableType.DType == data.DT_NoType {
+		symbol := p.getGlobalSymbol(p.peek().Value)
+
+		// Symbol is a struct
+		if symbol.symbolType == ST_Struct {
+			variableType.DType = data.DT_Struct
+			// Symbol is a enum
+		} else if symbol.symbolType == ST_Enum {
+			variableType.DType = data.DT_Enum
+		}
+
+		// Set sub-type to struct/enum name
+		variableType.SubType = p.peek().Value
+	}
+
+	// Create data type
+	p.consume()
+
+	// Insert subtype to list data type
 	if variableType.DType == data.DT_List {
 		p.consume()
 		variableType.SubType = p.parseType()

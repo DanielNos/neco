@@ -10,7 +10,7 @@ func (l *Lexer) lexLetter() {
 	l.token.WriteRune(l.currRune)
 	l.advance()
 
-	for unicode.IsLetter(l.currRune) || unicode.IsDigit(l.currRune) || l.currRune == '_' || l.currRune == '.' {
+	for unicode.IsLetter(l.currRune) || unicode.IsDigit(l.currRune) || l.currRune == '_' {
 		l.token.WriteRune(l.currRune)
 		l.advance()
 	}

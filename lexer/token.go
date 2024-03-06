@@ -26,6 +26,8 @@ const (
 	TT_OP_And
 	TT_OP_Or
 
+	TT_OP_Dot
+
 	TT_OP_Add
 	TT_OP_Subtract
 	TT_OP_Multiply
@@ -102,6 +104,8 @@ var TokenTypeToString = map[TokenType]string{
 	TT_OP_And: "&",
 	TT_OP_Or:  "|",
 	TT_OP_Not: "!",
+
+	TT_OP_Dot: ".",
 
 	TT_OP_Add:      "+",
 	TT_OP_Subtract: "-",

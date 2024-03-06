@@ -291,6 +291,9 @@ func (l *Lexer) lexRune() {
 		case '|':
 			l.advance()
 			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Or, "")
+		case '.':
+			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Dot, "")
 
 		// EOC
 		case ';':

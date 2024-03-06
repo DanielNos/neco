@@ -11,7 +11,8 @@ const (
 	DT_Float
 	DT_String
 	DT_Any
-	DT_UserDefined
+	DT_Enum
+	DT_Struct
 	DT_List
 )
 
@@ -29,10 +30,12 @@ func (dt DType) String() string {
 		return "String"
 	case DT_Any:
 		return "Any"
+	case DT_Enum:
+		return "Enum"
+	case DT_Struct:
+		return "Struct"
 	case DT_List:
 		return "List"
-	case DT_UserDefined:
-		return "Custom"
 	}
 
 	return "[INVALID DATA TYPE]"
@@ -44,29 +47,45 @@ type DataType struct {
 }
 
 func (vt DataType) Equals(other DataType) bool {
+	// No type can't equal any other type
 	if vt.DType == DT_NoType || other.DType == DT_NoType {
 		return false
 	}
 
+	// Compare basic data types
 	if vt.DType <= DT_String && other.DType <= DT_String {
 		return vt.DType == other.DType
 	}
 
+	// Any can be assigned anything (except NoType)
 	if vt.DType == DT_Any {
 		return true
 	}
 
+	// Lists
 	if vt.DType == DT_List && other.DType == DT_List {
 		return vt.SubType.(DataType).Equals(other.SubType.(DataType))
+	}
+
+	// Compare struct names
+	if vt.DType == DT_Struct && other.DType == DT_Struct {
+		return vt.SubType == other.SubType
+	}
+
+	// Compare enum names
+	if vt.DType == DT_Enum && other.DType == DT_Enum {
+		return vt.SubType == other.SubType
 	}
 
 	return false
 }
 
 func (dt DataType) String() string {
-	if dt.DType <= DT_UserDefined {
+	if dt.DType <= DT_Any {
 		return dt.DType.String()
+	} else if dt.DType <= DT_Struct {
+		return dt.SubType.(string)
+	} else {
+		return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
 	}
-
-	return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
 }

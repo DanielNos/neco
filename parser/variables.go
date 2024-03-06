@@ -14,31 +14,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	variableType := p.parseType()
 
 	// Collect identifiers
-	identifierTokens := []*lexer.Token{}
-	identifiers := []string{}
-	variableTypes := []data.DataType{}
-
-	for p.peek().TokenType != lexer.TT_EndOfFile {
-		identifierTokens = append(identifierTokens, p.peek())
-		identifiers = append(identifiers, p.peek().Value)
-		variableTypes = append(variableTypes, variableType)
-
-		// Check if variable is redeclared
-		symbol := p.getSymbol(p.peek().Value)
-
-		if symbol != nil {
-			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
-		} else {
-			p.consume()
-		}
-
-		// More identifiers
-		if p.peek().TokenType == lexer.TT_DL_Comma {
-			p.consume()
-		} else {
-			break
-		}
-	}
+	identifierTokens, identifiers, variableTypes := p.parseVariableIdentifiers(variableType)
 
 	// Create node
 	declareNode := &Node{startPosition.SetEndPos(identifierTokens[len(identifierTokens)-1].Position), NT_VariableDeclare, &VariableDeclareNode{variableType, constant, identifiers}}

@@ -22,6 +22,7 @@ const (
 	NT_VariableDeclare
 	NT_Assign
 	NT_Not
+	NT_Property
 	NT_And
 	NT_Or
 	NT_Add
@@ -50,6 +51,7 @@ const (
 	NT_Variable
 	NT_Literal
 	NT_Delete
+	NT_Enum
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -59,6 +61,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_VariableDeclare: "VariableDeclare",
 	NT_Assign:          "Assign",
 	NT_Not:             "!",
+	NT_Property:        ".",
 	NT_And:             "AND",
 	NT_Or:              "OR",
 	NT_Add:             "+",
@@ -87,6 +90,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Variable:        "Variable",
 	NT_Literal:         "Literal",
 	NT_Delete:          "Delete",
+	NT_Enum:            "Enum",
 }
 
 func (nt NodeType) String() string {
@@ -188,6 +192,11 @@ type ListAssignNode struct {
 	AssignedExpression *Node
 }
 
+type EnumNode struct {
+	Identifier string
+	Value      int64
+}
+
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
 	lexer.TT_OP_And: NT_And,
 	lexer.TT_OP_Or:  NT_Or,
@@ -218,11 +227,11 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 }
 
 func (n *Node) IsBinaryNode() bool {
-	return n.NodeType >= NT_And && n.NodeType <= NT_GreaterEqual && n.NodeType != NT_Not && n.Value.(*BinaryNode).Left != nil
+	return n.NodeType >= NT_Property && n.NodeType <= NT_GreaterEqual && n.Value.(*BinaryNode).Left != nil
 }
 
 func (nt NodeType) IsOperator() bool {
-	return nt >= NT_And && nt <= NT_GreaterEqual
+	return nt >= NT_Property && nt <= NT_GreaterEqual
 }
 
 func (nt NodeType) IsComparisonOperator() bool {
@@ -251,4 +260,6 @@ var operatorNodePrecedence = map[NodeType]int{
 	NT_Divide:   3,
 	NT_Power:    4,
 	NT_Modulo:   4,
+
+	NT_Property: 5,
 }

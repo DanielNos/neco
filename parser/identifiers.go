@@ -6,15 +6,15 @@ import (
 	"neco/lexer"
 )
 
-func (p *Parser) parseIdentifier() *Node {
-	identifier := p.consume()
-	symbol := p.findSymbol(identifier.Value)
+func (p *Parser) parseIdentifierStatement() *Node {
+	symbol := p.findSymbol(p.peek().Value)
 
-	// Decalare enum
+	// Decalare enum variable
 	if symbol != nil && symbol.symbolType == ST_Enum {
-		p.consume()
-		return &Node{}
+		return p.parseVariableDeclaration(false)
 	}
+
+	identifier := p.consume()
 
 	// Assign to variable
 	if p.peek().TokenType.IsAssignKeyword() {
@@ -143,4 +143,35 @@ func (p *Parser) parseIdentifier() *Node {
 
 	// Declared function
 	return p.parseFunctionCall(symbol, identifier)
+}
+
+func (p *Parser) parseVariableIdentifiers(variableType data.DataType) ([]*lexer.Token, []string, []data.DataType) {
+	// Collect identifiers
+	identifierTokens := []*lexer.Token{}
+	identifiers := []string{}
+	variableTypes := []data.DataType{}
+
+	for p.peek().TokenType != lexer.TT_EndOfFile {
+		identifierTokens = append(identifierTokens, p.peek())
+		identifiers = append(identifiers, p.peek().Value)
+		variableTypes = append(variableTypes, variableType)
+
+		// Check if variable is redeclared
+		symbol := p.getSymbol(p.peek().Value)
+
+		if symbol != nil {
+			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
+		} else {
+			p.consume()
+		}
+
+		// More identifiers
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		} else {
+			break
+		}
+	}
+
+	return identifierTokens, identifiers, variableTypes
 }
