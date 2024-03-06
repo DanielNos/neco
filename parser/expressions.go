@@ -13,9 +13,7 @@ const MINIMAL_PRECEDENCE = -100
 
 func (p *Parser) parseExpressionRoot() *Node {
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
-
-	p.collectConstants(expression)
-
+	p.collectConstant(expression)
 	return expression
 }
 
@@ -148,6 +146,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			continue
 		}
 
+		// Right node is binary node with same precedence => rotate nodes so they are left-to-right associated (except power, which is right-to-left associated)
 		if right.IsBinaryNode() && operatorNodePrecedence[nodeType] == operatorNodePrecedence[right.NodeType] && nodeType != NT_Power {
 			oldLeft := left
 
@@ -156,14 +155,90 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
 			right.Value.(*BinaryNode).Left = oldLeft
 
-			left = &Node{left.Position.SetEndPos(right.Position), nodeType, &BinaryNode{right, left, data.DataType{data.DT_NoType, nil}}}
+			left = p.createBinaryNode(operator.Position, nodeType, right, left)
 			continue
 		}
 
-		left = &Node{left.Position.SetEndPos(right.Position), nodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+		left = p.createBinaryNode(operator.Position, nodeType, left, right)
 	}
 
 	return left
+}
+
+func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, left, right *Node) *Node {
+	// Store constants
+	p.collectConstant(left)
+	p.collectConstant(right)
+
+	// Construct node and determine it's data type
+	dataType := p.deriveType(position, nodeType, left, right)
+	node := &Node{position, nodeType, &BinaryNode{left, right, dataType}}
+
+	return node
+}
+
+func (p *Parser) deriveType(position *data.CodePos, nodeType NodeType, left, right *Node) data.DataType {
+	// Unary operator
+	if left == nil {
+		return p.GetExpressionType(right)
+	}
+
+	// Collect left and right node data types
+	leftType := p.GetExpressionType(left)
+	rightType := p.GetExpressionType(right)
+
+	// Error in one of types
+	if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+		return data.DataType{data.DT_NoType, nil}
+	}
+
+	// Same type on both sides
+	if leftType.Equals(rightType) {
+		// Logic operators can be used only on booleans
+		if nodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
+			p.newError(position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", nodeType))
+			return data.DataType{data.DT_Bool, nil}
+		}
+
+		// Comparison operators return boolean
+		if nodeType.IsComparisonOperator() {
+			return data.DataType{data.DT_Bool, nil}
+		}
+
+		// Can't do non-comparison operations on enums
+		if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
+			p.newError(position, fmt.Sprintf("Operator %s can't be used on enum constants.", nodeType))
+			return data.DataType{data.DT_NoType, nil}
+		}
+
+		// Only + can be used on strings and lists
+		if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && nodeType != NT_Add {
+			p.newError(position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", nodeType, leftType, rightType))
+			return data.DataType{data.DT_NoType, nil}
+		}
+
+		// Return left type
+		if leftType.DType != data.DT_NoType {
+			return leftType
+		}
+
+		// Return right type
+		if rightType.DType != data.DT_NoType {
+			return rightType
+		}
+
+		// Neither have type
+		return leftType
+	}
+
+	// Left or right doesn't have a type
+	if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+		return leftType
+	}
+
+	// Failed to determine data type
+	p.newError(position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", nodeType, leftType, rightType))
+	return data.DataType{data.DT_NoType, nil}
 }
 
 func operatorPrecedence(operator lexer.TokenType) int {
@@ -243,14 +318,10 @@ func (p *Parser) parseIdentifier() *Node {
 	return &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
 }
 
-func (p *Parser) collectConstants(expression *Node) {
-	// Check operator children
-	if expression.IsBinaryNode() {
-		p.collectConstants(expression.Value.(*BinaryNode).Left)
-		p.collectConstants(expression.Value.(*BinaryNode).Right)
-		// Collect literal
-	} else if expression.NodeType == NT_Literal {
-		literalNode := expression.Value.(*LiteralNode)
+func (p *Parser) collectConstant(node *Node) {
+	// Collect literal
+	if node.NodeType == NT_Literal {
+		literalNode := node.Value.(*LiteralNode)
 
 		switch literalNode.DType {
 		case data.DT_Int:
@@ -261,8 +332,8 @@ func (p *Parser) collectConstants(expression *Node) {
 			p.StringConstants[literalNode.Value.(string)] = -1
 		}
 		// Collect enum value
-	} else if expression.NodeType == NT_Enum {
-		p.IntConstants[expression.Value.(*EnumNode).Value] = -1
+	} else if node.NodeType == NT_Enum {
+		p.IntConstants[node.Value.(*EnumNode).Value] = -1
 	}
 }
 
@@ -383,72 +454,9 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 }
 
 func (p *Parser) GetExpressionType(expression *Node) data.DataType {
+	// Binary nodes store their type
 	if expression.NodeType.IsOperator() {
-		// Unary operator
-		if expression.Value.(*BinaryNode).Left == nil {
-			unaryType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
-			expression.Value.(*BinaryNode).DataType = unaryType
-			return unaryType
-		}
-
-		leftType := p.GetExpressionType(expression.Value.(*BinaryNode).Left)
-		rightType := p.GetExpressionType(expression.Value.(*BinaryNode).Right)
-
-		// Error in one of types
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
-			return data.DataType{data.DT_NoType, nil}
-		}
-
-		// Same type on both sides
-		if leftType.Equals(rightType) {
-			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
-				return data.DataType{data.DT_Bool, nil}
-			}
-
-			// Comparison operators return boolean
-			if expression.NodeType.IsComparisonOperator() {
-				expression.Value.(*BinaryNode).DataType = data.DataType{data.DT_Bool, nil}
-				return data.DataType{data.DT_Bool, nil}
-			}
-
-			// Can't do non-comparison operations on enums
-			if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
-				return data.DataType{data.DT_NoType, nil}
-			}
-
-			// Only + can be used on strings and lists
-			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
-				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", NodeTypeToString[expression.NodeType], leftType, rightType))
-				return data.DataType{DType: data.DT_NoType, SubType: nil}
-			}
-
-			// Return left type
-			if leftType.DType != data.DT_NoType {
-				expression.Value.(*BinaryNode).DataType = leftType
-				return leftType
-			}
-
-			// Return right type
-			if rightType.DType != data.DT_NoType {
-				expression.Value.(*BinaryNode).DataType = rightType
-				return rightType
-			}
-
-			// Neither have type
-			return leftType
-		}
-
-		// Failed to get data type
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
-			return data.DataType{data.DT_NoType, nil}
-		}
-
-		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
-
-		return data.DataType{data.DT_NoType, nil}
+		return expression.Value.(*BinaryNode).DataType
 	}
 
 	switch expression.NodeType {

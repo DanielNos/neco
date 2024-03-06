@@ -195,6 +195,9 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(listAssign.IndexExpression, indent+"│  ", true)
 		visualize(listAssign.AssignedExpression, indent, true)
 
+	case NT_Enum:
+		fmt.Printf("%d (%s)\n", node.Value.(*EnumNode).Value, node.Value.(*EnumNode).Identifier)
+
 	default:
 		println(NodeTypeToString[node.NodeType])
 	}
