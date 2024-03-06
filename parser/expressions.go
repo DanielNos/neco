@@ -260,6 +260,9 @@ func (p *Parser) collectConstants(expression *Node) {
 		case data.DT_String:
 			p.StringConstants[literalNode.Value.(string)] = -1
 		}
+		// Collect enum value
+	} else if expression.NodeType == NT_Enum {
+		p.IntConstants[expression.Value.(*EnumNode).Value] = -1
 	}
 }
 
@@ -398,12 +401,6 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 
 		// Same type on both sides
 		if leftType.Equals(rightType) {
-			// Can't do operations on enums
-			if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
-				return data.DataType{data.DT_NoType, nil}
-			}
-
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
@@ -414,6 +411,12 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 			if expression.NodeType.IsComparisonOperator() {
 				expression.Value.(*BinaryNode).DataType = data.DataType{data.DT_Bool, nil}
 				return data.DataType{data.DT_Bool, nil}
+			}
+
+			// Can't do non-comparison operations on enums
+			if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
+				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
+				return data.DataType{data.DT_NoType, nil}
 			}
 
 			// Only + can be used on strings and lists

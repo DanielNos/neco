@@ -104,9 +104,14 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		// Generate LoadListAt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_IndexList, NO_ARGS})
 
+	// Logical not
 	case parser.NT_Not:
 		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
+
+	// Enums
+	case parser.NT_Enum:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value])}})
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))

@@ -259,7 +259,7 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, pass
 	switch dataType.DType {
 	case data.DT_Bool:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
-	case data.DT_Int:
+	case data.DT_Int, data.DT_Enum:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
 	case data.DT_Float:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
