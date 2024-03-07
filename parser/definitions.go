@@ -105,7 +105,7 @@ func (p *Parser) parseEnum() {
 
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
 		// Collect identifier
-		constantIdentifier := p.consume().Value
+		constantIdentifier := p.consume()
 
 		// Change index
 		if p.peek().TokenType == lexer.TT_KW_Assign {
@@ -121,8 +121,13 @@ func (p *Parser) parseEnum() {
 			constantIndex = expression.Value.(*LiteralNode).Value.(int64)
 		}
 
+		// Check if constant identifier already exists
+		if _, exists := constants[constantIdentifier.Value]; exists {
+			p.newError(constantIdentifier.Position, "Duplicate enum constant identifier.")
+		}
+
 		// Store constant
-		constants[constantIdentifier] = int64(constantIndex)
+		constants[constantIdentifier.Value] = int64(constantIndex)
 		constantIndex++
 
 		// Consume EOCs
