@@ -21,6 +21,13 @@ func (p *Parser) collectGlobals() {
 	for p.peek().TokenType != lexer.TT_EndOfFile {
 		if p.peek().TokenType == lexer.TT_KW_struct {
 			p.consume()
+
+			symbol := p.getGlobalSymbol(p.peek().Value)
+
+			if symbol != nil {
+				p.newError(p.peek().Position, fmt.Sprintf("Symbol is already declared as a %s.", symbol.symbolType))
+			}
+
 			p.insertSymbol(p.consume().Value, &Symbol{ST_Struct, nil})
 		} else {
 			p.consume()
@@ -59,6 +66,10 @@ func (p *Parser) parseStruct() {
 
 	p.consume() // {
 
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
 	// Collect properties
 	properties := map[string]PropertySymbol{}
 	propertyIndex := 1
@@ -86,10 +97,18 @@ func (p *Parser) parseStruct() {
 
 func (p *Parser) parseEnum() {
 	p.consume()
+	// Collect identifier
 	identifier := p.consume().Value
 
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
+	}
+
+	// Check for redeclaration
+	symbol := p.getGlobalSymbol(identifier)
+
+	if symbol != nil {
+		p.newError(p.peekPrevious().Position, fmt.Sprintf("Symbol is already declared as a %s.", symbol.symbolType))
 	}
 
 	p.consume() // {

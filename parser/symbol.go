@@ -20,6 +20,21 @@ const (
 	ST_Enum
 )
 
+func (st SymbolType) String() string {
+	switch st {
+	case ST_Variable:
+		return "variable"
+	case ST_FunctionBucket, ST_Function:
+		return "function"
+	case ST_Struct:
+		return "struct"
+	case ST_Enum:
+		return "enum"
+	}
+
+	return "UNDEFINED"
+}
+
 type SymbolValue interface{}
 
 type VariableSymbol struct {
