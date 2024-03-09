@@ -52,6 +52,7 @@ const (
 	NT_Literal
 	NT_Delete
 	NT_Enum
+	NT_Struct
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -91,6 +92,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Literal:         "Literal",
 	NT_Delete:          "Delete",
 	NT_Enum:            "Enum",
+	NT_Struct:          "Struct",
 }
 
 func (nt NodeType) String() string {
@@ -195,6 +197,11 @@ type ListAssignNode struct {
 type EnumNode struct {
 	Identifier string
 	Value      int64
+}
+
+type StructNode struct {
+	Identifier string
+	Properties []*Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

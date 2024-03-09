@@ -72,12 +72,13 @@ func (p *Parser) parseStruct() {
 
 	// Collect properties
 	properties := map[string]PropertySymbol{}
-	propertyIndex := 1
+	propertyIndex := 0
 
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
 		// Collect property
 		dataType := p.parseType()
-		properties[p.consume().Value] = PropertySymbol{0, dataType}
+		properties[p.consume().Value] = PropertySymbol{propertyIndex, dataType}
+		propertyIndex++
 
 		// Collect properties with same type
 		for p.peek().TokenType == lexer.TT_DL_Comma {

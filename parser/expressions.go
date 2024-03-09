@@ -313,9 +313,92 @@ func (p *Parser) parseIdentifier() *Node {
 		p.consume() // .
 
 		return &Node{identifierToken.Position.SetEndPos(p.peek().Position), NT_Enum, &EnumNode{identifierToken.Value, symbol.value.(map[string]int64)[p.consume().Value]}}
+		// Struct
+	} else if symbol.symbolType == ST_Struct {
+		return p.parseStructLiteral(symbol.value.(map[string]PropertySymbol))
 	}
 
 	return &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
+}
+
+func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node {
+	identifier := p.consume()
+
+	p.consume() // {
+
+	for p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
+	// Collect properties
+	propertyValues := []*Node{}
+	propertyIndex := 0
+
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Collect property expression
+		expression := p.parseExpressionRoot()
+		expressionType := p.GetExpressionType(expression)
+
+		// Find property by it's index
+		foundProperty := false
+
+		for propertyName, property := range properties {
+			if property.number == propertyIndex {
+				// Check if expression type is correct
+				if !property.dataType.Equals(expressionType) {
+					p.newError(expression.Position, fmt.Sprintf("Property %s of struct %s has type %s, but assigned expression has type %s.", propertyName, identifier.Value, property.dataType, expressionType))
+				}
+				foundProperty = true
+				break
+			}
+		}
+
+		propertyValues = append(propertyValues, expression)
+		propertyIndex++
+
+		// Consume comma
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		}
+
+		// Consume EOCs
+		for p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
+
+		// Property wasn't found
+		if !foundProperty {
+			count := p.parseAnyProperties()
+			p.newError(expression.Position.SetEndPos(p.peekPrevious().Position), fmt.Sprintf("Struct %s has %d properties, but %d properties were given.", identifier.Value, propertyIndex-1, propertyIndex+count))
+			break
+		}
+	}
+
+	p.consume() // }
+
+	return &Node{identifier.Position.SetEndPos(p.peekPrevious().Position), NT_Struct, &StructNode{identifier.Value, propertyValues}}
+}
+
+func (p *Parser) parseAnyProperties() int {
+	propertyCount := 0
+
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Collect property expression
+		p.parseExpressionRoot()
+		propertyCount++
+
+		// Consume comma
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		}
+
+		// Consume EOCs
+		for p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
+	}
+
+	return propertyCount
 }
 
 func (p *Parser) collectConstant(node *Node) {
@@ -472,6 +555,8 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		return p.GetExpressionType(expression.Value.(*BinaryNode).Left).SubType.(data.DataType)
 	case NT_Enum:
 		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
+	case NT_Struct:
+		return data.DataType{data.DT_Struct, expression.Value.(*StructNode).Identifier}
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))

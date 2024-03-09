@@ -198,6 +198,15 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Enum:
 		fmt.Printf("%d (%s)\n", node.Value.(*EnumNode).Value, node.Value.(*EnumNode).Identifier)
 
+	case NT_Struct:
+		structNode := node.Value.(*StructNode)
+
+		fmt.Printf("%s\n", structNode.Identifier)
+
+		for i, n := range structNode.Properties {
+			visualize(n, indent, i == len(structNode.Properties)-1)
+		}
+
 	default:
 		println(NodeTypeToString[node.NodeType])
 	}

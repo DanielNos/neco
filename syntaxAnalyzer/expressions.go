@@ -65,6 +65,33 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 					sn.consume()
 				}
 			}
+			// Struct
+		} else if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
+			sn.consume()
+
+			for sn.peek().TokenType == lexer.TT_EndOfCommand {
+				sn.consume()
+			}
+
+			for sn.peek().TokenType != lexer.TT_EndOfCommand {
+				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+					sn.consume()
+					break
+				}
+
+				sn.analyzeExpression()
+
+				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+					sn.consume()
+					break
+				} else if sn.peek().TokenType == lexer.TT_DL_Comma {
+					sn.consume()
+				}
+
+				for sn.peek().TokenType == lexer.TT_EndOfCommand {
+					sn.consume()
+				}
+			}
 		}
 
 		return

@@ -14,6 +14,11 @@ func (p *Parser) parseIdentifierStatement() *Node {
 		return p.parseVariableDeclaration(false)
 	}
 
+	// Declaration of struct variable
+	if symbol.symbolType == ST_Struct {
+		return p.parseVariableDeclaration(false)
+	}
+
 	identifier := p.consume()
 
 	// Assign to variable
