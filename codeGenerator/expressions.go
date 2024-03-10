@@ -113,8 +113,18 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Enum:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value])}})
 
-	// Structs
+		// Structs
 	case parser.NT_Struct:
+		structNode := node.Value.(*parser.StructNode)
+
+		// Create object
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateStruct, []byte{byte(cg.stringConstants[structNode.Identifier])}})
+
+		// Generate properties
+		for _, property := range structNode.Properties {
+			cg.generateExpression(property)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreProperty, NO_ARGS})
+		}
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))

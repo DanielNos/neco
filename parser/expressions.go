@@ -323,6 +323,7 @@ func (p *Parser) parseIdentifier() *Node {
 
 func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node {
 	identifier := p.consume()
+	p.StringConstants[identifier.Value] = -1
 
 	p.consume() // {
 

@@ -72,6 +72,13 @@ func NewVirutalMachine() *VirtualMachine {
 	return virtualMachine
 }
 
+var currentObject object
+
+type object struct {
+	identifier *string
+	properties []interface{}
+}
+
 func (vm *VirtualMachine) Execute(filePath string) {
 	// Read instructions
 	reader := NewInstructionReader(filePath, vm)
@@ -168,6 +175,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []interface{}{}}})
 
+		case IT_DeclareStruct:
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Struct, nil}, nil}})
+
 		// Set and load list at index
 		case IT_SetListAtPrevToCurr:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.stack.Pop().(int64)] = vm.stack.Pop()
@@ -184,6 +194,18 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 		case IT_Store:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.stack.Pop()
+
+		// Structs
+		case IT_CreateStruct:
+			identifier := vm.Constants[instruction.InstructionValue[0]].(string)
+			vm.stack.Push(object{&identifier, []interface{}{}})
+
+		case IT_StoreProperty:
+			vm.stack.size--
+
+			currentObject, _ = vm.stack.items[vm.stack.size-1].(object)
+			currentObject.properties = append(currentObject.properties, vm.stack.items[vm.stack.size])
+			vm.stack.items[vm.stack.size-1] = currentObject
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
@@ -369,7 +391,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 				}
 			}
 			println("}")
-			fmt.Printf("Instrcution after: %d %s %v\n", vm.instructionIndex+1, InstructionTypeToString[vm.Instructions[vm.instructionIndex].InstructionType], vm.Instructions[vm.instructionIndex].InstructionValue)
+			fmt.Printf("Next: %d %s %v\n", vm.instructionIndex+1, InstructionTypeToString[vm.Instructions[vm.instructionIndex].InstructionType], vm.Instructions[vm.instructionIndex].InstructionValue)
 			fmt.Scanln()
 		}
 	}

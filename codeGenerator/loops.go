@@ -10,7 +10,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	startPosition := len(cg.instructions) - 1
 
 	// Enter scope
-	cg.enterScope()
+	cg.enterScope(nil)
 
 	// Create break array and record loop scope
 	cg.scopeBreaks.Push([]Break{})
@@ -44,7 +44,7 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 	forLoop := node.Value.(*parser.ForLoopNode)
 
 	// Enter scope
-	cg.enterScope()
+	cg.enterScope(nil)
 
 	// Create break array and record loop scope
 	cg.scopeBreaks.Push([]Break{})

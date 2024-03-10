@@ -164,7 +164,18 @@ func necoPrint(value interface{}, root bool) {
 }
 
 func necoPrintString(value interface{}, root bool) string {
-	if _, ok := value.([]interface{}); ok {
+	if object, ok := value.(object); ok {
+		// Print struct
+		str := fmt.Sprintf("%s{", *object.identifier)
+
+		for _, property := range object.properties[:len(object.properties)-1] {
+			str = fmt.Sprintf("%s%s, ", str, necoPrintString(property, false))
+		}
+		str = fmt.Sprintf("%s%s}", str, necoPrintString(object.properties[len(object.properties)-1], false))
+
+		return str
+
+	} else if _, ok := value.([]interface{}); ok {
 		// Print list
 		str := "{"
 		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {

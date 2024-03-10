@@ -14,7 +14,7 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	cg.functions = append(cg.functions, len(cg.instructions))
 
 	// Push scope
-	cg.enterScope()
+	cg.enterScope(&function.Identifier)
 
 	// Pop arguments and store them as variables
 	parameterCount := len(function.Parameters)

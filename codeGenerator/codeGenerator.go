@@ -201,7 +201,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Scope
 	case parser.NT_Scope:
-		cg.generateScope(node.Value.(*parser.ScopeNode))
+		cg.generateScope(node.Value.(*parser.ScopeNode), nil)
 
 	// Loops
 	case parser.NT_Loop:
@@ -271,11 +271,18 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, pass
 		if dataType.SubType != nil {
 			cg.generateVariableDeclarator(dataType.SubType.(data.DataType), false)
 		}
+	case data.DT_Struct:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareStruct, args})
+
 	}
 }
 
-func (cg *CodeGenerator) enterScope() {
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
+func (cg *CodeGenerator) enterScope(name *string) {
+	if name == nil {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
+	} else {
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PushScope, []byte{byte(cg.stringConstants[*name])}})
+	}
 	cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
 	cg.variableIdentifiers.Push(map[string]uint8{})
 }
@@ -292,8 +299,8 @@ func (cg *CodeGenerator) generateStatements(scopeNode *parser.ScopeNode) {
 	}
 }
 
-func (cg *CodeGenerator) generateScope(scopeNode *parser.ScopeNode) {
-	cg.enterScope()
+func (cg *CodeGenerator) generateScope(scopeNode *parser.ScopeNode, name *string) {
+	cg.enterScope(name)
 	cg.generateStatements(scopeNode)
 	cg.leaveScope()
 }

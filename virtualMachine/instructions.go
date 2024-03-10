@@ -18,6 +18,7 @@ const (
 	IT_DeclareFloat
 	IT_DeclareString
 	IT_DeclareList
+	IT_DeclareStruct
 
 	IT_SetListAtPrevToCurr
 
@@ -25,6 +26,9 @@ const (
 	IT_LoadConstToList
 	IT_Load
 	IT_Store
+
+	IT_CreateStruct
+	IT_LoadProperty
 
 	IT_JumpBack
 	IT_Jump
@@ -70,6 +74,8 @@ const (
 	IT_PushScopeUnnamed
 	IT_PopScope
 
+	IT_StoreProperty
+
 	IT_CreateList
 	IT_AppendToList
 	IT_IndexList
@@ -95,6 +101,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareFloat:  "decl_float",
 	IT_DeclareString: "decl_string",
 	IT_DeclareList:   "decl_list",
+	IT_DeclareStruct: "decl_struct",
 
 	IT_SetListAtPrevToCurr: "set_list",
 
@@ -102,6 +109,9 @@ var InstructionTypeToString = map[byte]string{
 	IT_LoadConstToList: "append_const",
 	IT_Load:            "load",
 	IT_Store:           "store",
+
+	IT_CreateStruct: "new_struct",
+	IT_LoadProperty: "load_property",
 
 	IT_JumpBack:   "jump_back",
 	IT_Jump:       "jump",
@@ -146,6 +156,8 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PushScopeUnnamed: "push_scope_unnamed",
 	IT_PopScope:         "pop_scope",
+
+	IT_StoreProperty: "store_property",
 
 	IT_CreateList:   "new_list",
 	IT_AppendToList: "append_list",
