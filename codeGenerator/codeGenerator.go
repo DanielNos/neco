@@ -28,7 +28,7 @@ type CodeGenerator struct {
 	intConstants    map[int64]int
 	floatConstants  map[float64]int
 	stringConstants map[string]int
-	constants       []interface{} // int64/float64/string
+	Constants       []interface{} // int64/float64/string
 
 	instructions []VM.Instruction
 
@@ -54,7 +54,7 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 		intConstants:    intConstants,
 		floatConstants:  floatConstants,
 		stringConstants: stringConstants,
-		constants:       make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
+		Constants:       make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
 
 		instructions: []VM.Instruction{},
 
@@ -138,21 +138,21 @@ func (cg *CodeGenerator) generateConstantIDs() {
 
 	// Strings
 	for key := range cg.stringConstants {
-		cg.constants[id] = key
+		cg.Constants[id] = key
 		cg.stringConstants[key] = id
 		id++
 	}
 
 	// Integers
 	for key := range cg.intConstants {
-		cg.constants[id] = key
+		cg.Constants[id] = key
 		cg.intConstants[key] = id
 		id++
 	}
 
 	// Floats
 	for key := range cg.floatConstants {
-		cg.constants[id] = key
+		cg.Constants[id] = key
 		cg.floatConstants[key] = id
 		id++
 	}

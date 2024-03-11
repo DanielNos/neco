@@ -207,3 +207,39 @@ func PowerInt64(base, exponent int64) int64 {
 
 	return result
 }
+
+var BuiltInFuncToString = map[byte]string{
+	BIF_Print:     "print",
+	BIF_PrintLine: "printLine",
+
+	BIF_AnyToString: "str",
+
+	BIF_BoolToInt: "int",
+	BIF_EnumToInt: "int",
+
+	BIF_IntToFloat: "flt",
+
+	BIF_Floor:      "floor",
+	BIF_FloorToInt: "floorToInt",
+	BIF_Ceil:       "ceil",
+	BIF_CeilToInt:  "ceilToInt",
+	BIF_Round:      "round",
+	BIF_RoundToInt: "roundToInt",
+	BIF_AbsInt:     "absInt",
+	BIF_AbsFloat:   "absFloat",
+
+	BIF_ReadLine: "readLine",
+	BIF_ReadChar: "readChar",
+
+	BIF_StringLength: "length",
+	BIF_ListLength:   "size",
+
+	BIF_ToLower: "toLower",
+	BIF_ToUpper: "toUpper",
+
+	BIF_RandomInt:      "randomInt",
+	BIF_RandomFloat:    "randomFloat",
+	BIF_RandomRangeInt: "randomRangeInt",
+
+	BIF_Trace: "trace",
+}

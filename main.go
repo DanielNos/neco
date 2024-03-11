@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/fatih/color"
@@ -57,7 +58,7 @@ func printTokens(tokens []*lexer.Token) {
 	println()
 }
 
-func printInstructions(instructions *[]VM.Instruction) {
+func printInstructions(instructions *[]VM.Instruction, constants []interface{}) {
 	line := int((*instructions)[0].InstructionValue[0])
 	linePadder := "  "
 	justChanged := true
@@ -93,16 +94,13 @@ func printInstructions(instructions *[]VM.Instruction) {
 		}
 
 		// Print instruction number
-		if i < 10 {
-			print(" ")
-		}
-		fmt.Printf("%d   ", i)
+		fmt.Printf("%d  ", i)
 
 		// Print instruction name
 		fmt.Printf("%s", VM.InstructionTypeToString[instruction.InstructionType])
 
 		j := len(VM.InstructionTypeToString[instruction.InstructionType])
-		for j < 25 {
+		for j < 16 {
 			print(" ")
 			j++
 		}
@@ -115,6 +113,14 @@ func printInstructions(instructions *[]VM.Instruction) {
 				fmt.Printf(" (%d)", i-int(instruction.InstructionValue[0])+1)
 			} else if instruction.InstructionType == VM.IT_Jump || instruction.InstructionType == VM.IT_JumpIfTrue {
 				fmt.Printf(" (%d)", i+int(instruction.InstructionValue[0])+1)
+			} else if instruction.InstructionType == VM.IT_PushScope || instruction.InstructionType == VM.IT_LoadConst || instruction.InstructionType == VM.IT_LoadConstToList {
+				if reflect.TypeOf(constants[instruction.InstructionValue[0]]).Kind() == reflect.String {
+					fmt.Printf("  (\"%v\")", constants[instruction.InstructionValue[0]])
+				} else {
+					fmt.Printf("  (%v)", constants[instruction.InstructionValue[0]])
+				}
+			} else if instruction.InstructionType == VM.IT_CallBuiltInFunc {
+				fmt.Printf("  %v()", VM.BuiltInFuncToString[instruction.InstructionValue[0]])
 			}
 		}
 
@@ -296,7 +302,7 @@ func compile(path string, showTokens, showTree, printInstruction, dontOptimize b
 
 	// Print generated instructions
 	if printInstruction {
-		printInstructions(instructions)
+		printInstructions(instructions, codeGenerator.Constants)
 		println()
 	}
 }

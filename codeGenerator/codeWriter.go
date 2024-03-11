@@ -130,7 +130,7 @@ func (cw *CodeWriter) writeStringsSegment() {
 	cw.file.WriteString("STRS")
 
 	for i := 0; i < len(cw.codeGenerator.stringConstants); i++ {
-		cw.file.WriteString(cw.codeGenerator.constants[i].(string))
+		cw.file.WriteString(cw.codeGenerator.Constants[i].(string))
 		cw.file.Write(STRING_TERMINATOR)
 	}
 
@@ -144,7 +144,7 @@ func (cw *CodeWriter) writeIntsSegment() {
 
 	byteSlice := make([]byte, 8)
 	for i := len(cw.codeGenerator.stringConstants); i < len(cw.codeGenerator.stringConstants)+len(cw.codeGenerator.intConstants); i++ {
-		binary.BigEndian.PutUint64(byteSlice, uint64(cw.codeGenerator.constants[i].(int64)))
+		binary.BigEndian.PutUint64(byteSlice, uint64(cw.codeGenerator.Constants[i].(int64)))
 		cw.file.Write(byteSlice)
 	}
 
@@ -157,8 +157,8 @@ func (cw *CodeWriter) writeFloatsSegment() {
 	cw.file.WriteString("FLTS")
 
 	byteSlice := make([]byte, 8)
-	for i := len(cw.codeGenerator.stringConstants) + len(cw.codeGenerator.intConstants); i < len(cw.codeGenerator.constants); i++ {
-		binary.BigEndian.PutUint64(byteSlice, math.Float64bits(cw.codeGenerator.constants[i].(float64)))
+	for i := len(cw.codeGenerator.stringConstants) + len(cw.codeGenerator.intConstants); i < len(cw.codeGenerator.Constants); i++ {
+		binary.BigEndian.PutUint64(byteSlice, math.Float64bits(cw.codeGenerator.Constants[i].(float64)))
 		cw.file.Write(byteSlice)
 	}
 
