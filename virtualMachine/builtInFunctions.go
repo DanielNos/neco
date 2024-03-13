@@ -168,10 +168,10 @@ func necoPrintString(value interface{}, root bool) string {
 		// Print struct
 		str := fmt.Sprintf("%s{", *object.identifier)
 
-		for _, property := range object.properties[:len(object.properties)-1] {
+		for _, property := range object.fields[:len(object.fields)-1] {
 			str = fmt.Sprintf("%s%s, ", str, necoPrintString(property, false))
 		}
-		str = fmt.Sprintf("%s%s}", str, necoPrintString(object.properties[len(object.properties)-1], false))
+		str = fmt.Sprintf("%s%s}", str, necoPrintString(object.fields[len(object.fields)-1], false))
 
 		return str
 

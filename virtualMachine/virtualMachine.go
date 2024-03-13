@@ -76,7 +76,7 @@ var currentObject object
 
 type object struct {
 	identifier *string
-	properties []interface{}
+	fields     []interface{}
 }
 
 func (vm *VirtualMachine) Execute(filePath string) {
@@ -200,12 +200,15 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			identifier := vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.stack.Push(object{&identifier, []interface{}{}})
 
-		case IT_StoreProperty:
+		case IT_StoreField:
 			vm.stack.size--
 
 			currentObject, _ = vm.stack.items[vm.stack.size-1].(object)
-			currentObject.properties = append(currentObject.properties, vm.stack.items[vm.stack.size])
+			currentObject.fields = append(currentObject.fields, vm.stack.items[vm.stack.size])
 			vm.stack.items[vm.stack.size-1] = currentObject
+
+		case IT_GetField:
+			vm.stack.Push(vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]])
 
 		// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 

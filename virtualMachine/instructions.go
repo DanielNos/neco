@@ -28,7 +28,7 @@ const (
 	IT_Store
 
 	IT_CreateStruct
-	IT_LoadProperty
+	IT_GetField
 
 	IT_JumpBack
 	IT_Jump
@@ -74,7 +74,7 @@ const (
 	IT_PushScopeUnnamed
 	IT_PopScope
 
-	IT_StoreProperty
+	IT_StoreField
 
 	IT_CreateList
 	IT_AppendToList
@@ -111,7 +111,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_Store:           "store",
 
 	IT_CreateStruct: "new_struct",
-	IT_LoadProperty: "load_property",
+	IT_GetField:     "get_field",
 
 	IT_JumpBack:   "jump_back",
 	IT_Jump:       "jump",
@@ -157,7 +157,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_PushScopeUnnamed: "push_scope_unnamed",
 	IT_PopScope:         "pop_scope",
 
-	IT_StoreProperty: "store_property",
+	IT_StoreField: "store_field",
 
 	IT_CreateList:   "new_list",
 	IT_AppendToList: "append_list",

@@ -312,6 +312,27 @@ func (p *Parser) parseIdentifier() *Node {
 
 				return listValue
 			}
+			// Struct property
+		} else if p.peek().TokenType == lexer.TT_OP_Dot {
+			p.consume()
+			// Can access properties of structs only
+			if symbol.value.(*VariableSymbol).VariableType.DType != data.DT_Struct {
+				p.newError(p.peek().Position, fmt.Sprintf("Can't access a property of %s, because it's not a struct.", identifierToken))
+			} else {
+				// Find struct definition
+				structName := symbol.value.(*VariableSymbol).VariableType.SubType.(string)
+				structSymbol := p.getGlobalSymbol(structName)
+
+				// Check if field exists
+				property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
+
+				if !propertyExists {
+					p.newError(p.peek().Position, fmt.Sprintf("Struct %s doesn't have a property %s.", structName, p.peek().Value))
+				} else {
+					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &StructFieldNode{identifierToken.Value, property.number, property.dataType}}
+				}
+			}
+
 			// Normal variable
 		} else {
 			return &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
@@ -658,6 +679,8 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Struct:
 		return data.DataType{data.DT_Struct, expression.Value.(*StructNode).Identifier}
+	case NT_StructField:
+		return expression.Value.(*StructFieldNode).DataType
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
