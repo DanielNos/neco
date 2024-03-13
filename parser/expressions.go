@@ -275,6 +275,15 @@ func (p *Parser) parseIdentifier() *Node {
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 			p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
 			return p.parseFunctionCall(nil, identifier)
+			// Undeclared struct
+		} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+			p.newError(identifier.Position, fmt.Sprintf("Struct %s is not defined in this scope.", identifier.Value))
+
+			p.consume() // {
+			p.parseAnyProperties()
+			p.consume() // }
+
+			return &Node{identifier.Position, NT_Struct, &StructNode{identifier.Value, []*Node{}}}
 			// Undeclared variable
 		} else {
 			p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
@@ -331,48 +340,13 @@ func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node 
 		p.consume()
 	}
 
-	// Collect properties
-	propertyValues := []*Node{}
-	propertyIndex := 0
+	var propertyValues []*Node
 
-	for p.peek().TokenType != lexer.TT_DL_BraceClose {
-		// Collect property expression
-		expression := p.parseExpressionRoot()
-		expressionType := p.GetExpressionType(expression)
-
-		// Find property by it's index
-		foundProperty := false
-
-		for propertyName, property := range properties {
-			if property.number == propertyIndex {
-				// Check if expression type is correct
-				if !property.dataType.Equals(expressionType) {
-					p.newError(expression.Position, fmt.Sprintf("Property %s of struct %s has type %s, but assigned expression has type %s.", propertyName, identifier.Value, property.dataType, expressionType))
-				}
-				foundProperty = true
-				break
-			}
-		}
-
-		propertyValues = append(propertyValues, expression)
-		propertyIndex++
-
-		// Consume comma
-		if p.peek().TokenType == lexer.TT_DL_Comma {
-			p.consume()
-		}
-
-		// Consume EOCs
-		for p.peek().TokenType == lexer.TT_EndOfCommand {
-			p.consume()
-		}
-
-		// Property wasn't found
-		if !foundProperty {
-			count := p.parseAnyProperties()
-			p.newError(expression.Position.SetEndPos(p.peekPrevious().Position), fmt.Sprintf("Struct %s has %d properties, but %d properties were given.", identifier.Value, propertyIndex-1, propertyIndex+count))
-			break
-		}
+	// Collect named properties
+	if p.peek().TokenType == lexer.TT_Identifier && p.peekNext().TokenType == lexer.TT_DL_Colon {
+		propertyValues = p.parseKeyedProperties(properties, identifier.Value)
+	} else {
+		propertyValues = p.parseProperties(properties, identifier)
 	}
 
 	p.consume() // }
@@ -380,13 +354,118 @@ func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node 
 	return &Node{identifier.Position.SetEndPos(p.peekPrevious().Position), NT_Struct, &StructNode{identifier.Value, propertyValues}}
 }
 
-func (p *Parser) parseAnyProperties() int {
-	propertyCount := 0
+func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, structName string) []*Node {
+	propertyValues := map[string]*Node{}
 
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
-		// Collect property expression
-		p.parseExpressionRoot()
-		propertyCount++
+		// Field doesn't have a key
+		if p.peek().TokenType != lexer.TT_Identifier || p.peekNext().TokenType != lexer.TT_DL_Colon {
+
+			p.newError(p.peek().Position, "All values have to have keys in keyed struct creation.")
+
+			// Collect expression
+			p.parseExpressionRoot()
+
+		} else {
+			// Collect key
+			propertyName := p.consume()
+			p.consume()
+
+			// Look up property
+			property, exists := properties[propertyName.Value]
+
+			// It doesn't exist
+			if !exists {
+				p.newError(propertyName.Position, fmt.Sprintf("Struct %s doesn't have a field %s.", structName, propertyName.Value))
+				// It exists
+			} else {
+				// Check if property is already assigned
+				_, isReassigned := propertyValues[propertyName.Value]
+
+				// It's already assigned
+				if isReassigned {
+					p.newError(propertyName.Position, fmt.Sprintf("Field %s is already assigned.", propertyName.Value))
+				}
+			}
+
+			// Collect expression
+			expression := p.parseExpressionRoot()
+
+			// Check if expression has correct type
+			if exists {
+				expressionType := p.GetExpressionType(expression)
+				if !property.dataType.Equals(expressionType) {
+					p.newError(expression.Position, fmt.Sprintf("Field %s of struct %s has type %s, but is assigned expression of type %s.", propertyName.Value, structName, property.dataType, expressionType))
+				}
+			}
+
+			// Store field value
+			propertyValues[propertyName.Value] = expression
+		}
+
+		// More fields
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+
+			// Collect EOCs
+			for p.peek().TokenType == lexer.TT_EndOfCommand {
+				p.consume()
+			}
+		} else {
+			for p.peek().TokenType != lexer.TT_DL_BraceClose {
+				p.newError(p.peek().Position, "Unexpected token after struct field value.")
+			}
+		}
+	}
+
+	// Change order of values to match property order
+	orderedValues := make([]*Node, len(properties))
+
+	for key, property := range properties {
+		propertyValue, exists := propertyValues[key]
+
+		if exists {
+			orderedValues[property.number] = propertyValue
+		}
+	}
+
+	return orderedValues
+}
+
+func (p *Parser) parseProperties(properties map[string]PropertySymbol, structName *lexer.Token) []*Node {
+	// Make properties linear
+	orderedProperties := make([]PropertySymbol, len(properties))
+	orderedPropertyNames := make([]string, len(properties))
+
+	for key, property := range properties {
+		orderedPropertyNames[property.number] = key
+		orderedProperties[property.number] = property
+	}
+
+	// Collect field values
+	propertyValues := make([]*Node, len(properties))
+	propertyIndex := 0
+
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Too many fields
+		if propertyIndex == len(properties) {
+			p.newError(p.peek().Position, fmt.Sprintf("Struct %s has %d fields, but %d values were provided.", structName.Value, len(properties), propertyIndex+1))
+			p.parseExpressionRoot()
+			// Collect field value
+		} else {
+			// Collect field expression
+			expression := p.parseExpressionRoot()
+			expressionType := p.GetExpressionType(expression)
+
+			// Check type
+			if !orderedProperties[propertyIndex].dataType.Equals(expressionType) {
+				p.newError(expression.Position, fmt.Sprintf("Property %s of struct %s has type %s, but was assigned expression of type %s.", orderedPropertyNames[propertyIndex], structName.Value, orderedProperties[propertyIndex].dataType, expressionType))
+			}
+
+			// Store property
+			propertyValues[propertyIndex] = expression
+			propertyIndex++
+		}
 
 		// Consume comma
 		if p.peek().TokenType == lexer.TT_DL_Comma {
@@ -399,7 +478,28 @@ func (p *Parser) parseAnyProperties() int {
 		}
 	}
 
-	return propertyCount
+	if propertyIndex < len(properties) {
+		p.newError(structName.Position, fmt.Sprintf("Struct %s has %d fields, but only %d fields were assigned.", structName.Value, len(properties), propertyIndex))
+	}
+
+	return propertyValues
+}
+
+func (p *Parser) parseAnyProperties() {
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Collect property expression
+		p.parseExpressionRoot()
+
+		// Consume comma
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		}
+
+		// Consume EOCs
+		for p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+		}
+	}
 }
 
 func (p *Parser) collectConstant(node *Node) {

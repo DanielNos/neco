@@ -21,6 +21,7 @@ const (
 	TT_DL_BraceOpen
 	TT_DL_BraceClose
 	TT_DL_Comma
+	TT_DL_Colon
 
 	TT_OP_Not
 	TT_OP_And
@@ -100,6 +101,7 @@ var TokenTypeToString = map[TokenType]string{
 	TT_DL_BraceOpen:        "{",
 	TT_DL_BraceClose:       "}",
 	TT_DL_Comma:            ",",
+	TT_DL_Colon:            ":",
 
 	TT_OP_And: "&",
 	TT_OP_Or:  "|",

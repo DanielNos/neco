@@ -295,6 +295,11 @@ func (l *Lexer) lexRune() {
 			l.advance()
 			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Dot, "")
 
+		// Property
+		case ':':
+			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_DL_Colon, "")
+
 		// EOC
 		case ';':
 			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, ";")

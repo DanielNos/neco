@@ -67,27 +67,40 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			}
 			// Struct
 		} else if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
-			sn.consume()
+			sn.consume() // {
 
+			// Consume EOCs
 			for sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.consume()
 			}
 
+			// Collect properties
 			for sn.peek().TokenType != lexer.TT_EndOfCommand {
+				// End of properties
 				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 					sn.consume()
 					break
 				}
 
+				// Consume property label
+				if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_Colon {
+					sn.consume()
+					sn.consume()
+				}
+
+				// Collect property
 				sn.analyzeExpression()
 
+				// End of properties
 				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 					sn.consume()
 					break
+					// More properties
 				} else if sn.peek().TokenType == lexer.TT_DL_Comma {
 					sn.consume()
 				}
 
+				// Consume EOCs
 				for sn.peek().TokenType == lexer.TT_EndOfCommand {
 					sn.consume()
 				}
