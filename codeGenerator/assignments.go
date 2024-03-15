@@ -9,7 +9,7 @@ func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
 	cg.generateExpression(assignNode.AssignedExpression)
 
 	for i, assignedTo := range assignNode.AssignedTo {
-		cg.generateAssignmentInstruction(assignedTo, i == len(assignNode.AssignedTo)-1)
+		cg.generateAssignmentInstruction(assignedTo, i == len(assignNode.AssignedTo)-1 && cg.optimize)
 	}
 
 }

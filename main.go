@@ -203,7 +203,7 @@ func processArguments() (string, string, []bool) {
 	return action, target, flags
 }
 
-func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node, *parser.Parser) {
+func analyze(path string, showTokens, showTree, isCompiling, dontOptimize bool) (*parser.Node, *parser.Parser) {
 	action := "Analysis"
 	if isCompiling {
 		action = "Compilation"
@@ -283,7 +283,7 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 func compile(path string, showTokens, showTree, printInstruction, dontOptimize bool) {
 	startTime := time.Now()
 
-	tree, p := analyze(path, showTokens, showTree, true)
+	tree, p := analyze(path, showTokens, showTree, true, dontOptimize)
 
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, !dontOptimize)
@@ -323,7 +323,7 @@ func main() {
 		logger.Info(fmt.Sprintf("🐱 Analyzing %s", target))
 		startTime := time.Now()
 
-		analyze(target, flags[0], flags[1], false)
+		analyze(target, flags[0], flags[1], false, flags[2])
 
 		logger.Success(fmt.Sprintf("😺 Analyze completed in %s.", time.Since(startTime)))
 	}

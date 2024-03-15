@@ -149,6 +149,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		// Right node is binary node with same precedence => rotate nodes so they are left-to-right associated (except power, which is right-to-left associated)
 		if right.IsBinaryNode() && operatorNodePrecedence[nodeType] == operatorNodePrecedence[right.NodeType] && nodeType != NT_Power {
 			oldLeft := left
+			p.collectConstant(left)
 
 			// Rotate nodes
 			left = right.Value.(*TypedBinaryNode).Right

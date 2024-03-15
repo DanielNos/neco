@@ -48,7 +48,26 @@ type Parser struct {
 }
 
 func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
-	return Parser{tokens, 0, 0, data.NewStack(), data.NewStack(), []*FunctionSymbol{}, 0, 0, previousErrors, map[int64]int{}, map[float64]int{}, map[string]int{}}
+	return Parser{
+		tokens: tokens,
+
+		tokenIndex: 0,
+
+		scopeCounter:   0,
+		scopeNodeStack: data.NewStack(),
+
+		stack_symbolTablestack: data.NewStack(),
+
+		functions:     []*FunctionSymbol{},
+		functionIndex: 0,
+
+		ErrorCount:      0,
+		totalErrorCount: previousErrors,
+
+		IntConstants:    map[int64]int{},
+		FloatConstants:  map[float64]int{},
+		StringConstants: map[string]int{},
+	}
 }
 
 func (p *Parser) peek() *lexer.Token {

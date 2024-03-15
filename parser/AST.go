@@ -56,7 +56,12 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Literal:
 		literal := node.Value.(*LiteralNode)
-		fmt.Printf("%s %v\n", literal.DType.String(), literal.Value)
+		if literal.DType == data.DT_String {
+			fmt.Printf("%s \"%s\"\n", literal.DType.String(), literal.Value)
+		} else {
+			fmt.Printf("%s %v\n", literal.DType.String(), literal.Value)
+
+		}
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
