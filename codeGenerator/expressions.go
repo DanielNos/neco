@@ -20,7 +20,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// Operators
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
 		// Generate arguments
-		binaryNode := node.Value.(*parser.BinaryNode)
+		binaryNode := node.Value.(*parser.TypedBinaryNode)
 		cg.generateExpressionArguments(binaryNode)
 
 		// Generate operator
@@ -41,18 +41,18 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// Logical operators
 	case parser.NT_And:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
+		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_And, NO_ARGS})
 
 	case parser.NT_Or:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
+		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Or, NO_ARGS})
 
 	// Comparison operators
 	case parser.NT_Equal, parser.NT_NotEqual:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.BinaryNode))
+		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
 
 		// Generate operator
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})
@@ -63,7 +63,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
 		// Generate arguments
-		binaryNode := node.Value.(*parser.BinaryNode)
+		binaryNode := node.Value.(*parser.TypedBinaryNode)
 		cg.generateExpressionArguments(binaryNode)
 
 		// Generate operator
@@ -96,17 +96,17 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// List values
 	case parser.NT_ListValue:
 		// Generate list expression
-		cg.generateExpression(node.Value.(*parser.BinaryNode).Left)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
 
 		// Generate index expression
-		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 
 		// Generate LoadListAt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_IndexList, NO_ARGS})
 
 	// Logical not
 	case parser.NT_Not:
-		cg.generateExpression(node.Value.(*parser.BinaryNode).Right)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Not, NO_ARGS})
 
 	// Enums
@@ -139,7 +139,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	}
 }
 
-func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.BinaryNode) {
+func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.TypedBinaryNode) {
 	cg.generateExpression(binaryNode.Left)
 	cg.generateExpression(binaryNode.Right)
 }
@@ -178,14 +178,14 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 func getExpressionType(expression *parser.Node) data.DataType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
-		if expression.Value.(*parser.BinaryNode).Left == nil {
-			unaryType := getExpressionType(expression.Value.(*parser.BinaryNode).Right)
+		if expression.Value.(*parser.TypedBinaryNode).Left == nil {
+			unaryType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
 			return unaryType
 		}
 
 		// Binary operator
-		leftType := getExpressionType(expression.Value.(*parser.BinaryNode).Left)
-		rightType := getExpressionType(expression.Value.(*parser.BinaryNode).Right)
+		leftType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left)
+		rightType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
 
 		return data.DataType{max(leftType.DType, rightType.DType), nil}
 	}
@@ -200,7 +200,7 @@ func getExpressionType(expression *parser.Node) data.DataType {
 	case parser.NT_List:
 		return expression.Value.(*parser.ListNode).DataType
 	case parser.NT_ListValue:
-		return getExpressionType(expression.Value.(*parser.BinaryNode).Left).SubType.(data.DataType)
+		return getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left).SubType.(data.DataType)
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))

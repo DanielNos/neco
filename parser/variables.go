@@ -14,10 +14,10 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	variableType := p.parseType()
 
 	// Collect identifiers
-	identifierTokens, identifiers, variableTypes := p.parseVariableIdentifiers(variableType)
+	variableNodes, variableIdentifiers := p.parseVariableIdentifiers(variableType)
 
 	// Create node
-	declareNode := &Node{startPosition.SetEndPos(identifierTokens[len(identifierTokens)-1].Position), NT_VariableDeclare, &VariableDeclareNode{variableType, constant, identifiers}}
+	declareNode := &Node{startPosition.SetEndPos(variableNodes[len(variableNodes)-1].Position), NT_VariableDeclare, &VariableDeclareNode{variableType, constant, variableIdentifiers}}
 
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -35,7 +35,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 
 		// Parse expression and collect type
 		var expressionType data.DataType
-		declareNode, expressionType = p.parseAssign(identifierTokens, variableTypes)
+		declareNode, expressionType = p.parseAssign(variableNodes, startPosition)
 
 		// Change variable type if no was provided
 		if variableType.DType == data.DT_NoType {
@@ -45,14 +45,14 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	}
 
 	// Insert symbols
-	for _, id := range identifiers {
+	for _, id := range variableIdentifiers {
 		p.insertSymbol(id, &Symbol{ST_Variable, &VariableSymbol{variableType, declareNode.NodeType == NT_Assign, constant}})
 	}
 
 	return declareNode
 }
 
-func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []data.DataType) (*Node, data.DataType) {
+func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.CodePos) (*Node, data.DataType) {
 	assign := p.consume()
 	expressionStart := p.peek().Position
 
@@ -67,53 +67,25 @@ func (p *Parser) parseAssign(identifierTokens []*lexer.Token, variableTypes []da
 
 	// Print errors
 	if expressionType.DType != data.DT_NoType {
-		for i, identifier := range identifierTokens {
-			// Variable doesn't have type
-			if variableTypes[i].DType == data.DT_NoType {
-				variableTypes[i] = expressionType
-				// Variable has a type and it's incompatible with expression
-			} else if !variableTypes[i].Equals(expressionType) {
+		for _, assignedTo := range assignedStatements {
+			assignedType := p.GetExpressionType(assignedTo)
 
-				// Assign type to empty list literal
-				if variableTypes[i].DType == data.DT_List && expression.NodeType == NT_List && len(expression.Value.(*ListNode).Nodes) == 0 {
-					expression.Value.(*ListNode).DataType.SubType = variableTypes[i].SubType
-					continue
-				}
-
+			if !assignedType.Equals(expressionType) {
 				p.newErrorNoMessage()
-				logger.Error2CodePos(identifierTokens[i].Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable %s of type %s.", expressionType, identifier, variableTypes[i]))
+				logger.Error2CodePos(assign.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to statement of type %s.", expressionType, assignedType))
 			}
 		}
 	}
 
-	// Operation-Assign nodes
+	// Operation-assign nodes need to be edited
 	if assign.TokenType != lexer.TT_KW_Assign {
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
 
-		for i, identifier := range identifierTokens[:len(identifierTokens)-1] {
-			// Transform a += 1 to a = a + 1
-			variableNode := &Node{identifierTokens[i].Position, NT_Variable, &VariableNode{identifier.Value, expressionType}}
-			newExpression := &Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType}}}}
-
-			p.GetExpressionType(newExpression)
-			visualize(newExpression, "", true)
-
-			p.appendScope(newExpression)
+		// Transform assigned expressions in the following way: a += 1 to a = a + 1
+		for i := 0; i < len(assignedStatements); i++ {
+			assignedStatements[i] = &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatements[i], expression, expressionType}}
 		}
-
-		// Transform a += 1 to a = a + 1
-		variableNode := &Node{identifierTokens[len(identifierTokens)-1].Position, NT_Variable, &VariableNode{identifierTokens[len(identifierTokens)-1].Value, expressionType}}
-		newExpression := &Node{assign.Position, nodeType, &BinaryNode{variableNode, expression, expressionType}}
-
-		p.GetExpressionType(newExpression)
-
-		return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, newExpression}}, expressionType
 	}
 
-	// Assign nodes
-	for _, identifier := range identifierTokens[:len(identifierTokens)-1] {
-		p.appendScope(&Node{assign.Position, NT_Assign, &AssignNode{identifier.Value, expression}})
-	}
-
-	return &Node{assign.Position, NT_Assign, &AssignNode{identifierTokens[len(identifierTokens)-1].Value, expression}}, expressionType
+	return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedStatements, expression}}, expressionType
 }

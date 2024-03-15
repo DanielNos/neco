@@ -64,7 +64,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &BinaryNode{nil, right, data.DataType{data.DT_NoType, nil}}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &TypedBinaryNode{nil, right, data.DataType{data.DT_NoType, nil}}}
 		}
 
 		// Identifiers
@@ -151,9 +151,9 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			oldLeft := left
 
 			// Rotate nodes
-			left = right.Value.(*BinaryNode).Right
-			right.Value.(*BinaryNode).Right = right.Value.(*BinaryNode).Left
-			right.Value.(*BinaryNode).Left = oldLeft
+			left = right.Value.(*TypedBinaryNode).Right
+			right.Value.(*TypedBinaryNode).Right = right.Value.(*TypedBinaryNode).Left
+			right.Value.(*TypedBinaryNode).Left = oldLeft
 
 			left = p.createBinaryNode(operator.Position, nodeType, right, left)
 			continue
@@ -172,7 +172,7 @@ func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, lef
 
 	// Construct node and determine it's data type
 	dataType := p.deriveType(position, nodeType, left, right)
-	node := &Node{position, nodeType, &BinaryNode{left, right, dataType}}
+	node := &Node{position, nodeType, &TypedBinaryNode{left, right, dataType}}
 
 	return node
 }
@@ -307,7 +307,7 @@ func (p *Parser) parseIdentifier() *Node {
 			for p.peek().TokenType == lexer.TT_DL_BracketOpen {
 				p.consume() // [
 				variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-				listValue := &Node{identifierToken.Position, NT_ListValue, &BinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
+				listValue := &Node{identifierToken.Position, NT_ListValue, &TypedBinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
 				p.consume() // ]
 
 				return listValue
@@ -327,7 +327,7 @@ func (p *Parser) parseIdentifier() *Node {
 				property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
 
 				if !propertyExists {
-					p.newError(p.peek().Position, fmt.Sprintf("Struct %s doesn't have a property %s.", structName, p.peek().Value))
+					p.newError(p.peek().Position, fmt.Sprintf("Struct %s doesn't have a property %s.", structName, p.consume().Value))
 				} else {
 					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &StructFieldNode{identifierToken.Value, property.number, property.dataType}}
 				}
@@ -655,13 +655,13 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	}
 
 	// Invalid operation, can't combine
-	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &BinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &TypedBinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
 }
 
 func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 	// Binary nodes store their type
 	if expression.NodeType.IsOperator() {
-		return expression.Value.(*BinaryNode).DataType
+		return expression.Value.(*TypedBinaryNode).DataType
 	}
 
 	switch expression.NodeType {
@@ -674,7 +674,7 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return p.GetExpressionType(expression.Value.(*BinaryNode).Left).SubType.(data.DataType)
+		return p.GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(data.DataType)
 	case NT_Enum:
 		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Struct:

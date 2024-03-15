@@ -18,7 +18,7 @@ const (
 	IT_DeclareFloat
 	IT_DeclareString
 	IT_DeclareList
-	IT_DeclareStruct
+	IT_DeclareObject
 
 	IT_SetListAtPrevToCurr
 
@@ -26,6 +26,7 @@ const (
 	IT_LoadConstToList
 	IT_Load
 	IT_Store
+	IT_StoreAndPop
 
 	IT_CreateStruct
 	IT_GetField
@@ -101,7 +102,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareFloat:  "decl_float",
 	IT_DeclareString: "decl_string",
 	IT_DeclareList:   "decl_list",
-	IT_DeclareStruct: "decl_struct",
+	IT_DeclareObject: "decl_object",
 
 	IT_SetListAtPrevToCurr: "set_list",
 
@@ -109,6 +110,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_LoadConstToList: "append_const",
 	IT_Load:            "load",
 	IT_Store:           "store",
+	IT_StoreAndPop:     "store_pop",
 
 	IT_CreateStruct: "new_struct",
 	IT_GetField:     "get_field",
@@ -141,14 +143,14 @@ var InstructionTypeToString = map[byte]string{
 	IT_Return: "return",
 
 	IT_Equal:             "equal",
-	IT_IntLower:          "int_lower",
-	IT_FloatLower:        "flt_lower",
-	IT_IntGreater:        "int_greater",
-	IT_FloatGreater:      "flt_greater",
-	IT_IntLowerEqual:     "int_lower_equal",
-	IT_FloatLowerEqual:   "flt_lower_equal",
-	IT_IntGreaterEqual:   "int_greater_equal",
-	IT_FloatGreaterEqual: "flt_greater_equal",
+	IT_IntLower:          "int_lwr",
+	IT_FloatLower:        "flt_lwr",
+	IT_IntGreater:        "int_gtr",
+	IT_FloatGreater:      "flt_gtr",
+	IT_IntLowerEqual:     "int_lwr_eq",
+	IT_FloatLowerEqual:   "flt_lwr_eq",
+	IT_IntGreaterEqual:   "int_gtr_eq",
+	IT_FloatGreaterEqual: "flt_gtr_eq",
 	IT_Not:               "not",
 
 	IT_PushTrue:  "push_true",

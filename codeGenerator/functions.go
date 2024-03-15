@@ -30,7 +30,7 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 
 		// Store argument from stack in the variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreAndPop, []byte{identifier}})
 	}
 
 	// Generate function body

@@ -46,9 +46,13 @@ func visualize(node *Node, indent string, isLast bool) {
 		assign := node.Value.(*AssignNode)
 
 		println("Assign")
-		fmt.Printf("%s├─ %s\n", indent, assign.Identifier)
+		visualize(assign.AssignedExpression, indent, false)
+		println(indent + "└─ To")
+		indent += "   "
 
-		visualize(assign.Expression, indent, true)
+		for i, node := range assign.AssignedTo {
+			visualize(node, indent, i == len(assign.AssignedTo)-1)
+		}
 
 	case NT_Literal:
 		literal := node.Value.(*LiteralNode)
@@ -57,7 +61,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
 		NT_And, NT_Or:
-		binary := node.Value.(*BinaryNode)
+		binary := node.Value.(*TypedBinaryNode)
 		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DataType)
 
 		if binary.Left != nil {
@@ -68,7 +72,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Not:
 		println("!")
-		visualize(node.Value.(*BinaryNode).Right, indent, true)
+		visualize(node.Value.(*TypedBinaryNode).Right, indent, true)
 
 	case NT_Variable:
 		println(node.Value.(*VariableNode).Identifier)
@@ -182,7 +186,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_ListValue:
 		println("ListIndex")
-		listValue := node.Value.(*BinaryNode)
+		listValue := node.Value.(*TypedBinaryNode)
 
 		visualize(listValue.Left, indent, false)
 		visualize(listValue.Right, indent, true)

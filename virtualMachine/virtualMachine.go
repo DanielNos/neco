@@ -175,7 +175,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []interface{}{}}})
 
-		case IT_DeclareStruct:
+		case IT_DeclareObject:
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Struct, nil}, nil}})
 
 		// Set and load list at index
@@ -193,6 +193,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack.Push(vm.findSymbol().symbolValue.(*VariableSymbol).value)
 
 		case IT_Store:
+			vm.findSymbol().symbolValue.(*VariableSymbol).value = *vm.stack.Top()
+
+		case IT_StoreAndPop:
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.stack.Pop()
 
 		// Structs

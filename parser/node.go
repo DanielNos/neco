@@ -119,8 +119,8 @@ type VariableDeclareNode struct {
 }
 
 type AssignNode struct {
-	Identifier string
-	Expression *Node
+	AssignedTo         []*Node
+	AssignedExpression *Node
 }
 
 type LiteralValue interface{}
@@ -131,9 +131,12 @@ type LiteralNode struct {
 }
 
 type BinaryNode struct {
-	Left     *Node
-	Right    *Node
-	DataType data.DataType
+	Left, Right *Node
+}
+
+type TypedBinaryNode struct {
+	Left, Right *Node
+	DataType    data.DataType
 }
 
 type VariableNode struct {
@@ -242,7 +245,7 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 }
 
 func (n *Node) IsBinaryNode() bool {
-	return n.NodeType >= NT_Property && n.NodeType <= NT_GreaterEqual && n.Value.(*BinaryNode).Left != nil
+	return n.NodeType >= NT_Property && n.NodeType <= NT_GreaterEqual && n.Value.(*TypedBinaryNode).Left != nil
 }
 
 func (nt NodeType) IsOperator() bool {

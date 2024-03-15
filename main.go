@@ -84,16 +84,16 @@ func printInstructions(instructions *[]VM.Instruction, constants []interface{}) 
 
 		// Print line number
 		if justChanged {
-			fmt.Printf("%s%d ", linePadder, line)
-			if line < 10 {
-				print(" ")
-			}
+			fmt.Printf("%s%d  ", linePadder, line)
 			justChanged = false
 		} else {
 			print("     ")
 		}
 
-		// Print instruction number
+		// Print instruction number,
+		if i < 10 {
+			print(" ")
+		}
 		fmt.Printf("%d  ", i)
 
 		// Print instruction name
