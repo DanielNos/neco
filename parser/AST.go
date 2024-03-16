@@ -47,11 +47,15 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		println("Assign")
 		visualize(assign.AssignedExpression, indent, false)
-		println(indent + "└─ To")
-		indent += "   "
+		if len(assign.AssignedTo) > 1 {
+			println(indent + "└─ [multiple]")
+			indent += "   "
 
-		for i, node := range assign.AssignedTo {
-			visualize(node, indent, i == len(assign.AssignedTo)-1)
+			for i, node := range assign.AssignedTo {
+				visualize(node, indent, i == len(assign.AssignedTo)-1)
+			}
+		} else {
+			visualize(assign.AssignedTo[len(assign.AssignedTo)-1], indent, true)
 		}
 
 	case NT_Literal:

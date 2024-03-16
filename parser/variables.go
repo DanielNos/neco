@@ -70,7 +70,7 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 		for _, assignedTo := range assignedStatements {
 			assignedType := p.GetExpressionType(assignedTo)
 
-			if !assignedType.Equals(expressionType) {
+			if assignedType.DType != data.DT_NoType && !assignedType.Equals(expressionType) {
 				p.newErrorNoMessage()
 				logger.Error2CodePos(assign.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to statement of type %s.", expressionType, assignedType))
 			}

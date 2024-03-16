@@ -235,13 +235,9 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	switch p.peek().TokenType {
 
 	// Variable declaration
-	case lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list:
+	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list:
 		return p.parseVariableDeclaration(false)
 
-	case lexer.TT_KW_var:
-		return p.parseVariableDeclaration(false)
-
-	// Constant variable
 	case lexer.TT_KW_const:
 		p.consume()
 		return p.parseVariableDeclaration(true)
@@ -339,6 +335,12 @@ func (p *Parser) parseType() data.DataType {
 	// Token is not a data type keyword => it's enum or struct
 	if variableType.DType == data.DT_NoType {
 		symbol := p.getGlobalSymbol(p.peek().Value)
+
+		// Neither primitive or user defined type => type can't be determined
+		if symbol == nil {
+			p.consume()
+			return variableType // DT_NoType
+		}
 
 		// Symbol is a struct
 		if symbol.symbolType == ST_Struct {
