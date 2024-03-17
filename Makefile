@@ -3,6 +3,9 @@ VERSION=1.0
 
 PACKAGE=$(BIN_NAME)_$(VERSION)-amd64
 
+build_linux: *.go
+	GOOS=linux GOARCH=amd64 go build -o bin/$(BIN_NAME)_linux_amd64 .
+
 build: *.go
 	GOOS=linux GOARCH=amd64 go build -o bin/$(BIN_NAME)_linux_amd64 .
 	GOOS=linux GOARCH=386 go build -o bin/$(BIN_NAME)_linux_386 .
@@ -12,6 +15,7 @@ build: *.go
 	GOOS=windows GOARCH=arm go build -o bin/$(BIN_NAME)_windows_arm.exe .
 	GOOS=darwin GOARCH=amd64 go build -o bin/$(BIN_NAME)_macos_amd64 .
 	GOOS=darwin GOARCH=arm64 go build -o bin/$(BIN_NAME)_macos_arm64 .
+
 package: clean build
 	mkdir -p $(PACKAGE)/usr/bin
 	mkdir $(PACKAGE)/DEBIAN
@@ -20,5 +24,6 @@ package: clean build
 	dpkg-deb --build --root-owner-group $(PACKAGE)
 	mv $(PACKAGE).deb bin
 	rm -rf $(PACKAGE)
+	
 clean:
 	rm -rf bin

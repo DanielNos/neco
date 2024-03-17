@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -137,6 +138,7 @@ func processArguments() (string, string, []bool) {
 	}
 
 	action := args[0]
+	argumentsStart := 2
 
 	// Collect target
 	target := ""
@@ -151,7 +153,14 @@ func processArguments() (string, string, []bool) {
 		printHelp()
 		os.Exit(0)
 	default:
-		logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid action %s. Use neco help for more info.", args[1]))
+		if strings.HasSuffix(args[0], ".neco") {
+			action = "build"
+		} else {
+			action = "run"
+		}
+
+		target = args[0]
+		argumentsStart = 1
 	}
 
 	// Collect flags
@@ -161,7 +170,7 @@ func processArguments() (string, string, []bool) {
 	// Build flags
 	case "build":
 		flags = []bool{false, false, false, false}
-		for _, flag := range args[2:] {
+		for _, flag := range args[argumentsStart:] {
 			switch flag {
 			case "--tokens", "-to":
 				flags[0] = true
@@ -179,7 +188,7 @@ func processArguments() (string, string, []bool) {
 		}
 	// Run flags
 	case "run":
-		for _, flag := range args[2:] {
+		for _, flag := range args[argumentsStart:] {
 			switch flag {
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
@@ -203,7 +212,7 @@ func processArguments() (string, string, []bool) {
 	return action, target, flags
 }
 
-func analyze(path string, showTokens, showTree, isCompiling, dontOptimize bool) (*parser.Node, *parser.Parser) {
+func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node, *parser.Parser) {
 	action := "Analysis"
 	if isCompiling {
 		action = "Compilation"
@@ -283,7 +292,7 @@ func analyze(path string, showTokens, showTree, isCompiling, dontOptimize bool) 
 func compile(path string, showTokens, showTree, printInstruction, dontOptimize bool) {
 	startTime := time.Now()
 
-	tree, p := analyze(path, showTokens, showTree, true, dontOptimize)
+	tree, p := analyze(path, showTokens, showTree, true)
 
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, !dontOptimize)
@@ -323,7 +332,7 @@ func main() {
 		logger.Info(fmt.Sprintf("🐱 Analyzing %s", target))
 		startTime := time.Now()
 
-		analyze(target, flags[0], flags[1], false, flags[2])
+		analyze(target, flags[0], flags[1], false)
 
 		logger.Success(fmt.Sprintf("😺 Analyze completed in %s.", time.Since(startTime)))
 	}
