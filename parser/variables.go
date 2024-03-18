@@ -79,8 +79,14 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 
 			// Check if variable can be assigned expression
 			if leafType.DType != data.DT_NoType && !variableType.Equals(expressionType) {
-				p.newErrorNoMessage()
-				logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+				// Variable doesn't have type yet (declared using var)
+				if variableType.DType == data.DT_NoType {
+					variableType = expressionType
+					// Invalid type
+				} else {
+					p.newErrorNoMessage()
+					logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+				}
 			}
 		}
 	}
