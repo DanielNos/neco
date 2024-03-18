@@ -96,15 +96,18 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 
 	// Print line
 	if err == nil && len(strings.Trim(lineString, "\n \t")) != 0 {
+		// Print from start to error
 		color.Set(color.FgWhite)
 
 		fmt.Fprint(os.Stderr, lineString[0:startChar-1])
 
+		// Print error
 		color.Set(color.FgHiRed)
 		color.Set(color.Underline)
 
 		fmt.Fprint(os.Stderr, lineString[startChar-1:endChar])
 
+		// Print from error to end
 		color.Set(color.Reset)
 		color.Set(color.FgWhite)
 
@@ -128,50 +131,52 @@ func ErrorCodePos(codePos *data.CodePos, message string) {
 }
 
 func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
-	// Print error line
+	// Read line
 	lineString, err := readLine(*codePos1.File, codePos1.StartLine)
 
-	if err == nil {
+	if int(codePos1.EndChar) > len(lineString) {
+		codePos1.EndChar--
+	}
+
+	if int(codePos2.EndChar) > len(lineString) {
+		codePos2.EndChar--
+	}
+
+	// Print line
+	if err == nil && len(strings.Trim(lineString, "\n \t")) != 0 {
+		// Print from start to error 1
 		color.Set(color.FgWhite)
 
-		if codePos1.StartChar == codePos1.EndChar {
-			codePos1.EndChar++
-		}
-		if codePos2.StartChar == codePos2.EndChar {
-			codePos2.EndChar++
-		}
+		fmt.Fprint(os.Stderr, lineString[0:codePos1.StartChar-1])
 
-		// Print line of code with errors
-		fmt.Fprint(os.Stderr, "\t\t ")
-		fmt.Fprintf(os.Stderr, "%s", lineString)
-		fmt.Fprint(os.Stderr, "\n\t\t")
-
-		// Move to error token 1
-		var i uint
-		for i = 0; i < codePos1.StartChar; i++ {
-			fmt.Fprintf(os.Stderr, " ")
-		}
-
-		// Draw arrows under the error token 1
+		// Print error 1
 		color.Set(color.FgHiRed)
-		for i = codePos1.StartChar; i < codePos1.EndChar; i++ {
-			fmt.Fprintf(os.Stderr, "^")
-		}
+		color.Set(color.Underline)
 
-		// Move to error token 2
-		for i = codePos1.EndChar; i < codePos2.StartChar; i++ {
-			fmt.Fprintf(os.Stderr, " ")
-		}
+		fmt.Fprint(os.Stderr, lineString[codePos1.StartChar-1:codePos1.EndChar])
 
-		// Draw arrows under the error token 2
-		for i = codePos2.StartChar; i < codePos2.EndChar; i++ {
-			fmt.Fprintf(os.Stderr, "^")
-		}
+		// Print from end of error 1 to start of error 2
+		color.Set(color.Reset)
+		color.Set(color.FgWhite)
 
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, lineString[codePos1.EndChar:codePos2.StartChar-1])
+
+		// Print error 2
+		color.Set(color.FgHiRed)
+		color.Set(color.Underline)
+
+		fmt.Fprint(os.Stderr, lineString[codePos2.StartChar-1:codePos2.EndChar])
+
+		// Print from error 2 to end
+		color.Set(color.Reset)
+		color.Set(color.FgWhite)
+
+		fmt.Fprint(os.Stderr, lineString[codePos2.EndChar:])
+		fmt.Fprintln(os.Stderr, "\n")
 	}
 
 	// Print message
+	color.Set(color.FgHiRed)
 	fmt.Fprintf(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
