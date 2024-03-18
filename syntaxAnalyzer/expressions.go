@@ -138,7 +138,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	}
 
 	// List
-	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
+	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
 		sn.analyzeList()
 
 		// Not end of expression
@@ -200,7 +200,7 @@ func (sn *SyntaxAnalyzer) analyzeList() {
 	}
 
 	// Collect expressions in list
-	for sn.peek().TokenType != lexer.TT_DL_BraceClose && sn.peek().TokenType != lexer.TT_EndOfCommand {
+	for sn.peek().TokenType != lexer.TT_DL_BracketClose && sn.peek().TokenType != lexer.TT_EndOfCommand {
 		sn.analyzeExpression()
 
 		// Another expression
@@ -211,7 +211,7 @@ func (sn *SyntaxAnalyzer) analyzeList() {
 			if sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.consume()
 				// Missing expression
-			} else if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+			} else if sn.peek().TokenType == lexer.TT_DL_BracketClose {
 				sn.newError(sn.peek(), "Expected expression after comma.")
 				break
 			}
@@ -222,7 +222,7 @@ func (sn *SyntaxAnalyzer) analyzeList() {
 			sn.consume()
 
 			// Allow only after last element
-			if sn.peek().TokenType != lexer.TT_DL_BraceClose {
+			if sn.peek().TokenType != lexer.TT_DL_BracketClose {
 				sn.newError(sn.peekPrevious(), "There can be EOC (\\n) only after last element. Expected \",\".")
 			}
 		}

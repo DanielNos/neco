@@ -9,11 +9,11 @@ func (sn *SyntaxAnalyzer) analyzeListType() {
 	// Collect list
 	sn.consume()
 
-	// Collect <
-	if sn.peek().TokenType == lexer.TT_OP_Lower {
+	// Collect [
+	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
 		sn.consume()
 	} else {
-		sn.newError(sn.peek(), "Expected opening < after list type.")
+		sn.newError(sn.peek(), "Expected opening bracktet (\"[\") after list type.")
 	}
 
 	// Collect sub-type
@@ -27,11 +27,11 @@ func (sn *SyntaxAnalyzer) analyzeListType() {
 		sn.newError(sn.peek(), "Expected subtype in composite data type.")
 	}
 
-	// Collect >
-	if sn.peek().TokenType == lexer.TT_OP_Greater {
+	// Collect ]
+	if sn.peek().TokenType == lexer.TT_DL_BracketClose {
 		sn.consume()
 	} else {
-		sn.newError(sn.peek(), "Expected closing > aftrer data type.")
+		sn.newError(sn.peek(), "Expected closing bracket (\"]\") aftrer data type.")
 	}
 }
 

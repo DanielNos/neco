@@ -177,11 +177,11 @@ func necoPrintString(value interface{}, root bool) string {
 
 	} else if _, ok := value.([]interface{}); ok {
 		// Print list
-		str := "{"
+		str := "["
 		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
 			str = fmt.Sprintf("%s%s, ", str, necoPrintString(element, false))
 		}
-		str = fmt.Sprintf("%s%s}", str, necoPrintString(value.([]interface{})[len(value.([]interface{}))-1], false))
+		str = fmt.Sprintf("%s%s]", str, necoPrintString(value.([]interface{})[len(value.([]interface{}))-1], false))
 
 		return str
 

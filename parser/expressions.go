@@ -72,7 +72,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		left = p.parseIdentifier()
 
 		// List
-	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+	} else if p.peek().TokenType == lexer.TT_DL_BracketOpen {
 		startPosition := p.consume().Position
 
 		// Skip EOC
@@ -85,7 +85,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		expressionTypes := map[data.DataType]int{}
 		elementType := data.DataType{data.DT_NoType, nil}
 
-		for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		for p.peek().TokenType != lexer.TT_DL_BracketClose {
 			// Collect expression
 			expressions = append(expressions, p.parseExpressionRoot())
 
@@ -108,14 +108,23 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// More than one type in list
 		if len(expressionTypes) != 1 {
-			// Find type with lowest count
+			// Find type with lowest count and highest count
 			lowestCount := 999999
 			lowestType := data.DataType{}
 
+			highestCount := 0
+			highestType := data.DataType{}
+
 			for t, count := range expressionTypes {
+				// Update lowest count
 				if count < lowestCount {
 					lowestCount = count
 					lowestType = t
+				}
+				// Update highest count
+				if count > highestCount {
+					highestCount = count
+					highestType = t
 				}
 			}
 
@@ -126,6 +135,8 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 					break
 				}
 			}
+
+			elementType = highestType
 		}
 
 		left = &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}

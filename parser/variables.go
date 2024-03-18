@@ -68,11 +68,19 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 	// Print errors
 	if expressionType.DType != data.DT_NoType {
 		for _, assignedTo := range assignedStatements {
-			assignedType := p.GetExpressionType(assignedTo)
+			variableType := p.GetExpressionType(assignedTo)
 
-			if assignedType.DType != data.DT_NoType && !assignedType.Equals(expressionType) {
+			// Find leaf data type
+			leafType := expressionType
+
+			for leafType.DType == data.DT_List {
+				leafType = leafType.SubType.(data.DataType)
+			}
+
+			// Check if variable can be assigned expression
+			if leafType.DType != data.DT_NoType && !variableType.Equals(expressionType) {
 				p.newErrorNoMessage()
-				logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, assignedType))
+				logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
 			}
 		}
 	}
