@@ -90,9 +90,13 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
 
 		// Transform assigned expressions in the following way: a += 1 to a = a + 1
-		for i := 0; i < len(assignedStatements); i++ {
-			assignedStatements[i] = &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatements[i], expression, expressionType}}
+		for _, assignedStatement := range assignedStatements[:len(assignedStatements)-1] {
+			generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatement, expression, expressionType}}
+			p.appendScope(&Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedStatement}, generatedNode}})
 		}
+
+		generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatements[len(assignedStatements)-1], expression, expressionType}}
+		return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedStatements[len(assignedStatements)-1]}, generatedNode}}, expressionType
 	}
 
 	return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedStatements, expression}}, expressionType
