@@ -205,24 +205,22 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeType() {
-	if sn.peek().TokenType == lexer.TT_KW_list {
-		sn.analyzeCompositeType(lexer.TT_DL_BracketOpen, lexer.TT_DL_BracketClose)
-	} else if sn.peek().TokenType == lexer.TT_KW_set {
-		sn.analyzeCompositeType(lexer.TT_OP_Lower, lexer.TT_OP_Greater)
+	if sn.peek().TokenType == lexer.TT_KW_list || sn.peek().TokenType == lexer.TT_KW_set {
+		sn.analyzeCompositeType()
 	} else {
 		sn.consume()
 	}
 }
 
-func (sn *SyntaxAnalyzer) analyzeCompositeType(openingToken, closingToken lexer.TokenType) {
+func (sn *SyntaxAnalyzer) analyzeCompositeType() {
 	// Consume type
 	sn.consume()
 
 	// Consume opening token
-	if sn.peek().TokenType == openingToken {
+	if sn.peek().TokenType == lexer.TT_OP_Lower {
 		sn.consume()
 	} else {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected \"%s\" after composite data type.", openingToken))
+		sn.newError(sn.peek(), "Expected \"<\" after composite data type.")
 	}
 
 	// Analyze sub-type
@@ -233,9 +231,9 @@ func (sn *SyntaxAnalyzer) analyzeCompositeType(openingToken, closingToken lexer.
 	}
 
 	// Consume closing token
-	if sn.peek().TokenType == closingToken {
+	if sn.peek().TokenType == lexer.TT_OP_Greater {
 		sn.consume()
 	} else {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected \"%s\" aftrer data type.", closingToken))
+		sn.newError(sn.peek(), "Expected \">\" aftrer composite data type sub-type.")
 	}
 }
