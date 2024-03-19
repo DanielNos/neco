@@ -21,7 +21,8 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
 		// Generate arguments
 		binaryNode := node.Value.(*parser.TypedBinaryNode)
-		cg.generateExpressionArguments(binaryNode)
+		cg.generateExpression(binaryNode.Left)
+		cg.generateExpression(binaryNode.Right)
 
 		// Generate operator
 		// Concatenate strings
@@ -41,18 +42,21 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// Logical operators
 	case parser.NT_And:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_And, NO_ARGS})
 
 	case parser.NT_Or:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Or, NO_ARGS})
 
 	// Comparison operators
 	case parser.NT_Equal, parser.NT_NotEqual:
 		// Generate arguments
-		cg.generateExpressionArguments(node.Value.(*parser.TypedBinaryNode))
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 
 		// Generate operator
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Equal, NO_ARGS})
@@ -64,7 +68,8 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
 		// Generate arguments
 		binaryNode := node.Value.(*parser.TypedBinaryNode)
-		cg.generateExpressionArguments(binaryNode)
+		cg.generateExpression(binaryNode.Left)
+		cg.generateExpression(binaryNode.Right)
 
 		// Generate operator
 		leftType := getExpressionType(binaryNode.Left)
@@ -159,11 +164,6 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
 	}
-}
-
-func (cg *CodeGenerator) generateExpressionArguments(binaryNode *parser.TypedBinaryNode) {
-	cg.generateExpression(binaryNode.Left)
-	cg.generateExpression(binaryNode.Right)
 }
 
 func (cg *CodeGenerator) generateVariable(variableName string) {
