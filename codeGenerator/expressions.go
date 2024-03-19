@@ -19,9 +19,19 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 	// Operators
 	case parser.NT_Add, parser.NT_Subtract, parser.NT_Multiply, parser.NT_Divide, parser.NT_Power, parser.NT_Modulo:
-		// Generate arguments
+		// Generate left side
 		binaryNode := node.Value.(*parser.TypedBinaryNode)
 		cg.generateExpression(binaryNode.Left)
+
+		// Insert elements to a set (elements are inserted by themselves, we don't create another set)
+		if binaryNode.DataType.DType == data.DT_Set {
+			for _, element := range binaryNode.Right.Value.(*parser.ListNode).Nodes {
+				cg.generateExpression(element)
+				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
+			}
+			break
+		}
+
 		cg.generateExpression(binaryNode.Right)
 
 		// Generate operator
@@ -90,9 +100,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 	// Lists
 	case parser.NT_List:
-		// Create list in ListA
+		// Create list
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateList, NO_ARGS})
 
+		// Append elements
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
 			cg.generateExpression(node)
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_AppendToList, NO_ARGS})
@@ -106,7 +117,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		// Generate index expression
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 
-		// Generate LoadListAt instruction
+		// Generate indexing instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_IndexList, NO_ARGS})
 
 	// Logical not
