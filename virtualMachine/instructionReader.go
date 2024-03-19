@@ -180,15 +180,15 @@ func (ir *InstructionReader) readInstructions() {
 		} else if instructionType <= IT_JumpIfTrue {
 			ir.byteIndex++
 
-			// Declare list instruction
-			if instructionType == IT_DeclareList {
+			// Declarator of composite variable
+			if IsCompositeDeclarator(instructionType) {
 				// Add declare list instruction with id argument
 				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 				ir.byteIndex++
 
-				// Add list instructions without arguments
-				for ir.bytes[ir.byteIndex] == IT_DeclareList {
-					ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{IT_DeclareList, NO_ARGS})
+				// Add instructions for declaring composite sub-types types without arguments
+				for IsCompositeDeclarator(ir.bytes[ir.byteIndex]) {
+					ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
 					ir.byteIndex++
 				}
 

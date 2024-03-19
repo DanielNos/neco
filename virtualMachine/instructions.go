@@ -18,6 +18,7 @@ const (
 	IT_DeclareFloat
 	IT_DeclareString
 	IT_DeclareList
+	IT_DeclareSet
 	IT_DeclareObject
 
 	IT_SetListAtPrevToCurr
@@ -105,6 +106,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareFloat:  "decl_float",
 	IT_DeclareString: "decl_string",
 	IT_DeclareList:   "decl_list",
+	IT_DeclareSet:    "decl_set",
 	IT_DeclareObject: "decl_object",
 
 	IT_SetListAtPrevToCurr: "set_list",
@@ -186,4 +188,8 @@ type ExpandedInstruction struct {
 
 func IsJumpForward(instructionType byte) bool {
 	return instructionType == IT_Jump || instructionType == IT_JumpEx || instructionType == IT_JumpIfTrue || instructionType == IT_JumpIfTrueEx
+}
+
+func IsCompositeDeclarator(instructionType byte) bool {
+	return instructionType == IT_DeclareList || instructionType == IT_DeclareSet
 }

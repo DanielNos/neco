@@ -166,28 +166,45 @@ func necoPrint(value interface{}, root bool) {
 func necoPrintString(value interface{}, root bool) string {
 	if object, ok := value.(object); ok {
 		// Print struct
-		str := fmt.Sprintf("%s{", *object.identifier)
+		str := *object.identifier + "{"
 
 		for _, property := range object.fields[:len(object.fields)-1] {
-			str = fmt.Sprintf("%s%s, ", str, necoPrintString(property, false))
+			str += necoPrintString(property, false) + ", "
 		}
-		str = fmt.Sprintf("%s%s}", str, necoPrintString(object.fields[len(object.fields)-1], false))
 
-		return str
+		return necoPrintString(object.fields[len(object.fields)-1], false) + "}"
 
-	} else if _, ok := value.([]interface{}); ok {
+	} else if valueList, ok := value.([]interface{}); ok {
 		// Print list
 		str := "["
-		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
-			str = fmt.Sprintf("%s%s, ", str, necoPrintString(element, false))
+
+		for _, element := range valueList[:len(valueList)-1] {
+			str += necoPrintString(element, false) + ", "
 		}
-		str = fmt.Sprintf("%s%s]", str, necoPrintString(value.([]interface{})[len(value.([]interface{}))-1], false))
 
-		return str
+		return necoPrintString(valueList[len(valueList)-1], false) + "]"
 
-	} else if _, ok := value.(string); ok && !root {
+	} else if valueSet, ok := value.(map[interface{}]struct{}); ok {
+		// Print set
+
+		str := "{"
+		first := true
+
+		for item := range valueSet {
+			if first {
+				str += necoPrintString(item, false)
+				first = false
+			} else {
+				str += ", " + necoPrintString(item, false)
+			}
+		}
+
+		return str + "}"
+
+	} else if valueString, ok := value.(string); ok && !root {
 		// Print string
-		return fmt.Sprintf("\"%v\"", value)
+		return "\"" + valueString + "\""
+
 	} else {
 		// Use default formatting for everything else
 		return fmt.Sprintf("%v", value)

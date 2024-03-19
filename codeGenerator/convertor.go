@@ -2,6 +2,7 @@ package codeGenerator
 
 import (
 	"encoding/binary"
+	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -36,6 +37,16 @@ var comparisonOperatorToFloatInstruction = map[parser.NodeType]byte{
 	parser.NT_Greater:      VM.IT_FloatGreater,
 	parser.NT_LowerEqual:   VM.IT_FloatLowerEqual,
 	parser.NT_GreaterEqual: VM.IT_FloatGreaterEqual,
+}
+
+var dataTypeToDeclareInstruction = map[data.DType]byte{
+	data.DT_Bool:   VM.IT_DeclareBool,
+	data.DT_Int:    VM.IT_DeclareInt,
+	data.DT_Float:  VM.IT_DeclareFloat,
+	data.DT_String: VM.IT_DeclareString,
+	data.DT_List:   VM.IT_DeclareList,
+	data.DT_Set:    VM.IT_DeclareSet,
+	data.DT_Struct: VM.IT_DeclareObject,
 }
 
 func (cg *CodeGenerator) lineToInstruction(line byte) byte {

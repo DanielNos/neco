@@ -160,14 +160,14 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_DeclareString:
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_String, nil}, nil}})
 
-		case IT_DeclareList:
+		case IT_DeclareList, IT_DeclareSet:
 			vm.instructionIndex++
 
-			dataType := data.DataType{data.DT_List, nil}
+			dataType := data.DataType{declareInstructionToDataType[instruction.InstructionType], nil}
 			endType := &dataType.SubType
 
-			for vm.Instructions[vm.instructionIndex].InstructionType == IT_DeclareList {
-				dataType = data.DataType{data.DT_List, dataType}
+			for IsCompositeDeclarator(vm.Instructions[vm.instructionIndex].InstructionType) {
+				dataType = data.DataType{declareInstructionToDataType[vm.Instructions[vm.instructionIndex].InstructionType], dataType}
 				vm.instructionIndex++
 			}
 
@@ -373,6 +373,14 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]interface{})[vm.stack.items[vm.stack.size].(int64)]
 
+		// Set operations
+		case IT_CreateSet:
+			vm.stack.Push(map[interface{}]struct{}{})
+
+		case IT_InsertToSet:
+			vm.stack.size--
+			vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]] = struct{}{}
+
 		// Ignore line offsets
 		case IT_LineOffset:
 
@@ -428,4 +436,9 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 	}
 
 	return value
+}
+
+var declareInstructionToDataType = map[byte]data.DType{
+	IT_DeclareList: data.DT_List,
+	IT_DeclareSet:  data.DT_Set,
 }

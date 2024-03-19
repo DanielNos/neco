@@ -247,29 +247,18 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 }
 
 func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, passId bool) {
+	// Identifier of variable is passed only for root types, sub-types have no arguments
 	args := NO_ARGS
 	if passId {
 		args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
 	}
 
-	switch dataType.DType {
-	case data.DT_Bool:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareBool, args})
-	case data.DT_Int, data.DT_Enum:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareInt, args})
-	case data.DT_Float:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareFloat, args})
-	case data.DT_String:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareString, args})
-	case data.DT_List:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareList, args})
+	// Generate declaration of root type
+	cg.instructions = append(cg.instructions, VM.Instruction{dataTypeToDeclareInstruction[dataType.DType], args})
 
-		if dataType.SubType != nil {
-			cg.generateVariableDeclarator(dataType.SubType.(data.DataType), false)
-		}
-	case data.DT_Struct:
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_DeclareObject, args})
-
+	// Generate sub-type of composite types
+	if dataType.SubType != nil {
+		cg.generateVariableDeclarator(dataType.SubType.(data.DataType), false)
 	}
 }
 
