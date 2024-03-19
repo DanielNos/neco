@@ -172,7 +172,7 @@ func necoPrintString(value interface{}, root bool) string {
 			str += necoPrintString(property, false) + ", "
 		}
 
-		return necoPrintString(object.fields[len(object.fields)-1], false) + "}"
+		return str + necoPrintString(object.fields[len(object.fields)-1], false) + "}"
 
 	} else if valueList, ok := value.([]interface{}); ok {
 		// Print list
@@ -182,7 +182,7 @@ func necoPrintString(value interface{}, root bool) string {
 			str += necoPrintString(element, false) + ", "
 		}
 
-		return necoPrintString(valueList[len(valueList)-1], false) + "]"
+		return str + necoPrintString(valueList[len(valueList)-1], false) + "]"
 
 	} else if valueSet, ok := value.(map[interface{}]struct{}); ok {
 		// Print set
