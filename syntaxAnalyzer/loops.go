@@ -19,11 +19,7 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 	if !sn.peek().TokenType.IsVariableType() {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected variable type, found \"%s\" instead.", sn.peek()))
 	} else {
-		if sn.peek().TokenType == lexer.TT_KW_list {
-			sn.analyzeListType()
-		} else {
-			sn.consume()
-		}
+		sn.analyzeType()
 	}
 
 	// Check variable identifier

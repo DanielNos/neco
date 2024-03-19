@@ -9,6 +9,7 @@ var KEYWORDS = map[string]TokenType{
 	"flt":    TT_KW_flt,
 	"str":    TT_KW_str,
 	"list":   TT_KW_list,
+	"set":    TT_KW_set,
 
 	"loop":     TT_KW_loop,
 	"while":    TT_KW_while,

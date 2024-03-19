@@ -24,6 +24,7 @@ var TokenTypeToDataType = map[lexer.TokenType]data.DType{
 	lexer.TT_LT_String: data.DT_String,
 
 	lexer.TT_KW_list: data.DT_List,
+	lexer.TT_KW_set:  data.DT_Set,
 }
 
 type Parser struct {
@@ -235,7 +236,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	switch p.peek().TokenType {
 
 	// Variable declaration
-	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list:
+	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list, lexer.TT_KW_set:
 		return p.parseVariableDeclaration(false)
 
 	case lexer.TT_KW_const:
@@ -358,11 +359,17 @@ func (p *Parser) parseType() data.DataType {
 	p.consume()
 
 	// Insert subtype to list data type
-	if variableType.DType == data.DT_List {
+	if variableType.DType == data.DT_List || variableType.DType == data.DT_Set {
 		p.consume()
 		variableType.SubType = p.parseType()
 		p.consume()
 	}
 
 	return variableType
+}
+
+func (p *Parser) consumeEOCs() {
+	for p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
 }

@@ -56,6 +56,7 @@ const (
 	TT_KW_flt
 	TT_KW_str
 	TT_KW_list
+	TT_KW_set
 
 	TT_KW_Assign
 	TT_KW_AddAssign
@@ -172,7 +173,7 @@ func (tt TokenType) String() string {
 }
 
 func (tt TokenType) IsVariableType() bool {
-	return tt >= TT_KW_var && tt <= TT_KW_list
+	return tt >= TT_KW_var && tt <= TT_KW_set
 }
 
 func (tt TokenType) IsLiteral() bool {

@@ -5,43 +5,9 @@ import (
 	"neco/lexer"
 )
 
-func (sn *SyntaxAnalyzer) analyzeListType() {
-	// Collect list
-	sn.consume()
-
-	// Collect [
-	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
-		sn.consume()
-	} else {
-		sn.newError(sn.peek(), "Expected opening bracktet (\"[\") after list type.")
-	}
-
-	// Collect sub-type
-	if sn.peek().TokenType.IsVariableType() {
-		if sn.peek().TokenType == lexer.TT_KW_list {
-			sn.analyzeListType()
-		} else {
-			sn.consume()
-		}
-	} else {
-		sn.newError(sn.peek(), "Expected subtype in composite data type.")
-	}
-
-	// Collect ]
-	if sn.peek().TokenType == lexer.TT_DL_BracketClose {
-		sn.consume()
-	} else {
-		sn.newError(sn.peek(), "Expected closing bracket (\"]\") aftrer data type.")
-	}
-}
-
 func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
-	// Collect type
-	if sn.peek().TokenType == lexer.TT_KW_list {
-		sn.analyzeListType()
-	} else {
-		sn.consume()
-	}
+	// Analyze type
+	sn.analyzeType()
 
 	// Check identifier
 	if sn.peek().TokenType != lexer.TT_Identifier {
@@ -235,5 +201,41 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return
 		}
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeType() {
+	if sn.peek().TokenType == lexer.TT_KW_list {
+		sn.analyzeCompositeType(lexer.TT_DL_BracketOpen, lexer.TT_DL_BracketClose)
+	} else if sn.peek().TokenType == lexer.TT_KW_set {
+		sn.analyzeCompositeType(lexer.TT_OP_Lower, lexer.TT_OP_Greater)
+	} else {
+		sn.consume()
+	}
+}
+
+func (sn *SyntaxAnalyzer) analyzeCompositeType(openingToken, closingToken lexer.TokenType) {
+	// Consume type
+	sn.consume()
+
+	// Consume opening token
+	if sn.peek().TokenType == openingToken {
+		sn.consume()
+	} else {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected \"%s\" after composite data type.", openingToken))
+	}
+
+	// Analyze sub-type
+	if sn.peek().TokenType.IsVariableType() {
+		sn.analyzeType()
+	} else {
+		sn.newError(sn.peek(), "Expected subtype in composite data type.")
+	}
+
+	// Consume closing token
+	if sn.peek().TokenType == closingToken {
+		sn.consume()
+	} else {
+		sn.newError(sn.peek(), fmt.Sprintf("Expected \"%s\" aftrer data type.", closingToken))
 	}
 }

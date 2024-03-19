@@ -11,12 +11,13 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		sn.consume()
 	}
 
-	// Operator
+	// Unary operator
 	if sn.peek().TokenType.IsUnaryOperator() {
 		sn.consume()
 		sn.analyzeExpression()
 		return
 	}
+
 	// Literal
 	if sn.peek().TokenType.IsLiteral() {
 		sn.consume()
@@ -28,7 +29,14 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		}
 		return
 	}
-	// Variable or function call
+
+	// Set
+	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
+		sn.analyzeSet()
+		return
+	}
+
+	// Other types
 	if sn.peek().TokenType == lexer.TT_Identifier {
 		sn.consume()
 
@@ -229,4 +237,44 @@ func (sn *SyntaxAnalyzer) analyzeList() {
 	}
 
 	sn.consume()
+}
+
+func (sn *SyntaxAnalyzer) analyzeSet() {
+	sn.consume() // {
+	sn.consumeEOCs()
+
+	for sn.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Analyze expression
+		sn.analyzeExpression()
+
+		// Comma after element
+		if sn.peek().TokenType == lexer.TT_DL_Comma {
+			sn.consume()
+
+			// Closing brace right after comma
+			if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+				sn.newError(sn.peek(), "Expected expression or EOC after comma.")
+				break
+			}
+
+			sn.consumeEOCs()
+
+			// No more elements after comma
+			if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+				sn.consume()
+				break
+			}
+
+			continue
+		}
+
+		sn.consumeEOCs()
+
+		// No comma after element and no closing brace
+		if sn.peek().TokenType != lexer.TT_DL_BraceClose {
+			sn.newError(sn.peek(), "Expected closing brace (\"}\") after last set element.")
+		}
+	}
+
+	sn.consume() // }
 }

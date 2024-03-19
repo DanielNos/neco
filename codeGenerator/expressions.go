@@ -134,6 +134,28 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_GetField, []byte{byte(structFieldNode.PropertyIndex)}})
 
+	// Sets
+	case parser.NT_Set:
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateSet, NO_ARGS})
+
+		elements := node.Value.(*parser.ListNode).Nodes
+		usedElements := map[interface{}]struct{}{}
+
+		for _, element := range elements {
+			// Skip literals that were already inserted
+			if cg.optimize && element.NodeType == parser.NT_Literal {
+				_, exists := usedElements[element.Value.(*parser.LiteralNode).Value]
+				if exists {
+					continue
+				}
+				usedElements[element.Value.(*parser.LiteralNode).Value] = struct{}{}
+			}
+
+			// Genearate expression and insertion
+			cg.generateExpression(element)
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
+		}
+
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
 	}

@@ -54,6 +54,7 @@ const (
 	NT_Enum
 	NT_Struct
 	NT_StructField
+	NT_Set
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -95,6 +96,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Enum:            "Enum",
 	NT_Struct:          "Struct",
 	NT_StructField:     "StructField",
+	NT_Set:             "Set",
 }
 
 func (nt NodeType) String() string {

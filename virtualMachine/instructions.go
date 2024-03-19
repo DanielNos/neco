@@ -81,6 +81,9 @@ const (
 	IT_AppendToList
 	IT_IndexList
 
+	IT_CreateSet
+	IT_InsertToSet
+
 	IT_LineOffset
 )
 
@@ -164,6 +167,9 @@ var InstructionTypeToString = map[byte]string{
 	IT_CreateList:   "new_list",
 	IT_AppendToList: "append_list",
 	IT_IndexList:    "index_list",
+
+	IT_CreateSet:   "new_set",
+	IT_InsertToSet: "insert_set",
 
 	IT_LineOffset: "line_offset",
 }

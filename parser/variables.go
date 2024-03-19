@@ -73,20 +73,26 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 			// Find leaf data type
 			leafType := expressionType
 
-			for leafType.DType == data.DT_List {
+			for leafType.DType == data.DT_List || leafType.DType == data.DT_Set {
 				leafType = leafType.SubType.(data.DataType)
 			}
 
-			// Check if variable can be assigned expression
-			if leafType.DType != data.DT_NoType && !variableType.Equals(expressionType) {
-				// Variable doesn't have type yet (declared using var)
-				if variableType.DType == data.DT_NoType {
-					variableType = expressionType
-					// Invalid type
-				} else {
-					p.newErrorNoMessage()
-					logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+			// Leaf type of expression is set
+			if leafType.DType != data.DT_NoType {
+				// Check if variable can be assigned expression
+				if !variableType.Equals(expressionType) {
+					// Variable doesn't have type yet (declared using var)
+					if variableType.DType == data.DT_NoType {
+						variableType = expressionType
+						// Invalid type
+					} else {
+						p.newErrorNoMessage()
+						logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+					}
 				}
+				// Leaf type of expression is not set => use variable type
+			} else {
+				expression.Value.(*ListNode).DataType = variableType
 			}
 		}
 	}

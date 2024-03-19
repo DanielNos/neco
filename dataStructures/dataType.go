@@ -16,6 +16,7 @@ const (
 	DT_Enum
 	DT_Struct
 	DT_List
+	DT_Set
 )
 
 func (dt DType) String() string {
@@ -38,6 +39,8 @@ func (dt DType) String() string {
 		return "Struct"
 	case DT_List:
 		return "List"
+	case DT_Set:
+		return "Set"
 	}
 
 	return "[INVALID DATA TYPE]"
@@ -79,6 +82,11 @@ func (vt DataType) Equals(other DataType) bool {
 		if vt.SubType == nil || other.SubType == nil {
 			return true
 		}
+		return vt.SubType == other.SubType
+	}
+
+	// Compare structs
+	if vt.DType == DT_Set && other.DType == DT_Set {
 		return vt.SubType == other.SubType
 	}
 

@@ -115,9 +115,7 @@ func (p *Parser) parseEnum() {
 	p.consume() // {
 
 	// Consume EOCs
-	for p.peek().TokenType == lexer.TT_EndOfCommand {
-		p.consume()
-	}
+	p.consumeEOCs()
 
 	// Collect enum constants
 	constants := map[string]int64{}
@@ -151,9 +149,7 @@ func (p *Parser) parseEnum() {
 		constantIndex++
 
 		// Consume EOCs
-		for p.peek().TokenType == lexer.TT_EndOfCommand {
-			p.consume()
-		}
+		p.consumeEOCs()
 	}
 
 	p.consume() // }

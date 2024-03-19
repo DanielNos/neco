@@ -64,7 +64,6 @@ func visualize(node *Node, indent string, isLast bool) {
 			fmt.Printf("%s \"%s\"\n", literal.DType.String(), literal.Value)
 		} else {
 			fmt.Printf("%s %v\n", literal.DType.String(), literal.Value)
-
 		}
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
@@ -185,9 +184,16 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Break:
 		println("break")
 
-	case NT_List:
+	case NT_List, NT_Set:
 		listNode := node.Value.(*ListNode)
-		fmt.Printf("%s\n", listNode.DataType)
+		fmt.Printf("%s", listNode.DataType)
+
+		if len(listNode.Nodes) == 0 {
+			println(" (empty)")
+			return
+		} else {
+			println()
+		}
 
 		for i, node := range listNode.Nodes {
 			visualize(node, indent, i == len(listNode.Nodes)-1)

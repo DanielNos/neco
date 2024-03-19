@@ -73,73 +73,12 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// List
 	} else if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-		startPosition := p.consume().Position
+		left = p.parseList()
 
-		// Skip EOC
-		if p.peek().TokenType == lexer.TT_EndOfCommand {
-			p.consume()
-		}
+		// Sets
+	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+		left = p.parseSet()
 
-		// Collect edxpressions
-		expressions := []*Node{}
-		expressionTypes := map[data.DataType]int{}
-		elementType := data.DataType{data.DT_NoType, nil}
-
-		for p.peek().TokenType != lexer.TT_DL_BracketClose {
-			// Collect expression
-			expressions = append(expressions, p.parseExpressionRoot())
-
-			// Assign list type
-			elementType = p.GetExpressionType(expressions[len(expressions)-1])
-			expressionTypes[elementType] += 1
-
-			// Consume comma
-			if p.peek().TokenType == lexer.TT_DL_Comma {
-				p.consume()
-
-				// Skip EOC
-				if p.peek().TokenType == lexer.TT_EndOfCommand {
-					p.consume()
-				}
-			} else if p.peek().TokenType == lexer.TT_EndOfCommand {
-				p.consume()
-			}
-		}
-
-		// More than one type in list
-		if len(expressionTypes) != 1 {
-			// Find type with lowest count and highest count
-			lowestCount := 999999
-			lowestType := data.DataType{}
-
-			highestCount := 0
-			highestType := data.DataType{}
-
-			for t, count := range expressionTypes {
-				// Update lowest count
-				if count < lowestCount {
-					lowestCount = count
-					lowestType = t
-				}
-				// Update highest count
-				if count > highestCount {
-					highestCount = count
-					highestType = t
-				}
-			}
-
-			// Find it's expression and print error
-			for _, expression := range expressions {
-				if p.GetExpressionType(expression).Equals(lowestType) {
-					p.newError(expression.Position, "List can't contain elements of multiple data types.")
-					break
-				}
-			}
-
-			elementType = highestType
-		}
-
-		left = &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
 		// Invalid token
 	} else {
 		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
@@ -368,10 +307,7 @@ func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node 
 	p.StringConstants[identifier.Value] = -1
 
 	p.consume() // {
-
-	for p.peek().TokenType == lexer.TT_EndOfCommand {
-		p.consume()
-	}
+	p.consumeEOCs()
 
 	var propertyValues []*Node
 
@@ -441,9 +377,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 			p.consume()
 
 			// Collect EOCs
-			for p.peek().TokenType == lexer.TT_EndOfCommand {
-				p.consume()
-			}
+			p.consumeEOCs()
 		} else {
 			for p.peek().TokenType != lexer.TT_DL_BraceClose {
 				p.newError(p.peek().Position, "Unexpected token after struct field value.")
@@ -506,9 +440,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 		}
 
 		// Consume EOCs
-		for p.peek().TokenType == lexer.TT_EndOfCommand {
-			p.consume()
-		}
+		p.consumeEOCs()
 	}
 
 	if propertyIndex < len(properties) {
@@ -529,10 +461,119 @@ func (p *Parser) parseAnyProperties() {
 		}
 
 		// Consume EOCs
-		for p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consumeEOCs()
+	}
+}
+
+func (p *Parser) parseList() *Node {
+	startPosition := p.consume().Position
+
+	// Skip EOC
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
+	// Collect elements
+	expressions := []*Node{}
+	expressionTypes := map[data.DataType]int{}
+	elementType := data.DataType{data.DT_NoType, nil}
+
+	for p.peek().TokenType != lexer.TT_DL_BracketClose {
+		// Collect expression
+		expressions = append(expressions, p.parseExpressionRoot())
+
+		// Assign list type
+		elementType = p.GetExpressionType(expressions[len(expressions)-1])
+		expressionTypes[elementType] += 1
+
+		// Consume comma
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+
+			// Skip EOC
+			if p.peek().TokenType == lexer.TT_EndOfCommand {
+				p.consume()
+			}
+		} else if p.peek().TokenType == lexer.TT_EndOfCommand {
 			p.consume()
 		}
 	}
+
+	// Check if all list elements have the same type and set element type to the most common type
+	if len(expressionTypes) > 1 {
+		elementType = p.checkElementTypes(expressionTypes, expressions, "List")
+	}
+
+	return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
+}
+
+func (p *Parser) parseSet() *Node {
+	startPosition := p.consume().Position
+
+	// Collect elements
+	expressions := []*Node{}
+	expressionTypes := map[data.DataType]int{}
+	elementType := data.DataType{data.DT_NoType, nil}
+
+	p.consumeEOCs()
+
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Collect element
+		expressions = append(expressions, p.parseExpressionRoot())
+
+		// Assign set type
+		elementType = p.GetExpressionType(expressions[len(expressions)-1])
+		expressionTypes[elementType] += 1
+
+		// More elements
+		if p.peek().TokenType == lexer.TT_DL_Comma {
+			p.consume()
+		}
+
+		p.consumeEOCs()
+	}
+
+	// Check if all set elements have the same type and set element type to the most common type
+	if len(expressions) > 1 {
+		elementType = p.checkElementTypes(expressionTypes, expressions, "Set")
+	}
+
+	return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, data.DataType{data.DT_Set, elementType}}}
+}
+
+func (p *Parser) checkElementTypes(expressionTypes map[data.DataType]int, expressions []*Node, structureName string) data.DataType {
+	// Find type with lowest count and highest count
+	lowestCount := 999999
+	lowestType := data.DataType{}
+
+	highestCount := 0
+	highestType := data.DataType{}
+
+	for t, count := range expressionTypes {
+		// Update lowest count
+		if count < lowestCount {
+			lowestCount = count
+			lowestType = t
+		}
+		// Update highest count
+		if count > highestCount {
+			highestCount = count
+			highestType = t
+		}
+	}
+
+	// There are more than one data types
+	if len(expressionTypes) > 1 {
+		// Find it's expression and print error
+		for _, expression := range expressions {
+			if p.GetExpressionType(expression).Equals(lowestType) {
+				p.newError(expression.Position, structureName+" can't contain elements of multiple data types.")
+				break
+			}
+		}
+	}
+
+	return highestType
 }
 
 func (p *Parser) collectConstant(node *Node) {
@@ -693,6 +734,8 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		return data.DataType{data.DT_Struct, expression.Value.(*StructNode).Identifier}
 	case NT_StructField:
 		return expression.Value.(*StructFieldNode).DataType
+	case NT_Set:
+		return expression.Value.(*ListNode).DataType
 	}
 
 	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
