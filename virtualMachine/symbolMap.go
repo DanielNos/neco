@@ -16,3 +16,7 @@ func (s *SymbolMap) Insert(key int, value *Symbol) {
 func (s *SymbolMap) Get(key int) *Symbol {
 	return s.values[key%s.size]
 }
+
+func (s *SymbolMap) Delete(key int) {
+	s.values[key%s.size] = nil
+}

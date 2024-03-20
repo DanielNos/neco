@@ -172,97 +172,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeFunctionDeclaration()
 
 	case lexer.TT_Identifier: // Identifiers
-		// Function call
-		if sn.peekNext().TokenType == lexer.TT_DL_ParenthesisOpen {
-			sn.analyzeIdentifier()
-			// Variable
-		} else {
-			// Assignment
-			if sn.peekNext().TokenType.IsAssignKeyword() {
-				sn.consume()
-				sn.analyzeAssignment()
-				break
-			}
-			// Assignment to multiple variables
-			if sn.peekNext().TokenType == lexer.TT_DL_Comma {
-				sn.consume()
-				for sn.peek().TokenType == lexer.TT_DL_Comma {
-					sn.consume()
-					if sn.peek().TokenType != lexer.TT_Identifier {
-						sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after comma, found %s instead.", sn.peek()))
-						break
-					}
-					sn.consume()
-				}
-
-				// No = after variables
-				if !sn.peek().TokenType.IsAssignKeyword() {
-					sn.newError(sn.peek(), fmt.Sprintf("Expected = after list of variable identifiers, found %s instead.", sn.peek()))
-					break
-				}
-
-				// Assignment
-				sn.analyzeAssignment()
-				break
-			}
-
-			// Declare custom variable
-			if sn.customTypes[sn.peek().Value] {
-				sn.consume()
-
-				// Check identifier
-				if sn.peek().TokenType != lexer.TT_Identifier {
-					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().Value, sn.peek()))
-				} else {
-					sn.consume()
-				}
-
-				// Assign to it
-				if sn.peek().TokenType == lexer.TT_KW_Assign {
-					sn.analyzeAssignment()
-				}
-				break
-			}
-
-			// Assigning to list index
-			if sn.peekNext().TokenType == lexer.TT_DL_BracketOpen {
-				startChar := sn.consume().Position.StartChar
-				openingBracket := sn.consume() // Collect [
-
-				// Analyze index expression
-				sn.analyzeExpression()
-
-				// Missing closing bracket
-				if sn.peek().TokenType != lexer.TT_DL_BracketClose {
-					sn.newError(openingBracket, "Index is missing closing bracket.")
-					break
-				}
-
-				sn.consume() // Collect ]
-
-				// End of expression
-				if sn.peek().TokenType == lexer.TT_EndOfCommand {
-					sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
-					break
-				}
-
-				// No assignment
-				if !sn.peek().TokenType.IsAssignKeyword() {
-					break
-				}
-
-				// Assign expression
-				sn.consume() // Collect =
-				sn.analyzeExpression()
-
-				break
-			}
-
-			// Expression
-			startChar := sn.peek().Position.StartChar
-			sn.analyzeExpression()
-			sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
-		}
+		sn.analyzeIdentifier()
 
 	case lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 		startChar := sn.peek().Position.StartChar
@@ -325,6 +235,10 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			sn.analyzeExpression()
 		}
 
+	case lexer.TT_KW_delete: // Delete
+		sn.consume()
+		sn.analyzeExpression()
+
 	case lexer.TT_EndOfCommand: // Ignore EOCs
 		sn.consume()
 		return false
@@ -359,28 +273,4 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	sn.consume()
 
 	return false
-}
-
-func (sn *SyntaxAnalyzer) analyzeIdentifier() {
-	// Enum variable declaration
-	if sn.customTypes[sn.peek().Value] {
-		sn.analyzeVariableDeclaration(false)
-		return
-	}
-
-	sn.consume()
-
-	// Function call
-	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-		sn.analyzeFunctionCall()
-		// Assignment
-	} else if sn.peek().TokenType.IsAssignKeyword() {
-		sn.analyzeAssignment()
-	}
-}
-
-func (sn *SyntaxAnalyzer) analyzeAssignment() {
-	sn.consume()
-
-	sn.analyzeExpression()
 }

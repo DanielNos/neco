@@ -35,7 +35,7 @@ type Parser struct {
 	scopeCounter   int
 	scopeNodeStack *data.Stack
 
-	stack_symbolTablestack *data.Stack
+	stack_symbolTableStack *data.Stack
 
 	functions     []*FunctionSymbol
 	functionIndex int
@@ -57,7 +57,7 @@ func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
 		scopeCounter:   0,
 		scopeNodeStack: data.NewStack(),
 
-		stack_symbolTablestack: data.NewStack(),
+		stack_symbolTableStack: data.NewStack(),
 
 		functions:     []*FunctionSymbol{},
 		functionIndex: 0,
@@ -128,14 +128,14 @@ func (p *Parser) newErrorNoMessage() {
 }
 
 func (p *Parser) enterScope() {
-	p.stack_symbolTablestack.Push(symbolTable{})
+	p.stack_symbolTableStack.Push(symbolTable{})
 	p.scopeNodeStack.Push(&ScopeNode{p.scopeCounter, []*Node{}})
 	p.scopeCounter++
 }
 
 func (p *Parser) leaveScope() {
 	p.scopeNodeStack.Pop()
-	p.stack_symbolTablestack.Pop()
+	p.stack_symbolTableStack.Pop()
 }
 
 func (p *Parser) Parse() *Node {
@@ -174,7 +174,7 @@ func (p *Parser) parseModule() *Node {
 	}
 
 	// Check if all functions were called
-	for identifier, symbol := range p.stack_symbolTablestack.Bottom.Value.(symbolTable) {
+	for identifier, symbol := range p.stack_symbolTableStack.Bottom.Value.(symbolTable) {
 		// Try to find function bucket symbol
 		if symbol.symbolType == ST_FunctionBucket {
 			// Check if every function in the bucket was ever called
@@ -316,6 +316,10 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 		return p.parseStatement(enteredScope)
 
+	// Delete
+	case lexer.TT_KW_delete:
+		return p.parseDelete()
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()
@@ -372,4 +376,33 @@ func (p *Parser) consumeEOCs() {
 	for p.peek().TokenType == lexer.TT_EndOfCommand {
 		p.consume()
 	}
+}
+
+func (p *Parser) parseDelete() *Node {
+	position := p.consume().Position
+
+	// Missing expression
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.newError(position, "Expected deleted expression after keyword delete.")
+		return &Node{position, NT_Delete, nil}
+	}
+
+	// Collect expression
+	expression := p.parseExpressionRoot()
+
+	// Check if expression can be deleted
+	switch expression.NodeType {
+	// Remove variable from scope
+	case NT_Variable:
+		delete(p.stack_symbolTableStack.Top.Value.(symbolTable), expression.Value.(*VariableNode).Identifier)
+
+	// Accept also In and ListValue
+	case NT_In, NT_ListValue:
+
+	// Invalid target
+	default:
+		p.newError(GetExpressionPosition(expression), "Expression can't be deleted.")
+	}
+
+	return &Node{position, NT_Delete, expression}
 }

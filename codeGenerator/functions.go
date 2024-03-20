@@ -21,16 +21,16 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	for i := parameterCount - 1; i >= 0; i-- {
 
 		// Declare variable for argument
-		identifier := cg.variableIdentifierCounters.Top.Value.(uint8)
-		cg.variableIdentifiers.Top.Value.(map[string]uint8)[function.Parameters[i].Identifier] = identifier
+		id := cg.variableIdentifierCounters.Top.Value.(uint8)
+		cg.variableIdentifiers.Top.Value.(map[string]uint8)[function.Parameters[i].Identifier] = id
 
 		// Generate declaration instruction
-		cg.generateVariableDeclarator(function.Parameters[i].DataType, true)
+		cg.generateVariableDeclarator(function.Parameters[i].DataType, &id)
 
 		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 
 		// Store argument from stack in the variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreAndPop, []byte{identifier}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreAndPop, []byte{id}})
 	}
 
 	// Generate function body

@@ -229,36 +229,12 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		// Generate list assign instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtPrevToCurr, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
 
+	// Delete
+	case parser.NT_Delete:
+		cg.generateDeletion(node.Value.(*parser.Node))
+
 	default:
 		panic("Unkown node.")
-	}
-}
-
-func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
-	variable := node.Value.(*parser.VariableDeclareNode)
-
-	for i := 0; i < len(variable.Identifiers); i++ {
-		cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
-
-		cg.generateVariableDeclarator(variable.DataType, true)
-
-		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
-	}
-}
-
-func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, passId bool) {
-	// Identifier of variable is passed only for root types, sub-types have no arguments
-	args := NO_ARGS
-	if passId {
-		args = []byte{cg.variableIdentifierCounters.Top.Value.(uint8)}
-	}
-
-	// Generate declaration of root type
-	cg.instructions = append(cg.instructions, VM.Instruction{dataTypeToDeclareInstruction[dataType.DType], args})
-
-	// Generate sub-type of composite types
-	if dataType.SubType != nil {
-		cg.generateVariableDeclarator(dataType.SubType.(data.DataType), false)
 	}
 }
 

@@ -210,7 +210,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	// Leave scope
 	p.scopeNodeStack.Pop()
-	p.stack_symbolTablestack.Pop()
+	p.stack_symbolTableStack.Pop()
 
 	// Insert function symbol
 	newSymbol := p.insertFunction(identifierToken.Value, &FunctionSymbol{len(p.functions), parameters, returnType, identifierToken.Value == "entry"})

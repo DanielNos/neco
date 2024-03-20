@@ -1,15 +1,14 @@
 package lexer
 
 var KEYWORDS = map[string]TokenType{
-	"global": TT_KW_global,
-	"const":  TT_KW_const,
-	"var":    TT_KW_var,
-	"bool":   TT_KW_bool,
-	"int":    TT_KW_int,
-	"flt":    TT_KW_flt,
-	"str":    TT_KW_str,
-	"list":   TT_KW_list,
-	"set":    TT_KW_set,
+	"const": TT_KW_const,
+	"var":   TT_KW_var,
+	"bool":  TT_KW_bool,
+	"int":   TT_KW_int,
+	"flt":   TT_KW_flt,
+	"str":   TT_KW_str,
+	"list":  TT_KW_list,
+	"set":   TT_KW_set,
 
 	"loop":     TT_KW_loop,
 	"while":    TT_KW_while,
@@ -25,11 +24,12 @@ var KEYWORDS = map[string]TokenType{
 
 	"struct": TT_KW_struct,
 	"enum":   TT_KW_enum,
-	"class":  TT_KW_class,
 
 	"if":   TT_KW_if,
 	"elif": TT_KW_elif,
 	"else": TT_KW_else,
+
+	"delete": TT_KW_delete,
 }
 
 var DELIMITERS = map[rune]TokenType{

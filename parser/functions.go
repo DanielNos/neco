@@ -49,7 +49,7 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 
 	// Leave scope
 	p.scopeNodeStack.Pop()
-	p.stack_symbolTablestack.Pop()
+	p.stack_symbolTableStack.Pop()
 
 	// Store function name as a string constant for scope trace back
 	p.StringConstants[identifierToken.Value] = -1
