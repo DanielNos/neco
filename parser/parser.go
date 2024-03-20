@@ -394,8 +394,15 @@ func (p *Parser) parseDelete() *Node {
 	switch expression.NodeType {
 	// Remove variable from scope
 	case NT_Variable:
-		delete(p.stack_symbolTableStack.Top.Value.(symbolTable), expression.Value.(*VariableNode).Identifier)
+		// Look up variable
+		_, exists := p.stack_symbolTableStack.Top.Value.(symbolTable)[expression.Value.(*VariableNode).Identifier]
 
+		if exists {
+			delete(p.stack_symbolTableStack.Top.Value.(symbolTable), expression.Value.(*VariableNode).Identifier)
+			// It's not declared
+		} else {
+			p.newError(GetExpressionPosition(expression), "Variable isn't declared.")
+		}
 	// Accept also In and ListValue
 	case NT_In, NT_ListValue:
 
