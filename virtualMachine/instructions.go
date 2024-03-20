@@ -84,6 +84,7 @@ const (
 
 	IT_CreateSet
 	IT_InsertToSet
+	IT_SetContains
 
 	IT_LineOffset
 )
@@ -166,12 +167,13 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_StoreField: "store_field",
 
-	IT_CreateList:   "new_list",
-	IT_AppendToList: "append_list",
-	IT_IndexList:    "index_list",
+	IT_CreateList:   "list_new",
+	IT_AppendToList: "list_append",
+	IT_IndexList:    "list_index",
 
-	IT_CreateSet:   "new_set",
-	IT_InsertToSet: "insert_set",
+	IT_CreateSet:   "set_new",
+	IT_InsertToSet: "set_insert",
+	IT_SetContains: "set_contains",
 
 	IT_LineOffset: "line_offset",
 }

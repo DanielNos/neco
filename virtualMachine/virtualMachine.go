@@ -381,6 +381,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack.size--
 			vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]] = struct{}{}
 
+		case IT_SetContains:
+			vm.stack.size--
+			_, vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]]
+
 		// Ignore line offsets
 		case IT_LineOffset:
 

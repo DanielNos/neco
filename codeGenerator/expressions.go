@@ -150,7 +150,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_GetField, []byte{byte(structFieldNode.PropertyIndex)}})
 
-	// Sets
+	// Set literals
 	case parser.NT_Set:
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateSet, NO_ARGS})
 
@@ -171,6 +171,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 			cg.generateExpression(element)
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
 		}
+
+	// Set contains
+	case parser.NT_In:
+		binaryNode := node.Value.(*parser.TypedBinaryNode)
+		cg.generateExpression(binaryNode.Right)
+		cg.generateExpression(binaryNode.Left)
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetContains, NO_ARGS})
 
 	default:
 		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
