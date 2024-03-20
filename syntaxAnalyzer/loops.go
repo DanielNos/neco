@@ -30,7 +30,7 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 	}
 
 	// Check keyword in
-	if sn.peek().TokenType != lexer.TT_KW_in {
+	if sn.peek().TokenType != lexer.TT_OP_In {
 		sn.newError(sn.peek(), fmt.Sprintf("Expected keyword in after variable identifier, found \"%s\" instead.", sn.peek()))
 	} else {
 		sn.consume()

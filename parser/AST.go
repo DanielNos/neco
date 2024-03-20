@@ -68,7 +68,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
-		NT_And, NT_Or:
+		NT_And, NT_Or, NT_In:
 		binary := node.Value.(*TypedBinaryNode)
 		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DataType)
 

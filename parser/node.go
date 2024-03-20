@@ -37,6 +37,7 @@ const (
 	NT_Greater
 	NT_LowerEqual
 	NT_GreaterEqual
+	NT_In
 	NT_FunctionDeclare
 	NT_FunctionCall
 	NT_Return
@@ -65,8 +66,8 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Assign:          "Assign",
 	NT_Not:             "!",
 	NT_Property:        ".",
-	NT_And:             "AND",
-	NT_Or:              "OR",
+	NT_And:             "&",
+	NT_Or:              "|",
 	NT_Add:             "+",
 	NT_Subtract:        "-",
 	NT_Multiply:        "*",
@@ -79,6 +80,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Greater:         ">",
 	NT_LowerEqual:      "<=",
 	NT_GreaterEqual:    ">=",
+	NT_In:              "in",
 	NT_FunctionDeclare: "FunctionDeclare",
 	NT_FunctionCall:    "FunctionCall",
 	NT_Return:          "Return",
@@ -235,6 +237,8 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
 	lexer.TT_OP_Greater:      NT_Greater,
 	lexer.TT_OP_LowerEqual:   NT_LowerEqual,
 	lexer.TT_OP_GreaterEqual: NT_GreaterEqual,
+
+	lexer.TT_OP_In: NT_In,
 }
 
 var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
@@ -247,11 +251,11 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 }
 
 func (n *Node) IsBinaryNode() bool {
-	return n.NodeType >= NT_Property && n.NodeType <= NT_GreaterEqual && n.Value.(*TypedBinaryNode).Left != nil
+	return n.NodeType >= NT_Property && n.NodeType <= NT_In && n.Value.(*TypedBinaryNode).Left != nil
 }
 
 func (nt NodeType) IsOperator() bool {
-	return nt >= NT_Property && nt <= NT_GreaterEqual
+	return nt >= NT_Property && nt <= NT_In
 }
 
 func (nt NodeType) IsComparisonOperator() bool {
@@ -272,6 +276,7 @@ var operatorNodePrecedence = map[NodeType]int{
 	NT_Greater:      1,
 	NT_LowerEqual:   1,
 	NT_GreaterEqual: 1,
+	NT_In:           1,
 
 	NT_Add:      2,
 	NT_Subtract: 2,
