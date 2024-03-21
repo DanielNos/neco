@@ -11,7 +11,6 @@ func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
 	for i, assignedTo := range assignNode.AssignedTo {
 		cg.generateAssignmentInstruction(assignedTo, i == len(assignNode.AssignedTo)-1 && cg.optimize)
 	}
-
 }
 
 func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, isLast bool) {

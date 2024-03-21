@@ -47,12 +47,20 @@ func (cg *CodeGenerator) generateDeletion(target *parser.Node) {
 		// We don't actually delete anything, variable is redeclared with the same identifier
 
 	case parser.NT_In:
-		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Right)
-		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Left)
+		inNode := target.Value.(*parser.TypedBinaryNode)
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
+		// Only generate element removal if set isn't a literal
+		if inNode.Right.NodeType == parser.NT_Variable {
+			cg.generateExpression(inNode.Right) // Generate set
+			cg.generateExpression(inNode.Left)  // Generate element
 
-		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Right)
-		cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_StoreAndPop
+			// Remove it
+			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
+
+			// Generate set load
+			cg.generateExpression(inNode.Right)
+			// Replace set load instruction type with StoreAndPop
+			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_StoreAndPop
+		}
 	}
 }

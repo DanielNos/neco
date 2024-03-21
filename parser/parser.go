@@ -399,10 +399,8 @@ func (p *Parser) parseDelete() *Node {
 
 		if exists {
 			delete(p.stack_symbolTableStack.Top.Value.(symbolTable), expression.Value.(*VariableNode).Identifier)
-			// It's not declared
-		} else {
-			p.newError(GetExpressionPosition(expression), "Variable isn't declared.")
 		}
+
 	// Accept also In and ListValue
 	case NT_In, NT_ListValue:
 
