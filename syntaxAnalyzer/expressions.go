@@ -33,6 +33,12 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// Set
 	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 		sn.analyzeSet()
+
+		// Not end of expression
+		if sn.peek().TokenType.IsBinaryOperator() {
+			sn.consume()
+			sn.analyzeExpression()
+		}
 		return
 	}
 

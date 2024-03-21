@@ -85,6 +85,7 @@ const (
 	IT_CreateSet
 	IT_InsertToSet
 	IT_SetContains
+	IT_RemoveSetElement
 
 	IT_LineOffset
 )
@@ -171,9 +172,10 @@ var InstructionTypeToString = map[byte]string{
 	IT_AppendToList: "list_append",
 	IT_IndexList:    "list_index",
 
-	IT_CreateSet:   "set_new",
-	IT_InsertToSet: "set_insert",
-	IT_SetContains: "set_contains",
+	IT_CreateSet:        "set_new",
+	IT_InsertToSet:      "set_insert",
+	IT_SetContains:      "set_contains",
+	IT_RemoveSetElement: "set_remove",
 
 	IT_LineOffset: "line_offset",
 }

@@ -45,5 +45,14 @@ func (cg *CodeGenerator) generateDeletion(target *parser.Node) {
 	switch target.NodeType {
 	case parser.NT_Variable:
 		// We don't actually delete anything, variable is redeclared with the same identifier
+
+	case parser.NT_In:
+		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Right)
+		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Left)
+
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
+
+		cg.generateExpression(target.Value.(*parser.TypedBinaryNode).Right)
+		cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_StoreAndPop
 	}
 }

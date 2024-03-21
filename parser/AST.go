@@ -226,6 +226,10 @@ func visualize(node *Node, indent string, isLast bool) {
 			visualize(n, indent, i == len(structNode.Properties)-1)
 		}
 
+	case NT_Delete:
+		println("Delete")
+		visualize(node.Value.(*Node), indent, true)
+
 	default:
 		println(NodeTypeToString[node.NodeType])
 	}

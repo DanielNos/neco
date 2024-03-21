@@ -385,13 +385,17 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack.size--
 			_, vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]]
 
+		case IT_RemoveSetElement:
+			vm.stack.size--
+			delete(vm.stack.items[vm.stack.size-1].(map[interface{}]struct{}), vm.stack.items[vm.stack.size])
+
 		// Ignore line offsets
 		case IT_LineOffset:
 
 		// Unknown instruction
 		default:
 			vm.traceLine()
-			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d.", vm.firstLine, instruction.InstructionType))
+			logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d", vm.firstLine, instruction.InstructionType))
 		}
 		vm.instructionIndex++
 
