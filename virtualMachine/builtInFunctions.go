@@ -176,6 +176,10 @@ func necoPrintString(value interface{}, root bool) string {
 
 	} else if valueList, ok := value.([]interface{}); ok {
 		// Print list
+		if len(valueList) == 0 {
+			return "[]"
+		}
+
 		str := "["
 
 		for _, element := range valueList[:len(valueList)-1] {
