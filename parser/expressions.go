@@ -55,15 +55,15 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		right := p.parseExpression(operatorPrecedence(lexer.TT_OP_Not)) // Unary - has same precedence as !
 
 		// Combine - and int node
-		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == data.DT_Int {
+		if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).PrimitiveType == data.DT_Int {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(int64)
 			left = right
 			// Combine - and float node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).DType == data.DT_Float {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Subtract && right.Value.(*LiteralNode).PrimitiveType == data.DT_Float {
 			right.Value.(*LiteralNode).Value = -right.Value.(*LiteralNode).Value.(float64)
 			left = right
 			// Combine ! and bool node
-		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).DType == data.DT_Bool {
+		} else if right.NodeType == NT_Literal && operator.TokenType == lexer.TT_OP_Not && right.Value.(*LiteralNode).PrimitiveType == data.DT_Bool {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
@@ -94,7 +94,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		nodeType := TokenTypeToNodeType[operator.TokenType]
 
 		// Combine two literals into single node
-		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).DType == right.Value.(*LiteralNode).DType {
+		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).PrimitiveType == right.Value.(*LiteralNode).PrimitiveType {
 			left = combineLiteralNodes(left, right, nodeType)
 			continue
 		}
@@ -138,7 +138,7 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		binaryNode := expression.Value.(*TypedBinaryNode)
 
 		// Node has it's type stored already
-		if binaryNode.DataType.DType != data.DT_NoType {
+		if binaryNode.DataType.Type != data.DT_NoType {
 			return binaryNode.DataType
 		}
 
@@ -152,17 +152,17 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		rightType := p.deriveType(binaryNode.Right)
 
 		// Error in one of types
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+		if leftType.Type == data.DT_NoType || rightType.Type == data.DT_NoType {
 			return data.DataType{data.DT_NoType, nil}
 		}
 
 		// In operator has to be used on set with correct type
 		if expression.NodeType == NT_In {
 			// Right type isn't a set
-			if rightType.DType != data.DT_Set {
+			if rightType.Type != data.DT_Set {
 				p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set.")
 				// Left type isn't set's sub-type
-			} else if !rightType.SubType.(data.DataType).Equals(leftType) {
+			} else if !rightType.SubType.(data.DataType).CanBeAssigned(leftType) {
 				p.newErrorNoMessage()
 				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), fmt.Sprintf("Left expression type (%s) doesn't match the set element type (%s).", leftType, rightType.SubType.(data.DataType)))
 			}
@@ -171,9 +171,9 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		}
 
 		// Same type on both sides
-		if leftType.Equals(rightType) {
+		if leftType.CanBeAssigned(rightType) {
 			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.DType != data.DT_Bool || rightType.DType != data.DT_Bool) {
+			if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
 				binaryNode.DataType = data.DataType{data.DT_Bool, nil}
 				return binaryNode.DataType
@@ -186,25 +186,25 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 			}
 
 			// Can't do non-comparison operations on enums
-			if leftType.DType == data.DT_Enum || rightType.DType == data.DT_Enum {
+			if leftType.Type == data.DT_Enum || rightType.Type == data.DT_Enum {
 				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
 				return data.DataType{data.DT_NoType, nil}
 			}
 
 			// Only + can be used on strings and lists
-			if (leftType.DType == data.DT_String || leftType.DType == data.DT_List) && expression.NodeType != NT_Add {
+			if (leftType.Type == data.DT_String || leftType.Type == data.DT_List) && expression.NodeType != NT_Add {
 				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", expression.NodeType, leftType, rightType))
 				return data.DataType{data.DT_NoType, nil}
 			}
 
 			// Return left type
-			if leftType.DType != data.DT_NoType {
+			if leftType.Type != data.DT_NoType {
 				binaryNode.DataType = leftType
 				return leftType
 			}
 
 			// Return right type
-			if rightType.DType != data.DT_NoType {
+			if rightType.Type != data.DT_NoType {
 				binaryNode.DataType = rightType
 				return rightType
 			}
@@ -214,7 +214,7 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		}
 
 		// Left or right doesn't have a type
-		if leftType.DType == data.DT_NoType || rightType.DType == data.DT_NoType {
+		if leftType.Type == data.DT_NoType || rightType.Type == data.DT_NoType {
 			return leftType
 		}
 
@@ -302,7 +302,7 @@ func (p *Parser) parseIdentifier() *Node {
 		} else if p.peek().TokenType == lexer.TT_OP_Dot {
 			p.consume()
 			// Can access properties of structs only
-			if symbol.value.(*VariableSymbol).VariableType.DType != data.DT_Struct {
+			if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Struct {
 				p.newError(p.peek().Position, fmt.Sprintf("Can't access a property of %s, because it's not a struct.", identifierToken))
 			} else {
 				// Find struct definition
@@ -398,7 +398,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 			// Check if expression has correct type
 			if exists {
 				expressionType := p.GetExpressionType(expression)
-				if !property.dataType.Equals(expressionType) {
+				if !property.dataType.CanBeAssigned(expressionType) {
 					p.newError(expression.Position, fmt.Sprintf("Field %s of struct %s has type %s, but is assigned expression of type %s.", propertyName.Value, structName, property.dataType, expressionType))
 				}
 			}
@@ -460,7 +460,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 			expressionType := p.GetExpressionType(expression)
 
 			// Check type
-			if !orderedProperties[propertyIndex].dataType.Equals(expressionType) {
+			if !orderedProperties[propertyIndex].dataType.CanBeAssigned(expressionType) {
 				p.newError(expression.Position, fmt.Sprintf("Property %s of struct %s has type %s, but was assigned expression of type %s.", orderedPropertyNames[propertyIndex], structName.Value, orderedProperties[propertyIndex].dataType, expressionType))
 			}
 
@@ -601,7 +601,7 @@ func (p *Parser) checkElementTypes(expressionTypes map[data.DataType]int, expres
 	if len(expressionTypes) > 1 {
 		// Find it's expression and print error
 		for _, expression := range expressions {
-			if p.GetExpressionType(expression).Equals(lowestType) {
+			if p.GetExpressionType(expression).CanBeAssigned(lowestType) {
 				p.newError(expression.Position, structureName+" can't contain elements of multiple data types.")
 				break
 			}
@@ -616,7 +616,7 @@ func (p *Parser) collectConstant(node *Node) {
 	if node.NodeType == NT_Literal {
 		literalNode := node.Value.(*LiteralNode)
 
-		switch literalNode.DType {
+		switch literalNode.PrimitiveType {
 		case data.DT_Int:
 			p.IntConstants[literalNode.Value.(int64)] = -1
 		case data.DT_Float:
@@ -634,7 +634,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	leftLiteral := left.Value.(*LiteralNode)
 	rightLiteral := right.Value.(*LiteralNode)
 
-	switch leftLiteral.DType {
+	switch leftLiteral.PrimitiveType {
 	// Booleans
 	case data.DT_Bool:
 		switch parentNodeType {
@@ -754,7 +754,7 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 
 	switch expression.NodeType {
 	case NT_Literal:
-		return data.DataType{expression.Value.(*LiteralNode).DType, nil}
+		return data.DataType{expression.Value.(*LiteralNode).PrimitiveType, nil}
 	case NT_Variable:
 		return expression.Value.(*VariableNode).DataType
 	case NT_FunctionCall:

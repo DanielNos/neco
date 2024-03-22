@@ -130,8 +130,8 @@ type AssignNode struct {
 type LiteralValue interface{}
 
 type LiteralNode struct {
-	DType data.DType
-	Value LiteralValue
+	PrimitiveType data.PrimitiveType
+	Value         LiteralValue
 }
 
 type BinaryNode struct {

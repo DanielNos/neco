@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-type DType uint8
+type PrimitiveType uint8
 
 const (
-	DT_NoType DType = iota
+	DT_NoType PrimitiveType = iota
 	DT_Bool
 	DT_Int
 	DT_Float
@@ -19,8 +19,8 @@ const (
 	DT_Set
 )
 
-func (dt DType) String() string {
-	switch dt {
+func (pt PrimitiveType) String() string {
+	switch pt {
 	case DT_NoType:
 		return "No Type"
 	case DT_Bool:
@@ -47,38 +47,38 @@ func (dt DType) String() string {
 }
 
 type DataType struct {
-	DType   DType
+	Type    PrimitiveType
 	SubType interface{}
 }
 
-func (vt DataType) Equals(other DataType) bool {
+func (vt DataType) CanBeAssigned(other DataType) bool {
 	// No type can't equal any other type
-	if vt.DType == DT_NoType || other.DType == DT_NoType {
+	if vt.Type == DT_NoType || other.Type == DT_NoType {
 		return false
 	}
 
 	// Compare primitive data types
-	if vt.DType <= DT_String && other.DType <= DT_String {
-		return vt.DType == other.DType
+	if vt.Type <= DT_String && other.Type <= DT_String {
+		return vt.Type == other.Type
 	}
 
 	// Any can be assigned anything (except NoType)
-	if vt.DType == DT_Any {
+	if vt.Type == DT_Any {
 		return true
 	}
 
 	// Lists
-	if vt.DType == DT_List && other.DType == DT_List {
-		return vt.SubType.(DataType).Equals(other.SubType.(DataType))
+	if vt.Type == DT_List && other.Type == DT_List {
+		return vt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
 	}
 
 	// Compare struct names
-	if vt.DType == DT_Struct && other.DType == DT_Struct {
+	if vt.Type == DT_Struct && other.Type == DT_Struct {
 		return vt.SubType == other.SubType
 	}
 
 	// Compare enum names
-	if vt.DType == DT_Enum && other.DType == DT_Enum {
+	if vt.Type == DT_Enum && other.Type == DT_Enum {
 		if vt.SubType == nil || other.SubType == nil {
 			return true
 		}
@@ -86,31 +86,31 @@ func (vt DataType) Equals(other DataType) bool {
 	}
 
 	// Compare sets
-	if vt.DType == DT_Set && other.DType == DT_Set {
-		return vt.SubType.(DataType).Equals(other.SubType.(DataType))
+	if vt.Type == DT_Set && other.Type == DT_Set {
+		return vt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
 	}
 
 	return false
 }
 
 func (dt DataType) String() string {
-	if dt.DType <= DT_Any {
-		return dt.DType.String()
-	} else if dt.DType <= DT_Struct {
+	if dt.Type <= DT_Any {
+		return dt.Type.String()
+	} else if dt.Type <= DT_Struct {
 		return dt.SubType.(string)
 	} else {
-		return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
+		return fmt.Sprintf("%s<%s>", dt.Type, dt.SubType.(DataType))
 	}
 }
 
 func (dt DataType) Signature() string {
-	if dt.DType <= DT_Any {
-		return dt.DType.String()
-	} else if dt.DType == DT_Enum {
-		return "Enum"
-	} else if dt.DType == DT_Struct {
+	if dt.Type <= DT_Any {
+		return dt.Type.String()
+	} else if dt.Type == DT_Enum {
+		return "Enum:" + dt.SubType.(string)
+	} else if dt.Type == DT_Struct {
 		return dt.SubType.(string)
 	} else {
-		return fmt.Sprintf("%s<%s>", dt.DType, dt.SubType.(DataType))
+		return fmt.Sprintf("%s<%s>", dt.Type, dt.SubType.(DataType))
 	}
 }

@@ -33,7 +33,7 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType data.DataType, id *
 	}
 
 	// Generate declaration of root type
-	cg.instructions = append(cg.instructions, VM.Instruction{dataTypeToDeclareInstruction[dataType.DType], args})
+	cg.instructions = append(cg.instructions, VM.Instruction{dataTypeToDeclareInstruction[dataType.Type], args})
 
 	// Generate sub-type of composite types
 	if dataType.SubType != nil {

@@ -199,7 +199,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	if p.peek().TokenType == lexer.TT_KW_returns {
 		returnPosition = p.consume().Position
-		returnType.DType = TokenTypeToDataType[p.consume().TokenType]
+		returnType.Type = TokenTypeToDataType[p.consume().TokenType]
 		returnPosition.EndChar = p.peekPrevious().Position.EndChar
 
 		// Function entry() can't have a return type

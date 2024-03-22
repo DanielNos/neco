@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var TokenTypeToDataType = map[lexer.TokenType]data.DType{
+var TokenTypeToDataType = map[lexer.TokenType]data.PrimitiveType{
 	lexer.TT_KW_bool: data.DT_Bool,
 	lexer.TT_LT_Bool: data.DT_Bool,
 
@@ -338,7 +338,7 @@ func (p *Parser) parseType() data.DataType {
 	variableType := data.DataType{TokenTypeToDataType[p.peek().TokenType], nil}
 
 	// Token is not a data type keyword => it's enum or struct
-	if variableType.DType == data.DT_NoType {
+	if variableType.Type == data.DT_NoType {
 		symbol := p.getGlobalSymbol(p.peek().Value)
 
 		// Neither primitive or user defined type => type can't be determined
@@ -349,10 +349,10 @@ func (p *Parser) parseType() data.DataType {
 
 		// Symbol is a struct
 		if symbol.symbolType == ST_Struct {
-			variableType.DType = data.DT_Struct
+			variableType.Type = data.DT_Struct
 			// Symbol is a enum
 		} else if symbol.symbolType == ST_Enum {
-			variableType.DType = data.DT_Enum
+			variableType.Type = data.DT_Enum
 		}
 
 		// Set sub-type to struct/enum name
@@ -363,7 +363,7 @@ func (p *Parser) parseType() data.DataType {
 	p.consume()
 
 	// Insert subtype to list data type
-	if variableType.DType == data.DT_List || variableType.DType == data.DT_Set {
+	if variableType.Type == data.DT_List || variableType.Type == data.DT_Set {
 		p.consume()
 		variableType.SubType = p.parseType()
 		p.consume()

@@ -24,7 +24,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(binaryNode.Left)
 
 		// Insert elements to a set (elements are inserted by themselves, we don't create another set)
-		if binaryNode.DataType.DType == data.DT_Set {
+		if binaryNode.DataType.Type == data.DT_Set {
 			for _, element := range binaryNode.Right.Value.(*parser.ListNode).Nodes {
 				cg.generateExpression(element)
 				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
@@ -36,13 +36,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		// Generate operator
 		// Concatenate strings
-		if binaryNode.DataType.DType == data.DT_String {
+		if binaryNode.DataType.Type == data.DT_String {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
 			// Concatenate lists
-		} else if binaryNode.DataType.DType == data.DT_List {
+		} else if binaryNode.DataType.Type == data.DT_List {
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_ListConcat, NO_ARGS})
 			// Operation on ints
-		} else if binaryNode.DataType.DType == data.DT_Int {
+		} else if binaryNode.DataType.Type == data.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
 			// Operation on floats
 		} else {
@@ -85,10 +85,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		leftType := getExpressionType(binaryNode.Left)
 
 		// Compare ints
-		if leftType.DType == data.DT_Int {
+		if leftType.Type == data.DT_Int {
 			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToIntInstruction[node.NodeType], NO_ARGS})
 			// Compare floats
-		} else if leftType.DType == data.DT_Float {
+		} else if leftType.Type == data.DT_Float {
 			cg.instructions = append(cg.instructions, VM.Instruction{comparisonOperatorToFloatInstruction[node.NodeType], NO_ARGS})
 		} else {
 			panic("Can't generate comparision instruction on operator nodes.")
@@ -192,7 +192,7 @@ func (cg *CodeGenerator) generateVariable(variableName string) {
 func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	literalNode := node.Value.(*parser.LiteralNode)
 
-	switch literalNode.DType {
+	switch literalNode.PrimitiveType {
 	// Bool
 	case data.DT_Bool:
 		if literalNode.Value.(bool) {
@@ -227,12 +227,12 @@ func getExpressionType(expression *parser.Node) data.DataType {
 		leftType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left)
 		rightType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
 
-		return data.DataType{max(leftType.DType, rightType.DType), nil}
+		return data.DataType{max(leftType.Type, rightType.Type), nil}
 	}
 
 	switch expression.NodeType {
 	case parser.NT_Literal:
-		return data.DataType{expression.Value.(*parser.LiteralNode).DType, nil}
+		return data.DataType{expression.Value.(*parser.LiteralNode).PrimitiveType, nil}
 	case parser.NT_Variable:
 		return expression.Value.(*parser.VariableNode).DataType
 	case parser.NT_FunctionCall:

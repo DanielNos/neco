@@ -41,7 +41,7 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 	body := p.parseScope(false, true).(*Node)
 
 	// Check if function has return statements in all paths
-	if function.returnType.DType != data.DT_NoType {
+	if function.returnType.Type != data.DT_NoType {
 		if !p.verifyReturns(body, function.returnType) {
 			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, function.returnType))
 		}
@@ -136,7 +136,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 		// Try to match arguments to parameters
 		matched := true
 		for i, parameter := range function.value.(*FunctionSymbol).parameters {
-			if !parameter.DataType.Equals(argumentTypes[i]) {
+			if !parameter.DataType.CanBeAssigned(argumentTypes[i]) {
 				matched = false
 				break
 			}
@@ -201,7 +201,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType data.DataType) bo
 				// Incorrect return value data type
 				expressionType := p.GetExpressionType(statement.Value.(*Node))
 
-				if !returnType.Equals(expressionType) {
+				if !returnType.CanBeAssigned(expressionType) {
 					p.newError(statement.Value.(*Node).Position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
 				}
 			}

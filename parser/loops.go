@@ -174,12 +174,12 @@ func (p *Parser) parseForEach() *Node {
 	elementType := p.GetExpressionType(expression)
 
 	// Set element type to list subtype (if type was derived)
-	if elementType.DType != data.DT_NoType {
+	if elementType.Type != data.DT_NoType {
 		elementType = elementType.SubType.(data.DataType)
 	}
 
 	// Check if list element can be assigned to iterator
-	if !iteratorType.Equals(elementType) {
+	if !iteratorType.CanBeAssigned(elementType) {
 		logger.Error2CodePos(typePosition, expression.Position, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", elementType, iteratorType))
 		p.newErrorNoMessage()
 	}

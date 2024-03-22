@@ -22,7 +22,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		// var has to be assigned to
-		if variableType.DType == data.DT_NoType {
+		if variableType.Type == data.DT_NoType {
 			startPosition.EndChar = p.peekPrevious().Position.EndChar
 			p.newError(startPosition, "Variables declared using keyword var have to have an expression assigned to them, so a data type can be derived from it.")
 		}
@@ -38,7 +38,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 		declareNode, expressionType = p.parseAssign(variableNodes, startPosition)
 
 		// Change variable type if no was provided
-		if variableType.DType == data.DT_NoType {
+		if variableType.Type == data.DT_NoType {
 			variableType = expressionType
 			node.Value.(*VariableDeclareNode).DataType = expressionType
 		}
@@ -66,23 +66,23 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
 	// Print errors
-	if expressionType.DType != data.DT_NoType {
+	if expressionType.Type != data.DT_NoType {
 		for _, assignedTo := range assignedStatements {
 			variableType := p.GetExpressionType(assignedTo)
 
 			// Find leaf data type
 			leafType := expressionType
 
-			for leafType.DType == data.DT_List || leafType.DType == data.DT_Set {
+			for leafType.Type == data.DT_List || leafType.Type == data.DT_Set {
 				leafType = leafType.SubType.(data.DataType)
 			}
 
 			// Leaf type of expression is set
-			if leafType.DType != data.DT_NoType {
+			if leafType.Type != data.DT_NoType {
 				// Check if variable can be assigned expression
-				if !variableType.Equals(expressionType) {
+				if !variableType.CanBeAssigned(expressionType) {
 					// Variable doesn't have type yet (declared using var)
-					if variableType.DType == data.DT_NoType {
+					if variableType.Type == data.DT_NoType {
 						variableType = expressionType
 						// Invalid type
 					} else {

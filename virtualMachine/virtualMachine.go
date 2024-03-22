@@ -17,7 +17,7 @@ const (
 	SYMBOL_MAP_SIZE         = 100
 )
 
-var InstructionToDataType = map[byte]data.DType{
+var InstructionToDataType = map[byte]data.PrimitiveType{
 	IT_DeclareBool:   data.DT_Bool,
 	IT_DeclareInt:    data.DT_Int,
 	IT_DeclareFloat:  data.DT_Float,
@@ -446,7 +446,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 	return value
 }
 
-var declareInstructionToDataType = map[byte]data.DType{
+var declareInstructionToDataType = map[byte]data.PrimitiveType{
 	IT_DeclareList: data.DT_List,
 	IT_DeclareSet:  data.DT_Set,
 }

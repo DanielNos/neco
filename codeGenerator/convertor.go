@@ -39,7 +39,7 @@ var comparisonOperatorToFloatInstruction = map[parser.NodeType]byte{
 	parser.NT_GreaterEqual: VM.IT_FloatGreaterEqual,
 }
 
-var dataTypeToDeclareInstruction = map[data.DType]byte{
+var dataTypeToDeclareInstruction = map[data.PrimitiveType]byte{
 	data.DT_Bool:   VM.IT_DeclareBool,
 	data.DT_Int:    VM.IT_DeclareInt,
 	data.DT_Float:  VM.IT_DeclareFloat,
