@@ -11,7 +11,7 @@ var builtInFunctions = map[string]byte{
 	"int.Bool": VM.BIF_BoolToInt,
 	"int.Enum": VM.BIF_EnumToInt,
 
-	"flt.Int":  VM.BIF_IntToFloat,
+	"flt": VM.BIF_IntToFloat,
 
 	"floor":      VM.BIF_Floor,
 	"floorToInt": VM.BIF_FloorToInt,
@@ -25,7 +25,8 @@ var builtInFunctions = map[string]byte{
 	"readLine": VM.BIF_ReadLine,
 	"readChar": VM.BIF_ReadChar,
 
-	"length.String": VM.BIF_StringLength,
+	"length": VM.BIF_StringLength,
+	"size":   VM.BIF_ListLength,
 
 	"toLower": VM.BIF_ToLower,
 	"toUpper": VM.BIF_ToUpper,
@@ -38,7 +39,5 @@ var builtInFunctions = map[string]byte{
 }
 
 var overloadedBuiltInFunctions = map[string]struct{}{
-	"int":    {},
-	"flt":    {},
-	"length": {},
+	"int": {},
 }

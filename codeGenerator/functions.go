@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"neco/parser"
 	VM "neco/virtualMachine"
-	"strings"
 )
 
 func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
@@ -73,6 +72,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	}
 
 	// Try to look up built-in function
+	fmt.Printf("ID: %v\n", identifier)
 	builtInFunction, exists := builtInFunctions[identifier]
 
 	// It's a built-in function
@@ -82,9 +82,6 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	} else if functionCall.Identifier == "exit" {
 		// Convert exit function to halt instruction
 		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
-		// List length
-	} else if strings.HasPrefix(identifier, "length") {
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{VM.BIF_ListLength}})
 		// Unknown function
 	} else {
 		panic("Unkown function.")

@@ -84,7 +84,9 @@ func (p *Parser) insertBuiltInFunctions() {
 		[]Parameter{{data.DataType{data.DT_String, nil}, "string", nil}},
 		data.DataType{data.DT_Int, nil}, true},
 	)
-	p.insertFunction("length", &FunctionSymbol{-1,
+
+	// Size of lists
+	p.insertFunction("size", &FunctionSymbol{-1,
 		[]Parameter{{data.DataType{data.DT_List, data.DataType{data.DT_Any, nil}}, "list", nil}},
 		data.DataType{data.DT_Int, nil}, true},
 	)

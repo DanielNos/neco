@@ -57,7 +57,7 @@ func (vt DataType) Equals(other DataType) bool {
 		return false
 	}
 
-	// Compare basic data types
+	// Compare primitive data types
 	if vt.DType <= DT_String && other.DType <= DT_String {
 		return vt.DType == other.DType
 	}
@@ -85,9 +85,9 @@ func (vt DataType) Equals(other DataType) bool {
 		return vt.SubType == other.SubType
 	}
 
-	// Compare structs
+	// Compare sets
 	if vt.DType == DT_Set && other.DType == DT_Set {
-		return vt.SubType == other.SubType
+		return vt.SubType.(DataType).Equals(other.SubType.(DataType))
 	}
 
 	return false
