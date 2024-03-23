@@ -72,7 +72,6 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	}
 
 	// Try to look up built-in function
-	fmt.Printf("ID: %v\n", identifier)
 	builtInFunction, exists := builtInFunctions[identifier]
 
 	// It's a built-in function
