@@ -47,43 +47,43 @@ type DataType struct {
 	SubType interface{}
 }
 
-func (vt DataType) CanBeAssigned(other DataType) bool {
+func (dt DataType) CanBeAssigned(other DataType) bool {
 	// No type can't equal any other type
-	if vt.Type == DT_NoType || other.Type == DT_NoType {
+	if dt.Type == DT_NoType || other.Type == DT_NoType {
 		return false
 	}
 
 	// Compare primitive data types
-	if vt.Type <= DT_String && other.Type <= DT_String {
-		return vt.Type == other.Type
+	if dt.Type <= DT_String && other.Type <= DT_String {
+		return dt.Type == other.Type
 	}
 
 	// Any can be assigned anything (except NoType)
-	if vt.Type == DT_Any {
+	if dt.Type == DT_Any {
 		return true
 	}
 
 	// Lists
-	if vt.Type == DT_List && other.Type == DT_List {
-		return vt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
+	if dt.Type == DT_List && other.Type == DT_List {
+		return dt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
 	}
 
 	// Compare struct names
-	if vt.Type == DT_Struct && other.Type == DT_Struct {
-		return vt.SubType == other.SubType
+	if dt.Type == DT_Struct && other.Type == DT_Struct {
+		return dt.SubType == other.SubType
 	}
 
 	// Compare enum names
-	if vt.Type == DT_Enum && other.Type == DT_Enum {
-		if vt.SubType == nil || other.SubType == nil {
+	if dt.Type == DT_Enum && other.Type == DT_Enum {
+		if dt.SubType == nil || other.SubType == nil {
 			return true
 		}
-		return vt.SubType == other.SubType
+		return dt.SubType == other.SubType
 	}
 
 	// Compare sets
-	if vt.Type == DT_Set && other.Type == DT_Set {
-		return vt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
+	if dt.Type == DT_Set && other.Type == DT_Set {
+		return dt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
 	}
 
 	return false
@@ -93,8 +93,14 @@ func (dt DataType) String() string {
 	if dt.Type <= DT_Any {
 		return dt.Type.String()
 	} else if dt.Type <= DT_Struct {
+		if dt.SubType == nil {
+			return "Any"
+		}
 		return dt.SubType.(string)
 	} else {
+		if dt.SubType == nil {
+			return dt.Type.String() + "<?>"
+		}
 		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"
 	}
 }
@@ -105,6 +111,9 @@ func (dt DataType) Signature() string {
 	} else if dt.Type == DT_Enum {
 		return "Enum:" + dt.SubType.(string)
 	} else if dt.Type == DT_Struct {
+		if dt.SubType == nil {
+			return "Any"
+		}
 		return dt.SubType.(string)
 	} else {
 		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"

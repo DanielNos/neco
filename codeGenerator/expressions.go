@@ -133,7 +133,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		structNode := node.Value.(*parser.StructNode)
 
 		// Create object
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateStruct, []byte{byte(cg.stringConstants[structNode.Identifier])}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateObject, []byte{byte(cg.stringConstants[structNode.Identifier])}})
 
 		// Generate properties
 		for _, property := range structNode.Properties {

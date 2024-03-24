@@ -64,10 +64,7 @@ func (p *Parser) parseStruct() {
 	symbol := p.getGlobalSymbol(identifier)
 
 	p.consume() // {
-
-	if p.peek().TokenType == lexer.TT_EndOfCommand {
-		p.consume()
-	}
+	p.consumeEOCs()
 
 	// Collect properties
 	properties := map[string]PropertySymbol{}

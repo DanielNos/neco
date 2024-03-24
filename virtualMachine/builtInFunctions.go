@@ -165,7 +165,11 @@ func necoPrint(value interface{}, root bool) {
 
 func necoPrintString(value interface{}, root bool) string {
 	if object, ok := value.(object); ok {
-		// Print struct
+		// Print object
+		if len(object.fields) == 0 {
+			return "{}"
+		}
+
 		str := *object.identifier + "{"
 
 		for _, property := range object.fields[:len(object.fields)-1] {

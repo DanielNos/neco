@@ -199,7 +199,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.stack.Pop()
 
 		// Structs
-		case IT_CreateStruct:
+		case IT_CreateObject:
 			identifier := vm.Constants[instruction.InstructionValue[0]].(string)
 			vm.stack.Push(object{&identifier, []interface{}{}})
 

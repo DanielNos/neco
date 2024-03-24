@@ -41,6 +41,8 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 
 	// Check properties
 	for sn.peek().TokenType != lexer.TT_EndOfFile {
+		sn.consumeEOCs()
+
 		// Property
 		if sn.peek().TokenType.IsVariableType() || sn.peek().TokenType == lexer.TT_Identifier && sn.customTypes[sn.peek().Value] {
 			sn.consume()
@@ -84,9 +86,6 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 		} else if sn.peek().TokenType == lexer.TT_DL_BraceClose {
 			sn.consume()
 			return
-			// Empty line
-		} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
-			sn.consume()
 			// Invalid token
 		} else {
 			sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" in struct properties.")

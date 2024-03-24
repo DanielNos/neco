@@ -539,7 +539,11 @@ func (p *Parser) parseList() *Node {
 		elementType = p.checkElementTypes(expressionTypes, expressions, "List")
 	}
 
+	if elementType.Type == data.DT_NoType {
+		return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, nil}}}
+	}
 	return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
+
 }
 
 func (p *Parser) parseSet() *Node {
@@ -573,6 +577,9 @@ func (p *Parser) parseSet() *Node {
 		elementType = p.checkElementTypes(expressionTypes, expressions, "Set")
 	}
 
+	if elementType.Type == data.DT_NoType {
+		return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, data.DataType{data.DT_Set, nil}}}
+	}
 	return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, data.DataType{data.DT_Set, elementType}}}
 }
 

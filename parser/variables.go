@@ -57,8 +57,6 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 
 	// Collect expression
 	expression := p.parseExpressionRoot()
-
-	// Get expression type
 	expressionType := p.GetExpressionType(expression)
 
 	// Uncompatible data types
@@ -69,15 +67,8 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 		for _, assignedTo := range assignedStatements {
 			variableType := p.GetExpressionType(assignedTo)
 
-			// Find leaf data type
-			leafType := expressionType
-
-			for leafType.Type == data.DT_List || leafType.Type == data.DT_Set {
-				leafType = leafType.SubType.(data.DataType)
-			}
-
 			// Leaf type of expression is set
-			if leafType.Type != data.DT_NoType {
+			if expressionType.SubType != nil {
 				// Check if variable can be assigned expression
 				if !variableType.CanBeAssigned(expressionType) {
 					// Variable doesn't have type yet (declared using var)
@@ -91,7 +82,18 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 				}
 				// Leaf type of expression is not set => use variable type
 			} else {
-				expression.Value.(*ListNode).DataType = variableType
+				// Assignin list<?> or set<?> expression to a var variable, so type can't be determined
+				if variableType.Type == data.DT_NoType {
+					p.newErrorNoMessage()
+					if expressionType.Type == data.DT_Set {
+						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type set<?> to variable declared using keyword var. Replace var with required type.")
+					} else if expressionType.Type == data.DT_List {
+						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type list<?> to variable declared using keyword var. Replace var with required type.")
+					}
+					// Set expressions sub-type to variable sub-type (both list and set use *ListNode for elements)
+				} else {
+					expression.Value.(*ListNode).DataType = variableType
+				}
 			}
 		}
 	}

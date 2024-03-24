@@ -29,7 +29,7 @@ const (
 	IT_Store
 	IT_StoreAndPop
 
-	IT_CreateStruct
+	IT_CreateObject
 	IT_GetField
 
 	IT_JumpBack
@@ -119,7 +119,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_Store:           "store",
 	IT_StoreAndPop:     "store_pop",
 
-	IT_CreateStruct: "new_struct",
+	IT_CreateObject: "new_object",
 	IT_GetField:     "get_field",
 
 	IT_JumpBack:   "jump_back",
