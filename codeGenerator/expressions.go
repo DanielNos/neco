@@ -129,25 +129,25 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value])}})
 
 	// Struct objects
-	case parser.NT_Struct:
-		structNode := node.Value.(*parser.StructNode)
+	case parser.NT_Object:
+		ObjectNode := node.Value.(*parser.ObjectNode)
 
 		// Create object
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateObject, []byte{byte(cg.stringConstants[structNode.Identifier])}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_CreateObject, []byte{byte(cg.stringConstants[ObjectNode.Identifier])}})
 
 		// Generate properties
-		for _, property := range structNode.Properties {
+		for _, property := range ObjectNode.Properties {
 			cg.generateExpression(property)
 			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreField, NO_ARGS})
 		}
 
 	// Struct fields
 	case parser.NT_StructField:
-		structFieldNode := node.Value.(*parser.StructFieldNode)
+		ObjectFieldNode := node.Value.(*parser.ObjectFieldNode)
 
-		cg.generateVariable(structFieldNode.Identifier)
+		cg.generateVariable(ObjectFieldNode.Identifier)
 
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_GetField, []byte{byte(structFieldNode.PropertyIndex)}})
+		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_GetField, []byte{byte(ObjectFieldNode.PropertyIndex)}})
 
 	// Set literals
 	case parser.NT_Set:

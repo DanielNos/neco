@@ -3,6 +3,7 @@ package parser
 import (
 	data "neco/dataStructures"
 	"neco/lexer"
+	"neco/logger"
 )
 
 func (p *Parser) collectGlobals() {
@@ -60,8 +61,8 @@ func (p *Parser) parseStruct() {
 	p.consume()
 
 	// Collect symbol
-	identifier := p.consume().Value
-	symbol := p.getGlobalSymbol(identifier)
+	identifier := p.consume()
+	symbol := p.getGlobalSymbol(identifier.Value)
 
 	p.consume() // {
 	p.consumeEOCs()
@@ -88,6 +89,13 @@ func (p *Parser) parseStruct() {
 	}
 
 	p.consume() // }
+
+	if len(properties) == 0 {
+		if p.ErrorCount+p.totalErrorCount == 0 {
+			println()
+		}
+		logger.WarningCodePos(identifier.Position, "Struct "+identifier.Value+" has no fields.")
+	}
 
 	symbol.value = properties
 }

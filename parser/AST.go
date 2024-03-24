@@ -217,13 +217,13 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Enum:
 		fmt.Printf("%d (%s)\n", node.Value.(*EnumNode).Value, node.Value.(*EnumNode).Identifier)
 
-	case NT_Struct:
-		structNode := node.Value.(*StructNode)
+	case NT_Object:
+		ObjectNode := node.Value.(*ObjectNode)
 
-		fmt.Printf("%s\n", structNode.Identifier)
+		fmt.Printf("%s\n", ObjectNode.Identifier)
 
-		for i, n := range structNode.Properties {
-			visualize(n, indent, i == len(structNode.Properties)-1)
+		for i, n := range ObjectNode.Properties {
+			visualize(n, indent, i == len(ObjectNode.Properties)-1)
 		}
 
 	case NT_Delete:

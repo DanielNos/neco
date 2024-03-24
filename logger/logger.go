@@ -14,6 +14,8 @@ const (
 	LL_Info byte = iota
 	LL_Warning
 	LL_Error
+	LL_Fatal
+	LL_NoLog
 )
 
 var LoggingLevel byte = LL_Info
@@ -78,7 +80,59 @@ func Warning(message string) {
 	fmt.Println(message)
 }
 
+func WarningPos(file *string, line, startChar, endChar uint, message string) {
+	if LoggingLevel > LL_Warning {
+		return
+	}
+
+	// Read line
+	lineString, err := readLine(*file, line)
+
+	if int(endChar) > len(lineString) {
+		endChar--
+	}
+
+	// Print line
+	if err == nil && len(strings.Trim(lineString, "\n \t")) != 0 {
+		// Print from start to error
+		color.Set(color.FgWhite)
+
+		fmt.Fprint(os.Stderr, lineString[0:startChar-1])
+
+		// Print error
+		color.Set(color.FgHiRed)
+		color.Set(color.Underline)
+
+		fmt.Fprint(os.Stderr, lineString[startChar-1:endChar])
+
+		// Print from error to end
+		color.Set(color.Reset)
+		color.Set(color.FgWhite)
+
+		fmt.Fprint(os.Stderr, lineString[endChar:])
+		fmt.Fprintln(os.Stderr, "\n")
+	}
+
+	// Print message
+	color.Set(color.FgHiYellow)
+	fmt.Print("[WARNING]   ")
+
+	color.Set(color.FgHiCyan)
+	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
+
+	color.Set(color.FgHiWhite)
+	fmt.Fprintf(os.Stderr, "%s\n\n", message)
+}
+
+func WarningCodePos(codePos *data.CodePos, message string) {
+	WarningPos(codePos.File, codePos.StartLine, codePos.StartChar, codePos.EndChar, message)
+}
+
 func Error(message string) {
+	if LoggingLevel > LL_Error {
+		return
+	}
+
 	color.Set(color.FgHiRed)
 	fmt.Fprint(os.Stderr, "[ERROR]   ")
 	color.Set(color.FgHiWhite)
@@ -87,6 +141,10 @@ func Error(message string) {
 }
 
 func ErrorPos(file *string, line, startChar, endChar uint, message string) {
+	if LoggingLevel > LL_Error {
+		return
+	}
+
 	// Read line
 	lineString, err := readLine(*file, line)
 
@@ -131,6 +189,10 @@ func ErrorCodePos(codePos *data.CodePos, message string) {
 }
 
 func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
+	if LoggingLevel > LL_Error {
+		return
+	}
+
 	// Read line
 	lineString, err := readLine(*codePos1.File, codePos1.StartLine)
 
@@ -187,6 +249,10 @@ func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 }
 
 func Fatal(error_code int, message string) {
+	if LoggingLevel > LL_Fatal {
+		return
+	}
+
 	color.Set(color.FgHiRed)
 	color.Set(color.Bold)
 	fmt.Fprintf(os.Stderr, "[FATAL]   %s\n", message)

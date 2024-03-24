@@ -53,7 +53,7 @@ const (
 	NT_Literal
 	NT_Delete
 	NT_Enum
-	NT_Struct
+	NT_Object
 	NT_StructField
 	NT_Set
 )
@@ -96,8 +96,8 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Literal:         "Literal",
 	NT_Delete:          "Delete",
 	NT_Enum:            "Enum",
-	NT_Struct:          "Struct",
-	NT_StructField:     "StructField",
+	NT_Object:          "Object",
+	NT_StructField:     "ObjectField",
 	NT_Set:             "Set",
 }
 
@@ -208,12 +208,12 @@ type EnumNode struct {
 	Value      int64
 }
 
-type StructNode struct {
+type ObjectNode struct {
 	Identifier string
 	Properties []*Node
 }
 
-type StructFieldNode struct {
+type ObjectFieldNode struct {
 	Identifier    string
 	PropertyIndex int
 	DataType      data.DataType

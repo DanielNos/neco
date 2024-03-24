@@ -269,7 +269,7 @@ func (p *Parser) parseIdentifier() *Node {
 			p.parseAnyProperties()
 			p.consume() // }
 
-			return &Node{identifier.Position, NT_Struct, &StructNode{identifier.Value, []*Node{}}}
+			return &Node{identifier.Position, NT_Object, &ObjectNode{identifier.Value, []*Node{}}}
 			// Undeclared variable
 		} else {
 			p.newError(identifier.Position, "Variable "+identifier.Value+" is not declared in this scope.")
@@ -315,7 +315,7 @@ func (p *Parser) parseIdentifier() *Node {
 				if !propertyExists {
 					p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
 				} else {
-					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &StructFieldNode{identifierToken.Value, property.number, property.dataType}}
+					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
 				}
 			}
 
@@ -355,7 +355,7 @@ func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node 
 
 	p.consume() // }
 
-	return &Node{identifier.Position.SetEndPos(p.peekPrevious().Position), NT_Struct, &StructNode{identifier.Value, propertyValues}}
+	return &Node{identifier.Position.SetEndPos(p.peekPrevious().Position), NT_Object, &ObjectNode{identifier.Value, propertyValues}}
 }
 
 func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, structName string) []*Node {
@@ -772,10 +772,10 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		return p.GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(data.DataType)
 	case NT_Enum:
 		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
-	case NT_Struct:
-		return data.DataType{data.DT_Struct, expression.Value.(*StructNode).Identifier}
+	case NT_Object:
+		return data.DataType{data.DT_Struct, expression.Value.(*ObjectNode).Identifier}
 	case NT_StructField:
-		return expression.Value.(*StructFieldNode).DataType
+		return expression.Value.(*ObjectFieldNode).DataType
 	case NT_Set:
 		return expression.Value.(*ListNode).DataType
 	}

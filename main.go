@@ -30,6 +30,7 @@ func printHelp() {
 	println("                 -i  --instructions  Prints generated instructions.")
 	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
 	println("                 -s  --silent        Doesn't produce info messages when possible.")
+	println("                 -n  --noLog         Doesn't produce any log messages, even if there are errors.")
 	println("\nrun [target]")
 	println("\nanalyze [target] -to --tokens  Prints lexed tokens.")
 	println("                 -tr --tree    Draws abstract syntax tree.")
@@ -182,6 +183,8 @@ func processArguments() (string, string, []bool) {
 				flags[3] = true
 			case "--silent", "-s":
 				logger.LoggingLevel = logger.LL_Error
+			case "--noLog", "-n":
+				logger.LoggingLevel = logger.LL_NoLog
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action build.")
 			}
