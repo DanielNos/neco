@@ -55,7 +55,7 @@ func (l *Lexer) lexNumber() {
 			// Invalid character
 		} else {
 			l.collectRestOfToken()
-			l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+			l.newError(startLine, startChar, true, "Invalid character/s in integer literal \""+l.token.String()+"\".")
 			l.newToken(startLine, startChar, TT_LT_Int)
 			return
 		}
@@ -85,7 +85,7 @@ func (l *Lexer) lexNumber() {
 		// Invalid characters in number
 	} else {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, "Invalid character/s in integer literal \""+l.token.String()+"\".")
 		l.newToken(startLine, startChar, TT_LT_Int)
 	}
 }
@@ -118,7 +118,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 
 	// Digits exceed base
 	if invalidDigits {
-		l.newError(startLine, startChar+uint(len(baseString))+1, true, fmt.Sprintf("Digit/s of integer \"%s\" exceed its base.", l.token.String()))
+		l.newError(startLine, startChar+uint(len(baseString))+1, true, "Digit/s of integer \""+l.token.String()+"\" exceed its base.")
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -126,7 +126,7 @@ func (l *Lexer) lexBaseInt(startLine, startChar uint, baseString string) {
 	// Invalid characters in number
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in integer literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, "Invalid character/s in integer literal \""+l.token.String()+"\".")
 		l.newToken(startLine, startChar, TT_LT_Int)
 		return
 	}
@@ -153,7 +153,7 @@ func (l *Lexer) lexFloat(startLine, startChar uint) {
 	// Invalid characters
 	if !isTokenBreaker(l.currRune) {
 		l.collectRestOfToken()
-		l.newError(startLine, startChar, true, fmt.Sprintf("Invalid character/s in float literal \"%s\".", l.token.String()))
+		l.newError(startLine, startChar, true, "Invalid character/s in float literal \""+l.token.String()+"\".")
 		l.newToken(startLine, startChar, TT_LT_Float)
 		return
 	}

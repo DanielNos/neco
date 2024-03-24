@@ -101,7 +101,7 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 			}
 		}
 
-		expression = fmt.Sprintf("%s %s", expression, sn.tokens[i])
+		expression += " " + sn.tokens[i].String()
 		i++
 	}
 
@@ -141,15 +141,15 @@ func (sn *SyntaxAnalyzer) lookFor(tokenType lexer.TokenType, afterWhat, name str
 
 			// Found token
 			if sn.peek().TokenType == tokenType {
-				sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s. Only 0 or 1 EOCs are allowed.", afterWhat))
+				sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after "+afterWhat+". Only 0 or 1 EOCs are allowed.")
 			} else {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				sn.newError(sn.peek(), "Expected "+name+" after "+afterWhat+".")
 				sn.rewind()
 				return false
 			}
 		} else if sn.peek().TokenType != tokenType {
 			if !optional {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected %s after %s.", name, afterWhat))
+				sn.newError(sn.peek(), "Expected "+name+" after "+afterWhat+".")
 				sn.rewind()
 				return false
 			}
@@ -190,7 +190,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		if isScope {
 			return true
 		}
-		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\". Expected statement.", sn.consume()))
+		sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\". Expected statement.")
 
 	case lexer.TT_DL_ParenthesisClose:
 		return true

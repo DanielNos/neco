@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"fmt"
-
 	data "neco/dataStructures"
 	"neco/lexer"
 )
@@ -43,7 +41,7 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 	// Check if function has return statements in all paths
 	if function.returnType.Type != data.DT_NoType {
 		if !p.verifyReturns(body, function.returnType) {
-			p.newError(returnPosition, fmt.Sprintf("Function %s with return type %s does not return a value in all code paths.", identifierToken.Value, function.returnType))
+			p.newError(returnPosition, "Function "+identifierToken.Value+" with return type "+function.returnType.String()+" does not return a value in all code paths.")
 		}
 	}
 
@@ -152,7 +150,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 	}
 
 	// Failed to match to all functions in a bucket
-	p.newError(identifierToken.Position, fmt.Sprintf("Failed to match function %s to any header.", identifierToken.Value))
+	p.newError(identifierToken.Position, "Failed to match function "+identifierToken.Value+" to any header.")
 	return nil
 }
 
@@ -196,13 +194,13 @@ func (p *Parser) verifyReturns(statementList *Node, returnType data.DataType) bo
 		if statement.NodeType == NT_Return {
 			// No return value
 			if statement.Value == nil {
-				p.newError(statement.Position, fmt.Sprintf("Return statement has no return value, but function has return type %s.", returnType))
+				p.newError(statement.Position, "Return statement has no return value, but function has return type "+returnType.String()+".")
 			} else {
 				// Incorrect return value data type
 				expressionType := p.GetExpressionType(statement.Value.(*Node))
 
 				if !returnType.CanBeAssigned(expressionType) {
-					p.newError(statement.Value.(*Node).Position, fmt.Sprintf("Return statement has return value with type %s, but function has return type %s.", expressionType, returnType))
+					p.newError(statement.Value.(*Node).Position, "Return statement has return value with type "+expressionType.String()+", but function has return type "+returnType.String()+".")
 				}
 			}
 

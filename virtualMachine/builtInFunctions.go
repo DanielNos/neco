@@ -106,7 +106,7 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 
 	case BIF_ReadChar:
 		char, _, _ := vm.reader.ReadRune()
-		vm.stack.Push(fmt.Sprintf("%c", char))
+		vm.stack.Push(string(char))
 
 	// Lengths
 	case BIF_StringLength:

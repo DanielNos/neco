@@ -1,7 +1,6 @@
 package codeGenerator
 
 import (
-	"fmt"
 	data "neco/dataStructures"
 	"neco/parser"
 	VM "neco/virtualMachine"
@@ -180,7 +179,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetContains, NO_ARGS})
 
 	default:
-		panic(fmt.Sprintf("Invalid node in generator expression: %s", node.NodeType))
+		panic("Invalid node in generator expression: " + node.NodeType.String())
 	}
 }
 
@@ -243,5 +242,5 @@ func getExpressionType(expression *parser.Node) data.DataType {
 		return getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left).SubType.(data.DataType)
 	}
 
-	panic(fmt.Sprintf("Can't determine expression data type from %s.", parser.NodeTypeToString[expression.NodeType]))
+	panic("Can't determine expression data type from " + parser.NodeTypeToString[expression.NodeType] + ".")
 }

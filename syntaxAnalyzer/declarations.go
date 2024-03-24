@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -14,7 +13,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 		if constant {
 			sn.newError(sn.peekPrevious(), "Expected variable identifier after const keyword.")
 		}
-		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after %s keyword.", sn.peekPrevious()))
+		sn.newError(sn.peek(), "Expected variable identifier after "+sn.peekPrevious().String()+" keyword.")
 	} else {
 		sn.consume()
 	}
@@ -25,7 +24,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 
 		// Missing identifier
 		if sn.peek().TokenType != lexer.TT_Identifier {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after \",\" keyword, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected variable identifier after \",\" keyword, found \""+sn.peek().String()+"\" instead.")
 
 			// Not the end of identifiers
 			if sn.peek().TokenType != lexer.TT_KW_Assign {
@@ -48,7 +47,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 
 		// Collect invalid tokens
 		for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
+			sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" after variable declaration.")
 		}
 		return
 	}
@@ -66,7 +65,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 
 	// Collect invalid tokens
 	for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after variable declaration.", sn.consume()))
+		sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" after variable declaration.")
 	}
 }
 
@@ -75,14 +74,14 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 
 	// Collect identifier
 	if sn.peek().TokenType != lexer.TT_Identifier {
-		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected function identifier after fun keyword, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peekPrevious(), "Expected function identifier after fun keyword, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Check for opening parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
-		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected opening parenthesis after function identifier, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peekPrevious(), "Expected opening parenthesis after function identifier, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
@@ -94,7 +93,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 	// Check for closing parenthesis
 	var closingParent *lexer.Token = nil
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peekPrevious(), fmt.Sprintf("Expected closing parenthesis after function identifier, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peekPrevious(), "Expected closing parenthesis after function identifier, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		closingParent = sn.consume()
 	}
@@ -105,11 +104,11 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 
 		// Missing return type
 		if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_DL_BraceOpen {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected return type after keyword ->, found \""+sn.peek().String()+"\" instead.")
 		} else {
 			// Check if type is valid
 			if !sn.peek().TokenType.IsVariableType() && !(sn.peek().TokenType == lexer.TT_Identifier && sn.customTypes[sn.peek().Value]) {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected return type after keyword ->, found \"%s\" instead.", sn.peek()))
+				sn.newError(sn.peek(), "Expected return type after keyword ->, found \""+sn.peek().String()+"\" instead.")
 			}
 			sn.consume()
 		}
@@ -144,21 +143,21 @@ func (sn *SyntaxAnalyzer) analyzeFunctionDeclaration() {
 	}
 
 	// Invalid tokens
-	sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after function header. Expected code block.", sn.peek()))
+	sn.newError(sn.peek(), "Unexpected token \""+sn.peek().String()+"\" after function header. Expected code block.")
 }
 
 func (sn *SyntaxAnalyzer) analyzeParameters() {
 	for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_EndOfCommand {
 		// Check type
 		if !sn.peek().TokenType.IsVariableType() {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected variable type at start of parameters, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected variable type at start of parameters, found \""+sn.peek().String()+"\" instead.")
 		} else {
 			sn.consume()
 		}
 
 		// Check identifier
 		if sn.peek().TokenType != lexer.TT_Identifier {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected parameter identifier after parameter type, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected parameter identifier after parameter type, found \""+sn.peek().String()+"\" instead.")
 		} else {
 			sn.consume()
 		}
@@ -182,14 +181,14 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 
 		// Check assign
 		if sn.peek().TokenType != lexer.TT_KW_Assign {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected \"=\" or \",\" after parameter identifier, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected \"=\" or \",\" after parameter identifier, found \""+sn.peek().String()+"\" instead.")
 		} else {
 			sn.consume()
 		}
 
 		// Check default value
 		if !sn.peek().TokenType.IsLiteral() {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected default value literal after = in function parameter, found \"%s\" instead.", sn.peek()))
+			sn.newError(sn.peek(), "Expected default value literal after = in function parameter, found \""+sn.peek().String()+"\" instead.")
 		} else {
 			sn.consume()
 		}

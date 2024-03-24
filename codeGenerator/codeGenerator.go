@@ -262,7 +262,7 @@ func (cg *CodeGenerator) findVariableIdentifier(identifier string) uint8 {
 
 	// Couldn't find variable
 	if !found {
-		panic(fmt.Sprintf("Failed to find variable id: %s.", identifier))
+		panic("Failed to find variable id: " + identifier + ".")
 	}
 
 	return id

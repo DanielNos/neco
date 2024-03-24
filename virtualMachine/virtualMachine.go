@@ -277,7 +277,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		// Concatenations
 		case IT_StringConcat:
 			vm.stack.size--
-			vm.stack.items[vm.stack.size-1] = fmt.Sprintf("%s%s", vm.stack.items[vm.stack.size-1].(string), vm.stack.items[vm.stack.size].(string))
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(string) + vm.stack.items[vm.stack.size].(string)
 
 		case IT_ListConcat:
 			vm.stack.size--

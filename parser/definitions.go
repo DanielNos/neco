@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	data "neco/dataStructures"
 	"neco/lexer"
 )
@@ -25,7 +24,7 @@ func (p *Parser) collectGlobals() {
 			symbol := p.getGlobalSymbol(p.peek().Value)
 
 			if symbol != nil {
-				p.newError(p.peek().Position, fmt.Sprintf("Symbol is already declared as a %s.", symbol.symbolType))
+				p.newError(p.peek().Position, "Symbol is already declared as a "+symbol.symbolType.String()+".")
 			}
 
 			p.insertSymbol(p.consume().Value, &Symbol{ST_Struct, nil})
@@ -109,7 +108,7 @@ func (p *Parser) parseEnum() {
 	symbol := p.getGlobalSymbol(identifier)
 
 	if symbol != nil {
-		p.newError(p.peekPrevious().Position, fmt.Sprintf("Symbol is already declared as a %s.", symbol.symbolType))
+		p.newError(p.peekPrevious().Position, "Symbol is already declared as a "+symbol.symbolType.String()+".")
 	}
 
 	p.consume() // {
@@ -186,7 +185,7 @@ func (p *Parser) parseFunctionHeader() {
 		if symbol.symbolType == ST_FunctionBucket {
 			id := createParametersIdentifier(parameters)
 			if symbol.value.(symbolTable)[id] != nil {
-				p.newError(identifierToken.Position, fmt.Sprintf("Redeclaration of symbol %s.", identifierToken.Value))
+				p.newError(identifierToken.Position, "Redeclaration of symbol "+identifierToken.Value+".")
 			}
 		}
 	}

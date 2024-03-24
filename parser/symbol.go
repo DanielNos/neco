@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	data "neco/dataStructures"
 )
 
@@ -116,7 +115,7 @@ func (p *Parser) insertFunction(name string, functionSymbol *FunctionSymbol) *Sy
 func createParametersIdentifier(parameters []Parameter) string {
 	id := ""
 	for _, parameter := range parameters {
-		id = fmt.Sprintf("%s.%s", id, parameter.DataType)
+		id += "." + parameter.DataType.String()
 	}
 
 	return id

@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -165,7 +164,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 
 	// Operator missing right side expression
 	if sn.peekPrevious().TokenType.IsOperator() {
-		sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
+		sn.newError(sn.peekPrevious(), "Operator "+sn.peekPrevious().String()+" is missing right side expression.")
 		// Operator missing left side expression
 	} else if sn.peek().TokenType.IsBinaryOperator() {
 		// Allow only for minus
@@ -173,19 +172,19 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			sn.consume()
 			sn.analyzeExpression()
 		} else {
-			sn.newError(sn.peek(), fmt.Sprintf("Operator %s is missing left side expression.", sn.consume()))
+			sn.newError(sn.peek(), "Operator "+sn.consume().String()+" is missing left side expression.")
 
 			// Analyze right side expression
 			if sn.peek().TokenType.IsLiteral() || sn.peek().TokenType == lexer.TT_Identifier || sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 				sn.analyzeExpression()
 				// Right side expression is missing
 			} else {
-				sn.newError(sn.peekPrevious(), fmt.Sprintf("Operator %s is missing right side expression.", sn.peekPrevious()))
+				sn.newError(sn.peekPrevious(), "Operator "+sn.peekPrevious().String()+" is missing right side expression.")
 			}
 		}
 		// Invalid token
 	} else {
-		sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in expression.", sn.peek()))
+		sn.newError(sn.peek(), "Unexpected token \""+sn.peek().String()+"\" in expression.")
 
 		if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 			sn.consume()

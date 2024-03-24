@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -15,10 +14,10 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 
 	// Check closing parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected \")\" after function call arguments, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected \")\" after function call arguments, found \""+sn.peek().String()+"\" instead.")
 
 		for sn.peek().TokenType != lexer.TT_EndOfCommand {
-			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in function call.", sn.consume()))
+			sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" in function call.")
 		}
 
 		return
@@ -47,7 +46,7 @@ func (sn *SyntaxAnalyzer) analyzeAruments() {
 			return
 			// Invalid token
 		} else {
-			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in argument.", sn.consume()))
+			sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" in argument.")
 		}
 	}
 }

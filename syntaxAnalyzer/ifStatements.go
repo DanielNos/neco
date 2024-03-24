@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -16,21 +15,21 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 
 	// Check opening parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword if, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected opening parenthesis after keyword if, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Collect condition expression
 	if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected condition, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.analyzeExpression()
 	}
 
 	// Check closing parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected closing parenthesis after condition, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
@@ -78,13 +77,13 @@ func (sn *SyntaxAnalyzer) analyzeIfStatement(isElseIf bool) {
 		// Found else
 		if sn.peek().TokenType == lexer.TT_KW_else {
 			sn.consume()
-			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
+			sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after "+statementName+" block. Only 0 or 1 EOCs are allowed.")
 			sn.analyzeElseStatement()
 			return
 			// Found elif
 		} else if sn.peek().TokenType == lexer.TT_KW_elif {
 			sn.consume()
-			sn.newError(sn.peek(), fmt.Sprintf("Too many EOCs (\\n or ;) after %s block. Only 0 or 1 EOCs are allowed.", statementName))
+			sn.newError(sn.peek(), "Too many EOCs (\\n or ;) after "+statementName+" block. Only 0 or 1 EOCs are allowed.")
 			sn.analyzeIfStatement(true)
 			return
 			// Other tokens

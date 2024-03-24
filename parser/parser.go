@@ -180,7 +180,7 @@ func (p *Parser) parseModule() *Node {
 			// Check if every function in the bucket was ever called
 			for _, functionSymbol := range symbol.value.(symbolTable) {
 				if !functionSymbol.value.(*FunctionSymbol).everCalled {
-					logger.Warning(fmt.Sprintf("Function %s was never called.", identifier))
+					logger.Warning("Function " + identifier + " was never called.")
 				}
 			}
 		}
@@ -330,7 +330,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 		return nil
 	}
 
-	panic(fmt.Sprintf("%v Unexpected token %s \"%s\".", p.peek().Position, p.peek().TokenType, p.consume()))
+	panic(p.peek().Position.String() + " Unexpected token " + p.peek().TokenType.String() + " \"" + p.consume().String() + "\".")
 }
 
 func (p *Parser) parseType() data.DataType {

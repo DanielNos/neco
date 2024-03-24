@@ -1,9 +1,5 @@
 package dataStructures
 
-import (
-	"fmt"
-)
-
 type PrimitiveType uint8
 
 const (
@@ -99,7 +95,7 @@ func (dt DataType) String() string {
 	} else if dt.Type <= DT_Struct {
 		return dt.SubType.(string)
 	} else {
-		return fmt.Sprintf("%s<%s>", dt.Type, dt.SubType.(DataType))
+		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"
 	}
 }
 
@@ -111,6 +107,6 @@ func (dt DataType) Signature() string {
 	} else if dt.Type == DT_Struct {
 		return dt.SubType.(string)
 	} else {
-		return fmt.Sprintf("%s<%s>", dt.Type, dt.SubType.(DataType))
+		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"
 	}
 }

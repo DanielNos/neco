@@ -84,7 +84,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Invalid token
 	} else {
-		panic(fmt.Sprintf("Invalid token in expression %s.", p.peek()))
+		panic("Invalid token in expression " + p.peek().String() + ".")
 	}
 
 	// Operators
@@ -164,7 +164,7 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 				// Left type isn't set's sub-type
 			} else if !rightType.SubType.(data.DataType).CanBeAssigned(leftType) {
 				p.newErrorNoMessage()
-				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), fmt.Sprintf("Left expression type (%s) doesn't match the set element type (%s).", leftType, rightType.SubType.(data.DataType)))
+				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), "Left expression type ("+leftType.String()+") doesn't match the set element type ("+rightType.SubType.(data.DataType).String()+").")
 			}
 			binaryNode.DataType = data.DataType{data.DT_Bool, nil}
 			return binaryNode.DataType
@@ -174,7 +174,7 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		if leftType.CanBeAssigned(rightType) {
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can be only used on expressions of type bool.", expression.NodeType))
+				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can be only used on expressions of type bool.")
 				binaryNode.DataType = data.DataType{data.DT_Bool, nil}
 				return binaryNode.DataType
 			}
@@ -187,13 +187,13 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 
 			// Can't do non-comparison operations on enums
 			if leftType.Type == data.DT_Enum || rightType.Type == data.DT_Enum {
-				p.newError(expression.Position, fmt.Sprintf("Operator %s can't be used on enum constants.", expression.NodeType))
+				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can't be used on enum constants.")
 				return data.DataType{data.DT_NoType, nil}
 			}
 
 			// Only + can be used on strings and lists
 			if (leftType.Type == data.DT_String || leftType.Type == data.DT_List) && expression.NodeType != NT_Add {
-				p.newError(expression.Position, fmt.Sprintf("Can't use operator %s on data types %s and %s.", expression.NodeType, leftType, rightType))
+				p.newError(expression.Position, "Can't use operator "+expression.NodeType.String()+" on data types "+leftType.String()+" and "+rightType.String()+".")
 				return data.DataType{data.DT_NoType, nil}
 			}
 
@@ -219,7 +219,7 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		}
 
 		// Failed to determine data type
-		p.newError(expression.Position, fmt.Sprintf("Operator %s is used on incompatible data types %s and %s.", expression.NodeType, leftType, rightType))
+		p.newError(expression.Position, "Operator "+expression.NodeType.String()+" is used on incompatible data types "+leftType.String()+" and "+rightType.String()+".")
 		return data.DataType{data.DT_NoType, nil}
 	}
 
@@ -246,7 +246,7 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	case lexer.TT_OP_Dot:
 		return 6
 	default:
-		panic(fmt.Sprintf("Can't get operator precedence of token type %s.", operator))
+		panic("Can't get operator precedence of token type " + operator.String() + ".")
 	}
 }
 
@@ -259,11 +259,11 @@ func (p *Parser) parseIdentifier() *Node {
 
 		// Undeclared function
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-			p.newError(identifier.Position, fmt.Sprintf("Function %s is not declared in this scope.", identifier.Value))
+			p.newError(identifier.Position, "Function "+identifier.Value+" is not declared in this scope.")
 			return p.parseFunctionCall(nil, identifier)
 			// Undeclared struct
 		} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
-			p.newError(identifier.Position, fmt.Sprintf("Struct %s is not defined in this scope.", identifier.Value))
+			p.newError(identifier.Position, "Struct "+identifier.Value+" is not defined in this scope.")
 
 			p.consume() // {
 			p.parseAnyProperties()
@@ -272,7 +272,7 @@ func (p *Parser) parseIdentifier() *Node {
 			return &Node{identifier.Position, NT_Struct, &StructNode{identifier.Value, []*Node{}}}
 			// Undeclared variable
 		} else {
-			p.newError(identifier.Position, fmt.Sprintf("Variable %s is not declared in this scope.", identifier.Value))
+			p.newError(identifier.Position, "Variable "+identifier.Value+" is not declared in this scope.")
 			return &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, data.DataType{data.DT_NoType, nil}}}
 		}
 		// Function call
@@ -282,7 +282,7 @@ func (p *Parser) parseIdentifier() *Node {
 	} else if symbol.symbolType == ST_Variable {
 		// Uninitialized variable
 		if !symbol.value.(*VariableSymbol).isInitialized {
-			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is not initialized.", p.peek()))
+			p.newError(p.peek().Position, "Variable "+p.peek().String()+" is not initialized.")
 		}
 
 		identifierToken := p.consume()
@@ -303,7 +303,7 @@ func (p *Parser) parseIdentifier() *Node {
 			p.consume()
 			// Can access properties of structs only
 			if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Struct {
-				p.newError(p.peek().Position, fmt.Sprintf("Can't access a property of %s, because it's not a struct.", identifierToken))
+				p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
 			} else {
 				// Find struct definition
 				structName := symbol.value.(*VariableSymbol).VariableType.SubType.(string)
@@ -313,7 +313,7 @@ func (p *Parser) parseIdentifier() *Node {
 				property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
 
 				if !propertyExists {
-					p.newError(p.peek().Position, fmt.Sprintf("Struct %s doesn't have a property %s.", structName, p.consume().Value))
+					p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
 				} else {
 					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &StructFieldNode{identifierToken.Value, property.number, property.dataType}}
 				}
@@ -380,7 +380,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 
 			// It doesn't exist
 			if !exists {
-				p.newError(propertyName.Position, fmt.Sprintf("Struct %s doesn't have a field %s.", structName, propertyName.Value))
+				p.newError(propertyName.Position, "Struct "+structName+" doesn't have a field "+propertyName.Value+".")
 				// It exists
 			} else {
 				// Check if property is already assigned
@@ -388,7 +388,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 
 				// It's already assigned
 				if isReassigned {
-					p.newError(propertyName.Position, fmt.Sprintf("Field %s is already assigned.", propertyName.Value))
+					p.newError(propertyName.Position, "Field "+propertyName.Value+" is already assigned.")
 				}
 			}
 
@@ -399,7 +399,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 			if exists {
 				expressionType := p.GetExpressionType(expression)
 				if !property.dataType.CanBeAssigned(expressionType) {
-					p.newError(expression.Position, fmt.Sprintf("Field %s of struct %s has type %s, but is assigned expression of type %s.", propertyName.Value, structName, property.dataType, expressionType))
+					p.newError(expression.Position, "Field "+propertyName.Value+" of struct "+structName+" has type "+property.dataType.String()+", but is assigned expression of type "+expressionType.String()+".")
 				}
 			}
 
@@ -451,7 +451,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
 		// Too many fields
 		if propertyIndex == len(properties) {
-			p.newError(p.peek().Position, fmt.Sprintf("Struct %s has %d fields, but %d values were provided.", structName.Value, len(properties), propertyIndex+1))
+			p.newError(p.peek().Position, "Struct "+structName.Value+fmt.Sprintf(" has %d fields, but %d values were provided.", len(properties), propertyIndex+1))
 			p.parseExpressionRoot()
 			// Collect field value
 		} else {
@@ -461,7 +461,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 
 			// Check type
 			if !orderedProperties[propertyIndex].dataType.CanBeAssigned(expressionType) {
-				p.newError(expression.Position, fmt.Sprintf("Property %s of struct %s has type %s, but was assigned expression of type %s.", orderedPropertyNames[propertyIndex], structName.Value, orderedProperties[propertyIndex].dataType, expressionType))
+				p.newError(expression.Position, "Property "+orderedPropertyNames[propertyIndex]+" of struct "+structName.Value+" has type "+orderedProperties[propertyIndex].dataType.String()+", but was assigned expression of type "+expressionType.String()+".")
 			}
 
 			// Store property
@@ -479,7 +479,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 	}
 
 	if propertyIndex < len(properties) {
-		p.newError(structName.Position, fmt.Sprintf("Struct %s has %d fields, but only %d fields were assigned.", structName.Value, len(properties), propertyIndex))
+		p.newError(structName.Position, "Struct "+structName.Value+fmt.Sprintf(" has %d fields, but only %d fields were assigned.", len(properties), propertyIndex))
 	}
 
 	return propertyValues
@@ -738,7 +738,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	// Strings
 	case data.DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_String, fmt.Sprintf("%s%s", left.Value.(*LiteralNode).Value, right.Value.(*LiteralNode).Value)}}
+			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_String, left.Value.(*LiteralNode).Value.(string) + right.Value.(*LiteralNode).Value.(string)}}
 		}
 	}
 
@@ -773,7 +773,7 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 		return expression.Value.(*ListNode).DataType
 	}
 
-	panic(fmt.Sprintf("Can't determine expression data type from %s.", NodeTypeToString[expression.NodeType]))
+	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + ".")
 }
 
 func GetExpressionPosition(expression *Node) *data.CodePos {

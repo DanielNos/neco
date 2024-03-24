@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -51,11 +50,11 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 				sn.consume()
 				// Missing identifier
 			} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
+				sn.newError(sn.peek(), "Expected struct property identifier, found \""+sn.consume().String()+"\" instead.")
 				continue
 				// Invalid identifier
 			} else {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected struct property identifier, found \"%s\" instead.", sn.consume()))
+				sn.newError(sn.peek(), "Expected struct property identifier, found \""+sn.consume().String()+"\" instead.")
 			}
 
 			// More identifiers of same type
@@ -78,7 +77,7 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 
 			// Tokens after identifier
 			for sn.peek().TokenType != lexer.TT_EndOfCommand {
-				sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after struct property.", sn.consume()))
+				sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" after struct property.")
 			}
 			sn.consume()
 			// End of properties
@@ -90,7 +89,7 @@ func (sn *SyntaxAnalyzer) analyzeStructDefinition() {
 			sn.consume()
 			// Invalid token
 		} else {
-			sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" in struct properties.", sn.consume()))
+			sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" in struct properties.")
 		}
 	}
 }
@@ -143,12 +142,12 @@ func (sn *SyntaxAnalyzer) analyzeEnumDefinition() {
 				if sn.peek().TokenType.IsLiteral() {
 					expression := sn.collectExpression()
 
-					sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name. Did you want %s = %s?", sn.peek(), identifier, expression))
+					sn.newError(sn.peek(), "Unexpected token \""+sn.peek().String()+"\" after enum name. Did you want "+identifier.String()+" = "+expression+"?")
 					sn.analyzeExpression()
 					// Generic error
 				} else {
 					for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceClose {
-						sn.newError(sn.peek(), fmt.Sprintf("Unexpected token \"%s\" after enum name.", sn.consume()))
+						sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" after enum name.")
 					}
 				}
 			}

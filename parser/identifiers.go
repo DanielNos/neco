@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	data "neco/dataStructures"
 	"neco/lexer"
 )
@@ -70,7 +69,7 @@ func (p *Parser) parseVariableIdentifiers(variableType data.DataType) ([]*Node, 
 		symbol := p.getSymbol(p.peek().Value)
 
 		if symbol != nil {
-			p.newError(p.peek().Position, fmt.Sprintf("Variable %s is redeclared in this scope.", p.consume().Value))
+			p.newError(p.peek().Position, "Variable "+p.consume().Value+" is redeclared in this scope.")
 		} else {
 			p.consume()
 		}

@@ -1,7 +1,6 @@
 package codeGenerator
 
 import (
-	"fmt"
 	"neco/parser"
 	VM "neco/virtualMachine"
 )
@@ -67,7 +66,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 	if overloaded {
 		// Add parameter types to identifier so it can be matched to correct function
 		for _, argumentType := range functionCall.ArgumentTypes {
-			identifier = fmt.Sprintf("%s.%s", identifier, argumentType.Signature())
+			identifier = identifier + "." + argumentType.Signature()
 		}
 	}
 

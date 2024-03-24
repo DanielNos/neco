@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	data "neco/dataStructures"
 	"neco/lexer"
 	"neco/logger"
@@ -87,7 +86,7 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 						// Invalid type
 					} else {
 						p.newErrorNoMessage()
-						logger.Error2CodePos(assignedTo.Position, &expressionPosition, fmt.Sprintf("Can't assign expression of type %s to variable of type %s.", expressionType, variableType))
+						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type "+expressionType.String()+" to variable of type "+variableType.String()+".")
 					}
 				}
 				// Leaf type of expression is not set => use variable type

@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -10,35 +9,35 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 
 	// Check opening parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword forEach, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected opening parenthesis after keyword forEach, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Check type
 	if !sn.peek().TokenType.IsVariableType() {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected variable type, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected variable type, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.analyzeType()
 	}
 
 	// Check variable identifier
 	if sn.peek().TokenType != lexer.TT_Identifier {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after variable type, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected variable identifier after variable type, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Check keyword in
 	if sn.peek().TokenType != lexer.TT_OP_In {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected keyword in after variable identifier, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected keyword in after variable identifier, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Check enumerated expression
 	if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_EndOfCommand {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected enumerated expression after keyword \"in\", found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected enumerated expression after keyword \"in\", found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.analyzeExpression()
 	}
@@ -48,7 +47,7 @@ func (sn *SyntaxAnalyzer) analyzeForEachLoop() {
 		sn.consume()
 	} else {
 		for sn.peek().TokenType != lexer.TT_DL_ParenthesisClose && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_EndOfCommand {
-			sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis, found \"%s\" instead.", sn.consume()))
+			sn.newError(sn.peek(), "Expected closing parenthesis, found \""+sn.consume().String()+"\" instead.")
 		}
 
 		// Parenthesis found
@@ -68,7 +67,7 @@ func (sn *SyntaxAnalyzer) analyzeForLoop() {
 
 	// Check opening parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword for, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected opening parenthesis after keyword for, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
@@ -138,21 +137,21 @@ func (sn *SyntaxAnalyzer) analyzeWhileLoop() {
 
 	// Check opening parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisOpen {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected opening parenthesis after keyword while, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected opening parenthesis after keyword while, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}
 
 	// Check condition
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected condition, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected condition, found \""+sn.peek().String()+"\" instead.")
 		return
 	}
 	sn.analyzeExpression()
 
 	// Check closing parenthesis
 	if sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
-		sn.newError(sn.peek(), fmt.Sprintf("Expected closing parenthesis after condition, found \"%s\" instead.", sn.peek()))
+		sn.newError(sn.peek(), "Expected closing parenthesis after condition, found \""+sn.peek().String()+"\" instead.")
 	} else {
 		sn.consume()
 	}

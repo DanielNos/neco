@@ -183,7 +183,7 @@ func processArguments() (string, string, []bool) {
 			case "--silent", "-s":
 				logger.LoggingLevel = logger.LL_Error
 			default:
-				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action build.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action build.")
 			}
 		}
 	// Run flags
@@ -191,7 +191,7 @@ func processArguments() (string, string, []bool) {
 		for _, flag := range args[argumentsStart:] {
 			switch flag {
 			default:
-				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action run.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action run.")
 			}
 		}
 	// Analyze flags
@@ -204,7 +204,7 @@ func processArguments() (string, string, []bool) {
 			case "--tree", "-tr":
 				flags[1] = true
 			default:
-				logger.Fatal(errors.INVALID_FLAGS, fmt.Sprintf("Invalid flag \"%s\" for action analyze.", flag))
+				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action analyze.")
 			}
 		}
 	}
@@ -321,7 +321,7 @@ func main() {
 
 	// Build target
 	if action == "build" {
-		logger.Info(fmt.Sprintf("🐱 Compiling %s", target))
+		logger.Info("🐱 Compiling " + target)
 		compile(target, flags[0], flags[1], flags[2], !flags[3])
 		// Run target
 	} else if action == "run" {
@@ -329,7 +329,7 @@ func main() {
 		virtualMachine.Execute(target)
 		// Analyze target
 	} else if action == "analyze" {
-		logger.Info(fmt.Sprintf("🐱 Analyzing %s", target))
+		logger.Info("🐱 Analyzing " + target)
 		startTime := time.Now()
 
 		analyze(target, flags[0], flags[1], false)

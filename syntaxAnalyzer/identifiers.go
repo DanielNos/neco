@@ -1,7 +1,6 @@
 package syntaxAnalyzer
 
 import (
-	"fmt"
 	"neco/lexer"
 )
 
@@ -24,7 +23,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 			for sn.peek().TokenType == lexer.TT_DL_Comma {
 				sn.consume()
 				if sn.peek().TokenType != lexer.TT_Identifier {
-					sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after comma, found %s instead.", sn.peek()))
+					sn.newError(sn.peek(), "Expected variable identifier after comma, found "+sn.peek().String()+" instead.")
 					break
 				}
 				sn.consume()
@@ -32,7 +31,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 
 			// No = after variables
 			if !sn.peek().TokenType.IsAssignKeyword() {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected = after list of variable identifiers, found %s instead.", sn.peek()))
+				sn.newError(sn.peek(), "Expected = after list of variable identifiers, found "+sn.peek().String()+" instead.")
 				return
 			}
 
@@ -48,7 +47,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 
 			// Check identifier
 			if sn.peek().TokenType != lexer.TT_Identifier {
-				sn.newError(sn.peek(), fmt.Sprintf("Expected variable identifier after type %s, found \"%s\" instead.", sn.peekPrevious().Value, sn.peek()))
+				sn.newError(sn.peek(), "Expected variable identifier after type "+sn.peekPrevious().Value+", found \""+sn.peek().String()+"\" instead.")
 			} else {
 				sn.consume()
 			}
