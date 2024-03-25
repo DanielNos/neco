@@ -168,15 +168,15 @@ func (p *Parser) parseFunctionHeader() {
 
 	// Enter scope
 	p.enterScope()
-	p.consume()
+	p.consume() // (
 
 	// Collect parameters
+	startPosition := p.peek().Position
 	parameters := p.parseParameters()
 
 	// Function entry() can't have parameters
 	if identifierToken.Value == "entry" && len(parameters) != 0 {
-		// TODO: Display position of parameters
-		p.newError(identifierToken.Position, "Function entry() can't have any parameters.")
+		p.newError(startPosition.SetEndPos(p.peekPrevious().Position), "Function entry() can't have any parameters.")
 	}
 
 	// Check for redeclaration
@@ -195,7 +195,7 @@ func (p *Parser) parseFunctionHeader() {
 		}
 	}
 
-	p.consume()
+	p.consume() // )
 
 	// Collect return type
 	returnType := data.DataType{data.DT_NoType, nil}
