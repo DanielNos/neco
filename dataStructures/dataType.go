@@ -10,7 +10,7 @@ const (
 	DT_String
 	DT_Any
 	DT_Enum
-	DT_Struct
+	DT_Object
 	DT_List
 	DT_Set
 )
@@ -18,25 +18,25 @@ const (
 func (pt PrimitiveType) String() string {
 	switch pt {
 	case DT_NoType:
-		return "No Type"
+		return "[NOTYPE]"
 	case DT_Bool:
-		return "Bool"
+		return "bool"
 	case DT_Int:
-		return "Int"
+		return "int"
 	case DT_Float:
-		return "Float"
+		return "float"
 	case DT_String:
-		return "String"
+		return "string"
 	case DT_Any:
-		return "Any"
+		return "any"
 	case DT_Enum:
-		return "Enum"
-	case DT_Struct:
-		return "Struct"
+		return "enum"
+	case DT_Object:
+		return "object"
 	case DT_List:
-		return "List"
+		return "list"
 	case DT_Set:
-		return "Set"
+		return "set"
 	}
 
 	return "[INVALID DATA TYPE]"
@@ -69,7 +69,7 @@ func (dt DataType) CanBeAssigned(other DataType) bool {
 	}
 
 	// Compare struct names
-	if dt.Type == DT_Struct && other.Type == DT_Struct {
+	if dt.Type == DT_Object && other.Type == DT_Object {
 		return dt.SubType == other.SubType
 	}
 
@@ -92,9 +92,9 @@ func (dt DataType) CanBeAssigned(other DataType) bool {
 func (dt DataType) String() string {
 	if dt.Type <= DT_Any {
 		return dt.Type.String()
-	} else if dt.Type <= DT_Struct {
+	} else if dt.Type <= DT_Object {
 		if dt.SubType == nil {
-			return "Any"
+			return "any"
 		}
 		return dt.SubType.(string)
 	} else {
@@ -109,10 +109,10 @@ func (dt DataType) Signature() string {
 	if dt.Type <= DT_Any {
 		return dt.Type.String()
 	} else if dt.Type == DT_Enum {
-		return "Enum:" + dt.SubType.(string)
-	} else if dt.Type == DT_Struct {
+		return "enum:" + dt.SubType.(string)
+	} else if dt.Type == DT_Object {
 		if dt.SubType == nil {
-			return "Any"
+			return "any"
 		}
 		return dt.SubType.(string)
 	} else {

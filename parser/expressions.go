@@ -302,7 +302,7 @@ func (p *Parser) parseIdentifier() *Node {
 		} else if p.peek().TokenType == lexer.TT_OP_Dot {
 			p.consume()
 			// Can access properties of structs only
-			if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Struct {
+			if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Object {
 				p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
 			} else {
 				// Find struct definition
@@ -773,7 +773,7 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 	case NT_Enum:
 		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Object:
-		return data.DataType{data.DT_Struct, expression.Value.(*ObjectNode).Identifier}
+		return data.DataType{data.DT_Object, expression.Value.(*ObjectNode).Identifier}
 	case NT_StructField:
 		return expression.Value.(*ObjectFieldNode).DataType
 	case NT_Set:

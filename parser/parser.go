@@ -349,7 +349,7 @@ func (p *Parser) parseType() data.DataType {
 
 		// Symbol is a struct
 		if symbol.symbolType == ST_Struct {
-			variableType.Type = data.DT_Struct
+			variableType.Type = data.DT_Object
 			// Symbol is a enum
 		} else if symbol.symbolType == ST_Enum {
 			variableType.Type = data.DT_Enum

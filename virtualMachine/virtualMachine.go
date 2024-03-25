@@ -176,7 +176,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []interface{}{}}})
 
 		case IT_DeclareObject:
-			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Struct, nil}, nil}})
+			vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Object, nil}, nil}})
 
 		// Set and load list at index
 		case IT_SetListAtPrevToCurr:
