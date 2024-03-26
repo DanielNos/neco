@@ -214,7 +214,7 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	}
 }
 
-func getExpressionType(expression *parser.Node) data.DataType {
+func getExpressionType(expression *parser.Node) *data.DataType {
 	if expression.NodeType.IsOperator() {
 		// Unary operator
 		if expression.Value.(*parser.TypedBinaryNode).Left == nil {
@@ -226,20 +226,20 @@ func getExpressionType(expression *parser.Node) data.DataType {
 		leftType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left)
 		rightType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
 
-		return data.DataType{max(leftType.Type, rightType.Type), nil}
+		return &data.DataType{max(leftType.Type, rightType.Type), nil}
 	}
 
 	switch expression.NodeType {
 	case parser.NT_Literal:
-		return data.DataType{expression.Value.(*parser.LiteralNode).PrimitiveType, nil}
+		return &data.DataType{expression.Value.(*parser.LiteralNode).PrimitiveType, nil}
 	case parser.NT_Variable:
 		return expression.Value.(*parser.VariableNode).DataType
 	case parser.NT_FunctionCall:
-		return *expression.Value.(*parser.FunctionCallNode).ReturnType
+		return expression.Value.(*parser.FunctionCallNode).ReturnType
 	case parser.NT_List:
 		return expression.Value.(*parser.ListNode).DataType
 	case parser.NT_ListValue:
-		return getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left).SubType.(data.DataType)
+		return getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left).SubType.(*data.DataType)
 	}
 
 	panic("Can't determine expression data type from " + parser.NodeTypeToString[expression.NodeType] + ".")

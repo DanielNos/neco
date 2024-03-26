@@ -117,7 +117,7 @@ type ScopeNode struct {
 }
 
 type VariableDeclareNode struct {
-	DataType    data.DataType
+	DataType    *data.DataType
 	Constant    bool
 	Identifiers []string
 }
@@ -140,24 +140,24 @@ type BinaryNode struct {
 
 type TypedBinaryNode struct {
 	Left, Right *Node
-	DataType    data.DataType
+	DataType    *data.DataType
 }
 
 type VariableNode struct {
 	Identifier string
-	DataType   data.DataType
+	DataType   *data.DataType
 }
 
 type FunctionDeclareNode struct {
 	Number     int
 	Identifier string
 	Parameters []Parameter
-	ReturnType data.DataType
+	ReturnType *data.DataType
 	Body       *Node
 }
 
 type Parameter struct {
-	DataType     data.DataType
+	DataType     *data.DataType
 	Identifier   string
 	DefaultValue *Node
 }
@@ -166,7 +166,7 @@ type FunctionCallNode struct {
 	Number        int
 	Identifier    string
 	Arguments     []*Node
-	ArgumentTypes []data.DataType
+	ArgumentTypes []*data.DataType
 	ReturnType    *data.DataType
 }
 
@@ -193,7 +193,7 @@ type ForEachLoopNode struct {
 
 type ListNode struct {
 	Nodes    []*Node
-	DataType data.DataType
+	DataType *data.DataType
 }
 
 type ListAssignNode struct {
@@ -216,7 +216,7 @@ type ObjectNode struct {
 type ObjectFieldNode struct {
 	Identifier    string
 	PropertyIndex int
-	DataType      data.DataType
+	DataType      *data.DataType
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

@@ -198,7 +198,7 @@ func (p *Parser) parseFunctionHeader() {
 	p.consume() // )
 
 	// Collect return type
-	returnType := data.DataType{data.DT_NoType, nil}
+	returnType := &data.DataType{data.DT_Unknown, nil}
 	var returnPosition *data.CodePos
 
 	if p.peek().TokenType == lexer.TT_KW_returns {

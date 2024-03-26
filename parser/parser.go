@@ -333,18 +333,18 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	panic(p.peek().Position.String() + " Unexpected token " + p.peek().TokenType.String() + " \"" + p.consume().String() + "\".")
 }
 
-func (p *Parser) parseType() data.DataType {
+func (p *Parser) parseType() *data.DataType {
 	// Convert current token to data type
-	variableType := data.DataType{TokenTypeToDataType[p.peek().TokenType], nil}
+	variableType := &data.DataType{TokenTypeToDataType[p.peek().TokenType], nil}
 
 	// Token is not a data type keyword => it's enum or struct
-	if variableType.Type == data.DT_NoType {
+	if variableType.Type == data.DT_Unknown {
 		symbol := p.getGlobalSymbol(p.peek().Value)
 
 		// Neither primitive or user defined type => type can't be determined
 		if symbol == nil {
 			p.consume()
-			return variableType // DT_NoType
+			return variableType // DT_Unknown
 		}
 
 		// Symbol is a struct

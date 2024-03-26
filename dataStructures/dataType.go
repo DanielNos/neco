@@ -3,7 +3,7 @@ package dataStructures
 type PrimitiveType uint8
 
 const (
-	DT_NoType PrimitiveType = iota
+	DT_Unknown PrimitiveType = iota
 	DT_Bool
 	DT_Int
 	DT_Float
@@ -17,8 +17,8 @@ const (
 
 func (pt PrimitiveType) String() string {
 	switch pt {
-	case DT_NoType:
-		return "[NOTYPE]"
+	case DT_Unknown:
+		return "?"
 	case DT_Bool:
 		return "bool"
 	case DT_Int:
@@ -47,9 +47,9 @@ type DataType struct {
 	SubType interface{}
 }
 
-func (dt DataType) CanBeAssigned(other DataType) bool {
+func (dt *DataType) CanBeAssigned(other *DataType) bool {
 	// No type can't equal any other type
-	if dt.Type == DT_NoType || other.Type == DT_NoType {
+	if dt.Type == DT_Unknown || other.Type == DT_Unknown {
 		return false
 	}
 
@@ -65,7 +65,7 @@ func (dt DataType) CanBeAssigned(other DataType) bool {
 
 	// Lists
 	if dt.Type == DT_List && other.Type == DT_List {
-		return dt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
+		return dt.SubType.(*DataType).CanBeAssigned(other.SubType.(*DataType))
 	}
 
 	// Compare struct names
@@ -83,13 +83,45 @@ func (dt DataType) CanBeAssigned(other DataType) bool {
 
 	// Compare sets
 	if dt.Type == DT_Set && other.Type == DT_Set {
-		return dt.SubType.(DataType).CanBeAssigned(other.SubType.(DataType))
+		return dt.SubType.(*DataType).CanBeAssigned(other.SubType.(*DataType))
 	}
 
 	return false
 }
 
-func (dt DataType) String() string {
+func (dt *DataType) IsComplete() bool {
+	if dt.SubType == nil {
+		return dt.Type != DT_Unknown
+	}
+
+	return dt.SubType.(*DataType).IsComplete()
+}
+
+func (dt *DataType) GetDepth() int {
+	if dt.Type == DT_List || dt.Type == DT_Set {
+		return 1 + dt.SubType.(*DataType).GetDepth()
+	}
+
+	return 1
+}
+
+func (dt *DataType) GetLeafType() *DataType {
+	if dt.Type == DT_List || dt.Type == DT_Set {
+		return dt.SubType.(*DataType).GetLeafType()
+	}
+
+	return dt
+}
+
+func (dt *DataType) SetLeafType(dataType *DataType) {
+	if dt.Type == DT_List || dt.Type == DT_Set {
+		dt.SubType.(*DataType).SetLeafType(dataType)
+	} else {
+		*dt = *dataType
+	}
+}
+
+func (dt *DataType) String() string {
 	if dt.Type <= DT_Any {
 		return dt.Type.String()
 	} else if dt.Type <= DT_Object {
@@ -101,11 +133,11 @@ func (dt DataType) String() string {
 		if dt.SubType == nil {
 			return dt.Type.String() + "<?>"
 		}
-		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"
+		return dt.Type.String() + "<" + dt.SubType.(*DataType).String() + ">"
 	}
 }
 
-func (dt DataType) Signature() string {
+func (dt *DataType) Signature() string {
 	if dt.Type <= DT_Any {
 		return dt.Type.String()
 	} else if dt.Type == DT_Enum {
@@ -116,6 +148,6 @@ func (dt DataType) Signature() string {
 		}
 		return dt.SubType.(string)
 	} else {
-		return dt.Type.String() + "<" + dt.SubType.(DataType).String() + ">"
+		return dt.Type.String() + "<" + dt.SubType.(*DataType).String() + ">"
 	}
 }

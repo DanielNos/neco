@@ -3,7 +3,6 @@ package parser
 import (
 	data "neco/dataStructures"
 	"neco/lexer"
-	"neco/logger"
 )
 
 func (p *Parser) parseVariableDeclaration(constant bool) *Node {
@@ -21,7 +20,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
 		// var has to be assigned to
-		if variableType.Type == data.DT_NoType {
+		if variableType.Type == data.DT_Unknown {
 			startPosition.EndChar = p.peekPrevious().Position.EndChar
 			p.newError(startPosition, "Variables declared using keyword var have to have an expression assigned to them, so a data type can be derived from it.")
 		}
@@ -33,11 +32,11 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 		p.appendScope(node)
 
 		// Parse expression and collect type
-		var expressionType data.DataType
+		var expressionType *data.DataType
 		declareNode, expressionType = p.parseAssign(variableNodes, startPosition)
 
 		// Change variable type if no was provided
-		if variableType.Type == data.DT_NoType {
+		if variableType.Type == data.DT_Unknown {
 			variableType = expressionType
 			node.Value.(*VariableDeclareNode).DataType = expressionType
 		}
@@ -51,7 +50,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	return declareNode
 }
 
-func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.CodePos) (*Node, data.DataType) {
+func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos) (*Node, *data.DataType) {
 	assign := p.consume()
 	expressionStart := p.peek().Position
 
@@ -63,37 +62,43 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
 	// Print errors
-	if expressionType.Type != data.DT_NoType {
-		for _, assignedTo := range assignedStatements {
-			variableType := p.GetExpressionType(assignedTo)
+	if expressionType.Type != data.DT_Unknown {
+		for _, target := range assignedTo {
+			targetType := p.GetExpressionType(target)
 
-			// Leaf type of expression is set
-			if expressionType.SubType != nil {
-				// Check if variable can be assigned expression
-				if !variableType.CanBeAssigned(expressionType) {
-					// Variable doesn't have type yet (declared using var)
-					if variableType.Type == data.DT_NoType {
-						variableType = expressionType
-						// Invalid type
-					} else {
-						p.newErrorNoMessage()
-						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type "+expressionType.String()+" to variable of type "+variableType.String()+".")
-					}
-				}
-				// Leaf type of expression is not set => use variable type
-			} else {
-				// Assignin list<?> or set<?> expression to a var variable, so type can't be determined
-				if variableType.Type == data.DT_NoType {
-					if expressionType.Type == data.DT_Set {
-						p.newErrorNoMessage()
-						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type set<?> to variable declared using keyword var. Replace var with required type.")
-					} else if expressionType.Type == data.DT_List {
-						p.newErrorNoMessage()
-						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type list<?> to variable declared using keyword var. Replace var with required type.")
-					}
-					// Set expressions sub-type to variable sub-type (both list and set use *ListNode for elements)
+			if targetType.Type == data.DT_Unknown {
+				// Sub-type can be determined, assign it to expression
+				if expressionType.IsComplete() {
+					targetType = expressionType
 				} else {
-					expression.Value.(*ListNode).DataType = variableType
+					p.newError(&expressionPosition, "Can't assign expression with type "+expressionType.String()+" to a variable declared using var, because sub-type can't be determined. Replace var with desired type or add type before expression.")
+				}
+				continue
+			}
+
+			// Can't be assgined
+			if !targetType.CanBeAssigned(expressionType) {
+				// Depths are different, types can't be same
+				if expressionType.GetDepth() != targetType.GetDepth() {
+					p.newError(&expressionPosition, "Cant't assign expression with type "+expressionType.String()+" to variable with type "+targetType.String()+".")
+					continue
+				}
+
+				// Type is complete
+				if expressionType.IsComplete() {
+					p.newError(&expressionPosition, "Cant't assign expression with type "+expressionType.String()+" to variable with type "+targetType.String()+".")
+					continue
+				}
+
+				// Type doesn't have a leaf type, set it to the same as target
+				originalExpressionType := expressionType.String()
+				expressionType.SetLeafType(targetType.GetLeafType())
+
+				// Check if now it can be assigned
+				if targetType.CanBeAssigned(expressionType) {
+					expression.Value.(*ListNode).DataType = targetType
+				} else {
+					p.newError(&expressionPosition, "Cant't assign expression with type "+originalExpressionType+" to variable with type "+targetType.String()+".")
 				}
 			}
 		}
@@ -104,14 +109,14 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 		nodeType := OperationAssignTokenToNodeType[assign.TokenType]
 
 		// Transform assigned expressions in the following way: a += 1 to a = a + 1
-		for _, assignedStatement := range assignedStatements[:len(assignedStatements)-1] {
-			generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatement, expression, expressionType}}
-			p.appendScope(&Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedStatement}, generatedNode}})
+		for _, target := range assignedTo[:len(assignedTo)-1] {
+			generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{target, expression, expressionType}}
+			p.appendScope(&Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{target}, generatedNode}})
 		}
 
-		generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedStatements[len(assignedStatements)-1], expression, expressionType}}
-		return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedStatements[len(assignedStatements)-1]}, generatedNode}}, expressionType
+		generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedTo[len(assignedTo)-1], expression, expressionType}}
+		return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedTo[len(assignedTo)-1]}, generatedNode}}, expressionType
 	}
 
-	return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedStatements, expression}}, expressionType
+	return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedTo, expression}}, expressionType
 }

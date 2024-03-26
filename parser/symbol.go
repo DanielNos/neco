@@ -37,7 +37,7 @@ func (st SymbolType) String() string {
 type SymbolValue interface{}
 
 type VariableSymbol struct {
-	VariableType  data.DataType
+	VariableType  *data.DataType
 	isInitialized bool
 	isConstant    bool
 }
@@ -45,13 +45,13 @@ type VariableSymbol struct {
 type FunctionSymbol struct {
 	number     int
 	parameters []Parameter
-	returnType data.DataType
+	returnType *data.DataType
 	everCalled bool
 }
 
 type PropertySymbol struct {
 	number   int
-	dataType data.DataType
+	dataType *data.DataType
 }
 
 type symbolTable map[string]*Symbol

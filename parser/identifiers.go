@@ -56,7 +56,7 @@ func (p *Parser) parseIdentifierStatement() *Node {
 	return node
 }
 
-func (p *Parser) parseVariableIdentifiers(variableType data.DataType) ([]*Node, []string) {
+func (p *Parser) parseVariableIdentifiers(variableType *data.DataType) ([]*Node, []string) {
 	// Collect identifiers
 	variables := []*Node{}
 	identifiers := []string{}

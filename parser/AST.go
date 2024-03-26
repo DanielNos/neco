@@ -102,7 +102,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 		print(") ")
 
-		if functionDeclareNode.ReturnType.Type != data.DT_NoType {
+		if functionDeclareNode.ReturnType.Type != data.DT_Unknown {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
 		}
 

@@ -67,7 +67,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			right.Value.(*LiteralNode).Value = !right.Value.(*LiteralNode).Value.(bool)
 			left = right
 		} else {
-			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &TypedBinaryNode{nil, right, data.DataType{data.DT_NoType, nil}}}
+			left = &Node{operator.Position, TokenTypeToNodeType[operator.TokenType], &TypedBinaryNode{nil, right, &data.DataType{data.DT_Unknown, nil}}}
 		}
 
 		// Identifiers
@@ -129,16 +129,16 @@ func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, lef
 	// Store constants
 	p.collectConstant(left)
 	p.collectConstant(right)
-	return &Node{position, nodeType, &TypedBinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+	return &Node{position, nodeType, &TypedBinaryNode{left, right, &data.DataType{data.DT_Unknown, nil}}}
 }
 
-func (p *Parser) deriveType(expression *Node) data.DataType {
+func (p *Parser) deriveType(expression *Node) *data.DataType {
 	// Operators
 	if expression.NodeType.IsOperator() {
 		binaryNode := expression.Value.(*TypedBinaryNode)
 
 		// Node has it's type stored already
-		if binaryNode.DataType.Type != data.DT_NoType {
+		if binaryNode.DataType.Type != data.DT_Unknown {
 			return binaryNode.DataType
 		}
 
@@ -152,8 +152,8 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		rightType := p.deriveType(binaryNode.Right)
 
 		// Error in one of types
-		if leftType.Type == data.DT_NoType || rightType.Type == data.DT_NoType {
-			return data.DataType{data.DT_NoType, nil}
+		if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
+			return &data.DataType{data.DT_Unknown, nil}
 		}
 
 		// In operator has to be used on set with correct type
@@ -162,11 +162,11 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 			if rightType.Type != data.DT_Set {
 				p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set.")
 				// Left type isn't set's sub-type
-			} else if !rightType.SubType.(data.DataType).CanBeAssigned(leftType) {
+			} else if !rightType.SubType.(*data.DataType).CanBeAssigned(leftType) {
 				p.newErrorNoMessage()
-				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), "Left expression type ("+leftType.String()+") doesn't match the set element type ("+rightType.SubType.(data.DataType).String()+").")
+				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), "Left expression type ("+leftType.String()+") doesn't match the set element type ("+rightType.SubType.(*data.DataType).String()+").")
 			}
-			binaryNode.DataType = data.DataType{data.DT_Bool, nil}
+			binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
 			return binaryNode.DataType
 		}
 
@@ -175,36 +175,36 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
 				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can be only used on expressions of type bool.")
-				binaryNode.DataType = data.DataType{data.DT_Bool, nil}
+				binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
 				return binaryNode.DataType
 			}
 
 			// Comparison operators return boolean
 			if expression.NodeType.IsComparisonOperator() {
-				binaryNode.DataType = data.DataType{data.DT_Bool, nil}
+				binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
 				return binaryNode.DataType
 			}
 
 			// Can't do non-comparison operations on enums
 			if leftType.Type == data.DT_Enum || rightType.Type == data.DT_Enum {
 				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can't be used on enum constants.")
-				return data.DataType{data.DT_NoType, nil}
+				return &data.DataType{data.DT_Unknown, nil}
 			}
 
 			// Only + can be used on strings and lists
 			if (leftType.Type == data.DT_String || leftType.Type == data.DT_List) && expression.NodeType != NT_Add {
 				p.newError(expression.Position, "Can't use operator "+expression.NodeType.String()+" on data types "+leftType.String()+" and "+rightType.String()+".")
-				return data.DataType{data.DT_NoType, nil}
+				return &data.DataType{data.DT_Unknown, nil}
 			}
 
 			// Return left type
-			if leftType.Type != data.DT_NoType {
+			if leftType.Type != data.DT_Unknown {
 				binaryNode.DataType = leftType
 				return leftType
 			}
 
 			// Return right type
-			if rightType.Type != data.DT_NoType {
+			if rightType.Type != data.DT_Unknown {
 				binaryNode.DataType = rightType
 				return rightType
 			}
@@ -214,13 +214,13 @@ func (p *Parser) deriveType(expression *Node) data.DataType {
 		}
 
 		// Left or right doesn't have a type
-		if leftType.Type == data.DT_NoType || rightType.Type == data.DT_NoType {
+		if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
 			return leftType
 		}
 
 		// Failed to determine data type
 		p.newError(expression.Position, "Operator "+expression.NodeType.String()+" is used on incompatible data types "+leftType.String()+" and "+rightType.String()+".")
-		return data.DataType{data.DT_NoType, nil}
+		return &data.DataType{data.DT_Unknown, nil}
 	}
 
 	return p.GetExpressionType(expression)
@@ -273,7 +273,7 @@ func (p *Parser) parseIdentifier() *Node {
 			// Undeclared variable
 		} else {
 			p.newError(identifier.Position, "Variable "+identifier.Value+" is not declared in this scope.")
-			return &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, data.DataType{data.DT_NoType, nil}}}
+			return &Node{identifier.Position, NT_Variable, &VariableNode{identifier.Value, &data.DataType{data.DT_Unknown, nil}}}
 		}
 		// Function call
 	} else if symbol.symbolType == ST_FunctionBucket {
@@ -293,7 +293,7 @@ func (p *Parser) parseIdentifier() *Node {
 			for p.peek().TokenType == lexer.TT_DL_BracketOpen {
 				p.consume() // [
 				variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-				listValue := &Node{identifierToken.Position, NT_ListValue, &TypedBinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(data.DataType)}}
+				listValue := &Node{identifierToken.Position, NT_ListValue, &TypedBinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(*data.DataType)}}
 				p.consume() // ]
 
 				return listValue
@@ -334,7 +334,7 @@ func (p *Parser) parseIdentifier() *Node {
 		return p.parseStructLiteral(symbol.value.(map[string]PropertySymbol))
 	}
 
-	return &Node{p.peek().Position, NT_Variable, &VariableNode{p.consume().Value, data.DataType{data.DT_NoType, nil}}}
+	return nil
 }
 
 func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node {
@@ -510,8 +510,8 @@ func (p *Parser) parseList() *Node {
 
 	// Collect elements
 	expressions := []*Node{}
-	expressionTypes := map[data.DataType]int{}
-	elementType := data.DataType{data.DT_NoType, nil}
+	expressionTypes := map[*data.DataType]int{}
+	elementType := &data.DataType{data.DT_Unknown, nil}
 
 	for p.peek().TokenType != lexer.TT_DL_BracketClose {
 		// Collect expression
@@ -539,11 +539,7 @@ func (p *Parser) parseList() *Node {
 		elementType = p.checkElementTypes(expressionTypes, expressions, "List")
 	}
 
-	if elementType.Type == data.DT_NoType {
-		return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, nil}}}
-	}
-	return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, data.DataType{data.DT_List, elementType}}}
-
+	return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, &data.DataType{data.DT_List, elementType}}}
 }
 
 func (p *Parser) parseSet() *Node {
@@ -551,8 +547,8 @@ func (p *Parser) parseSet() *Node {
 
 	// Collect elements
 	expressions := []*Node{}
-	expressionTypes := map[data.DataType]int{}
-	elementType := data.DataType{data.DT_NoType, nil}
+	expressionTypes := map[*data.DataType]int{}
+	elementType := &data.DataType{data.DT_Unknown, nil}
 
 	p.consumeEOCs()
 
@@ -577,19 +573,16 @@ func (p *Parser) parseSet() *Node {
 		elementType = p.checkElementTypes(expressionTypes, expressions, "Set")
 	}
 
-	if elementType.Type == data.DT_NoType {
-		return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, data.DataType{data.DT_Set, nil}}}
-	}
-	return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, data.DataType{data.DT_Set, elementType}}}
+	return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, &data.DataType{data.DT_Set, elementType}}}
 }
 
-func (p *Parser) checkElementTypes(expressionTypes map[data.DataType]int, expressions []*Node, structureName string) data.DataType {
+func (p *Parser) checkElementTypes(expressionTypes map[*data.DataType]int, expressions []*Node, structureName string) *data.DataType {
 	// Find type with lowest count and highest count
 	lowestCount := 999999
-	lowestType := data.DataType{}
+	lowestType := &data.DataType{}
 
 	highestCount := 0
-	highestType := data.DataType{}
+	highestType := &data.DataType{}
 
 	for t, count := range expressionTypes {
 		// Update lowest count
@@ -750,10 +743,10 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	}
 
 	// Invalid operation, can't combine
-	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &TypedBinaryNode{left, right, data.DataType{data.DT_NoType, nil}}}
+	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &TypedBinaryNode{left, right, &data.DataType{data.DT_Unknown, nil}}}
 }
 
-func (p *Parser) GetExpressionType(expression *Node) data.DataType {
+func (p *Parser) GetExpressionType(expression *Node) *data.DataType {
 	// Binary nodes store their type
 	if expression.NodeType.IsOperator() {
 		return expression.Value.(*TypedBinaryNode).DataType
@@ -761,19 +754,19 @@ func (p *Parser) GetExpressionType(expression *Node) data.DataType {
 
 	switch expression.NodeType {
 	case NT_Literal:
-		return data.DataType{expression.Value.(*LiteralNode).PrimitiveType, nil}
+		return &data.DataType{expression.Value.(*LiteralNode).PrimitiveType, nil}
 	case NT_Variable:
 		return expression.Value.(*VariableNode).DataType
 	case NT_FunctionCall:
-		return *expression.Value.(*FunctionCallNode).ReturnType
+		return expression.Value.(*FunctionCallNode).ReturnType
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return p.GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(data.DataType)
+		return p.GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(*data.DataType)
 	case NT_Enum:
-		return data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
+		return &data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Object:
-		return data.DataType{data.DT_Object, expression.Value.(*ObjectNode).Identifier}
+		return &data.DataType{data.DT_Object, expression.Value.(*ObjectNode).Identifier}
 	case NT_StructField:
 		return expression.Value.(*ObjectFieldNode).DataType
 	case NT_Set:
