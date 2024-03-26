@@ -180,8 +180,8 @@ func (p *Parser) parseForEach() *Node {
 
 	// Check if list element can be assigned to iterator
 	if !iteratorType.CanBeAssigned(elementType) {
-		logger.Error2CodePos(typePosition, expression.Position, "Can't assign expression of type "+elementType.String()+" to variable of type "+iteratorType.String()+".")
 		p.newErrorNoMessage()
+		logger.Error2CodePos(typePosition, expression.Position, "Can't assign expression of type "+elementType.String()+" to variable of type "+iteratorType.String()+".")
 	}
 
 	// Assign to iterated_expression[interator_index] to iterator

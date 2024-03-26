@@ -84,10 +84,11 @@ func (p *Parser) parseAssign(assignedStatements []*Node, startOfStatement *data.
 			} else {
 				// Assignin list<?> or set<?> expression to a var variable, so type can't be determined
 				if variableType.Type == data.DT_NoType {
-					p.newErrorNoMessage()
 					if expressionType.Type == data.DT_Set {
+						p.newErrorNoMessage()
 						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type set<?> to variable declared using keyword var. Replace var with required type.")
 					} else if expressionType.Type == data.DT_List {
+						p.newErrorNoMessage()
 						logger.Error2CodePos(assignedTo.Position, &expressionPosition, "Can't assign expression of type list<?> to variable declared using keyword var. Replace var with required type.")
 					}
 					// Set expressions sub-type to variable sub-type (both list and set use *ListNode for elements)
