@@ -12,3 +12,5 @@ run
 bin
 main
 neco
+
+*.py

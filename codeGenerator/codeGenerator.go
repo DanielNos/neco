@@ -14,6 +14,7 @@ import (
 var NO_ARGS = []byte{}
 
 const MAX_UINT8 = 255
+const IGNORE_INSTRUCTION byte = 255
 
 type Break struct {
 	instruction         *VM.Instruction
@@ -97,9 +98,12 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 		return &cg.instructions
 	}
 
-	// Generate functions
+	// Generate first line index
 	cg.line = statements[0].Position.StartLine
 	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(cg.line)}})
+
+	// Generate call to entry function
+	cg.instructions = append(cg.instructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclare {
@@ -107,6 +111,12 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 			if cg.line < node.Position.StartLine {
 				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
 				cg.line = node.Position.StartLine
+			}
+
+			// Set first function call function id
+			if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
+				cg.instructions[1].InstructionType = VM.IT_Call
+				cg.instructions[1].InstructionValue = append(cg.instructions[1].InstructionValue, byte(len(cg.functions)))
 			}
 
 			cg.generateFunction(node)

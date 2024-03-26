@@ -93,9 +93,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 	vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
+	// Interpret instructions
 	for vm.instructionIndex < len(vm.Instructions) {
 		instruction := vm.Instructions[vm.instructionIndex]
-		prevII := vm.instructionIndex
+		prevII := vm.instructionIndex // REMOVE before public build
 
 		switch instruction.InstructionType {
 
@@ -399,10 +400,11 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		}
 		vm.instructionIndex++
 
-		// Debug stepper
+		// Debug stepper; REMOVE before public build
 		if false {
 			fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[vm.Instructions[prevII].InstructionType], vm.Instructions[prevII].InstructionValue)
 			fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
+			fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
 			print("Scope: {")
 			fmt.Printf("%s", vm.stack_scopes[0])
 			for _, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
