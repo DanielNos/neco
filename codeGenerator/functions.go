@@ -34,9 +34,6 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	// Generate function body
 	cg.generateStatements(function.Body.Value.(*parser.ScopeNode))
 
-	// Leave scope
-	cg.leaveScope()
-
 	// Generate line offset of closing brace
 	if cg.line < functionNode.Position.EndLine {
 		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(functionNode.Position.EndLine - cg.line)}})

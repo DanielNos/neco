@@ -289,6 +289,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 			vm.stack_symbolTables.Pop()
 			vm.reg_scopeIndex--
 
+			if vm.reg_scopeIndex == 1 {
+				return
+			}
+
 			vm.reg_returnIndex--
 			vm.instructionIndex = vm.stack_returnIndexes[vm.reg_returnIndex]
 			continue
@@ -355,6 +359,10 @@ func (vm *VirtualMachine) Execute(filePath string) {
 		case IT_PopScope:
 			vm.stack_symbolTables.Pop()
 			vm.reg_scopeIndex--
+
+			if vm.reg_scopeIndex == 1 {
+				return
+			}
 
 		// List operations
 		case IT_CreateList:
