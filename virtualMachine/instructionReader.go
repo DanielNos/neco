@@ -47,8 +47,8 @@ func (ir *InstructionReader) Read() {
 	}
 
 	// Invalid magic number
-	if ir.bytes[0] != 'N' || ir.bytes[1] != 'E' || ir.bytes[2] != 'C' || ir.bytes[3] != 'O' {
-		logger.Fatal(errors.READ_PROGRAM, "File isn't a NeCo binary.")
+	if ir.bytes[0] != 'N' || ir.bytes[1] != 'e' || ir.bytes[2] != 'C' || ir.bytes[3] != 'o' {
+		logger.Fatal(errors.READ_PROGRAM, "File isn't a NeCo binary or is corrupted.")
 	}
 
 	// Incompatible version
