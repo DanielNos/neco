@@ -39,7 +39,7 @@ func (cw *CodeWriter) Write() {
 	file, _ := os.Create(cw.codeGenerator.filePath)
 	cw.file = file
 
-	file.WriteString("NECO")
+	file.WriteString("NeCo")
 	file.Write([]byte{0, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH})
 
 	cw.writeConstantsSegment()
