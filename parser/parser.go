@@ -138,6 +138,14 @@ func (p *Parser) leaveScope() {
 	p.stack_symbolTableStack.Pop()
 }
 
+func (p *Parser) skipStatement() {
+	for p.peek().TokenType != lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
+	p.consume()
+}
+
 func (p *Parser) Parse() *Node {
 	return p.parseModule()
 }
@@ -184,7 +192,6 @@ func (p *Parser) parseModule() *Node {
 				}
 			}
 		}
-
 	}
 
 	return module
@@ -233,13 +240,26 @@ func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {
 }
 
 func (p *Parser) parseStatement(enteredScope bool) *Node {
+	// Variable declaration
+	if p.peek().TokenType.IsVariableType() {
+		// Skip statement if it's in root scope (global variable)
+		if p.scopeNodeStack.Size == 1 {
+			p.skipStatement()
+			return p.parseStatement(enteredScope)
+		}
+		return p.parseVariableDeclaration(false)
+	}
+
 	switch p.peek().TokenType {
 
 	// Variable declaration
-	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list, lexer.TT_KW_set:
-		return p.parseVariableDeclaration(false)
-
 	case lexer.TT_KW_const:
+		// Skip statement if it's in root scope (global variable)
+		if p.scopeNodeStack.Size == 1 {
+			p.skipStatement()
+			return p.parseStatement(enteredScope)
+		}
+
 		p.consume()
 		return p.parseVariableDeclaration(true)
 

@@ -108,7 +108,7 @@ func (vm *VirtualMachine) Execute(filePath string) {
 
 func (vm *VirtualMachine) interpretInstruction() {
 	instruction := (*vm.instructions)[vm.instructionIndex]
-	prevII := vm.instructionIndex // REMOVE before public build
+	prevII := vm.instructionIndex // REMOVE for public build
 
 	switch instruction.InstructionType {
 
@@ -419,7 +419,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 	}
 	vm.instructionIndex++
 
-	// Debug stepper; REMOVE before public build
+	// Debug stepper; REMOVE for public build
 	if false {
 		fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
 		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])

@@ -55,6 +55,19 @@ func (p *Parser) collectGlobals() {
 		}
 	}
 	p.tokenIndex = 1
+
+	// Collect global variables
+	for p.peek().TokenType != lexer.TT_EndOfFile {
+		if p.peek().TokenType.IsVariableType() {
+			p.appendScope(p.parseVariableDeclaration(false))
+		} else if p.peek().TokenType == lexer.TT_KW_const {
+			p.consume()
+			p.appendScope(p.parseVariableDeclaration(true))
+		} else {
+			p.consume()
+		}
+	}
+	p.tokenIndex = 1
 }
 
 func (p *Parser) parseStruct() {

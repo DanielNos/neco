@@ -129,10 +129,14 @@ func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 			cg.line = node.Position.StartLine
 		}
 
+		// Generate only declarations and assignments
 		if node.NodeType == parser.NT_VariableDeclare {
 			cg.generateVariableDeclaration(node)
 		} else if node.NodeType == parser.NT_Assign {
 			cg.generateAssignment(node.Value.(*parser.AssignNode))
+		} else {
+			// Stop if something else is found (globals are before everything else in tree)
+			break
 		}
 	}
 }
