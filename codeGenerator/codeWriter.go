@@ -11,19 +11,19 @@ import (
 
 var STRING_TERMINATOR = []byte{0}
 
-const CONSTANTS_SEGMENT = 0
+const SEGMENT_CONSTANTS = 0
 const (
-	STRINGS_SEGMENT = 0
-	INTS_SEGMENT    = 1
-	FLOATS_SEGMENT  = 2
+	SEGMENT_CONSTANTS_STRINGS = 0
+	SEGMENT_CONSTANTS_INTS    = 1
+	SEGMENT_CONSTANTS_FLOATS  = 2
 )
 
-const CODE_SEGMENT = 1
+const SEGMENT_CODE = 1
 const (
-	METADATA_SEGMENT          = 0
-	GLOBALS_SEGMENT           = 1
-	FUNCTIONS_INDEXES_SEGMENT = 2
-	FUNCTIONS_SEGMENT         = 3
+	SEGMENT_CODE_METADATA         = 0
+	SEGMENT_CODE_GLOBALS          = 1
+	SEGMENT_CODE_FUNCTION_INDEXES = 2
+	SEGMENT_CODE_FUNCTIONS        = 3
 )
 
 type CodeWriter struct {
@@ -86,7 +86,7 @@ func (cw *CodeWriter) writeCodeSegment() {
 	cw.writeFunctionIndexes()
 	cw.writeFunctions()
 
-	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CODE}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -96,7 +96,7 @@ func (cw *CodeWriter) writeMetaData() {
 
 	cw.file.Write([]byte{byte(cw.codeGenerator.FirstLine)}) // Write first line
 
-	cw.file.WriteAt([]byte{METADATA_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CODE_METADATA}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -106,7 +106,7 @@ func (cw *CodeWriter) writeGlobals() {
 
 	cw.writeInstructions(&cw.codeGenerator.GlobalsInstructions)
 
-	cw.file.WriteAt([]byte{GLOBALS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CODE_GLOBALS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -127,7 +127,7 @@ func (cw *CodeWriter) writeFunctionIndexes() {
 		lastFunction = function
 	}
 
-	cw.file.WriteAt([]byte{FUNCTIONS_INDEXES_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CODE_FUNCTION_INDEXES}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -137,7 +137,7 @@ func (cw *CodeWriter) writeFunctions() {
 
 	cw.writeInstructions(&cw.codeGenerator.FunctionsInstructions)
 
-	cw.file.WriteAt([]byte{FUNCTIONS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CODE_FUNCTIONS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -149,7 +149,7 @@ func (cw *CodeWriter) writeConstantsSegment() {
 	cw.writeIntsSegment()
 	cw.writeFloatsSegment()
 
-	cw.file.WriteAt([]byte{CONSTANTS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CONSTANTS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -162,7 +162,7 @@ func (cw *CodeWriter) writeStringsSegment() {
 		cw.file.Write(STRING_TERMINATOR)
 	}
 
-	cw.file.WriteAt([]byte{STRINGS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CONSTANTS_STRINGS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -176,7 +176,7 @@ func (cw *CodeWriter) writeIntsSegment() {
 		cw.file.Write(byteSlice)
 	}
 
-	cw.file.WriteAt([]byte{INTS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CONSTANTS_INTS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
@@ -190,6 +190,6 @@ func (cw *CodeWriter) writeFloatsSegment() {
 		cw.file.Write(byteSlice)
 	}
 
-	cw.file.WriteAt([]byte{FLOATS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{SEGMENT_CONSTANTS_FLOATS}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
