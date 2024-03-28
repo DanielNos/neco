@@ -1,0 +1,24 @@
+NeCo Binary File
+├─ File header
+│  ├─ Magic number "NeCo" - 4 B
+│  ├─ Zero Byte - 1 B
+│  └─ Version: Major Minor Patch - 3 B
+├─ [SEGMENT] Constants
+│  ├─ [SEGMENT] Strings
+│  │  └─ String bytes terminated by zero byte - N B
+│  ├─ [SEGMENT] Ints
+│  │  └─ 8 B Integers - 8 B * N
+│  └─ [SEGMENT] Floats
+│     └─ 8 B Floats - 8 B * N
+└─ [SEGMENT] Code
+   ├─ [SEGMENT] Meta Data
+   │  └─ First line - 1 B
+   ├─ [SEGMENT] Globals Instructions - N B
+   ├─ [SEGMENT] Functions Indexes - N B
+   │  └─ Delta positions of functions in instructions - N * 1 B
+   └─ [SEGMENT] Functions Instruction - N B
+
+SEGMENT
+├─ Segment ID - 1 B
+├─ Segment Size - 3 B
+└─ Segment Content - N B
