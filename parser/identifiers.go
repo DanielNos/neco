@@ -22,7 +22,7 @@ func (p *Parser) parseIdentifierStatement() *Node {
 	}
 
 	// Statement is a function call
-	if len(expressions) == 1 && expressions[0].NodeType == NT_FunctionCall && p.peek().TokenType == lexer.TT_EndOfCommand {
+	if len(expressions) == 1 && expressions[0].NodeType == NT_FunctionCall && (p.peek().TokenType == lexer.TT_EndOfCommand || p.peek().TokenType == lexer.TT_DL_BraceClose) {
 		return expressions[0]
 	}
 

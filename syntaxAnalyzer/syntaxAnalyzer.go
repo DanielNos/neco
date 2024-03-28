@@ -256,6 +256,10 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 	// Remaining tokens after statement
 	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_DL_BraceClose && isScope {
+			return true
+		}
+
 		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose || sn.peek().TokenType == lexer.TT_DL_BracketClose {
 			sn.consume()
 			return true

@@ -41,7 +41,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 
 	// No assign
 	if sn.peek().TokenType != lexer.TT_KW_Assign {
-		if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_EndOfFile {
+		if sn.peek().TokenType == lexer.TT_EndOfCommand || sn.peek().TokenType == lexer.TT_DL_BraceClose || sn.peek().TokenType == lexer.TT_EndOfFile {
 			return
 		}
 
@@ -64,7 +64,7 @@ func (sn *SyntaxAnalyzer) analyzeVariableDeclaration(constant bool) {
 	sn.analyzeExpression()
 
 	// Collect invalid tokens
-	for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
+	for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceClose && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
 		sn.newError(sn.peek(), "Unexpected token \""+sn.consume().String()+"\" after variable declaration.")
 	}
 }
