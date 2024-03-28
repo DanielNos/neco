@@ -12,6 +12,7 @@ import (
 
 const (
 	LL_Info byte = iota
+	LL_Success
 	LL_Warning
 	LL_Error
 	LL_Fatal
@@ -46,7 +47,7 @@ func readLine(filePath string, lineIndex uint) (string, error) {
 }
 
 func Success(message string) {
-	if LoggingLevel > LL_Info {
+	if LoggingLevel > LL_Success {
 		return
 	}
 

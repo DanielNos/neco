@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,12 +26,13 @@ func printHelp() {
 
 	color.Set(color.Reset)
 	println("build [target]")
-	println("                 -to --tokens        Prints lexed tokens.")
-	println("                 -tr --tree          Draws abstract syntax tree.")
-	println("                 -i  --instructions  Prints generated instructions.")
-	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
-	println("                 -s  --silent        Doesn't produce info messages when possible.")
-	println("                 -n  --noLog         Doesn't produce any log messages, even if there are errors.")
+	println("                 -to --tokens           Prints lexed tokens.")
+	println("                 -tr --tree             Draws abstract syntax tree.")
+	println("                 -i  --instructions     Prints generated instructions.")
+	println("                 -d  --dontOptimize     Compiler won't optimize byte code.")
+	println("                 -s  --silent           Doesn't produce info messages when possible.")
+	println("                 -n  --noLog            Doesn't produce any log messages, even if there are errors.")
+	println("                 -l  --logLevel [LEVEL] Sets logging level. Possible values are 0 to 5.")
 	println("\nrun [target]")
 	println("\nanalyze [target] -to --tokens  Prints lexed tokens.")
 	println("                 -tr --tree    Draws abstract syntax tree.")
@@ -171,8 +173,8 @@ func processArguments() (string, string, []bool) {
 	// Build flags
 	case "build":
 		flags = []bool{false, false, false, false}
-		for _, flag := range args[argumentsStart:] {
-			switch flag {
+		for i := argumentsStart; i < len(args); i++ {
+			switch args[i] {
 			case "--tokens", "-to":
 				flags[0] = true
 			case "--tree", "-tr":
@@ -185,8 +187,26 @@ func processArguments() (string, string, []bool) {
 				logger.LoggingLevel = logger.LL_Error
 			case "--noLog", "-n":
 				logger.LoggingLevel = logger.LL_NoLog
+			case "--logLevel", "-l":
+				if i+1 == len(args) {
+					logger.Fatal(errors.INVALID_FLAGS, "No logging level provided after "+args[i]+" flag.")
+				}
+
+				i++
+				loggingLevel, err := strconv.Atoi(args[i])
+
+				if err != nil {
+					logger.Fatal(errors.INVALID_FLAGS, "Logging level has to be a number.")
+				}
+
+				if loggingLevel < 0 || loggingLevel > 5 {
+					logger.Fatal(errors.INVALID_FLAGS, "Invalid logging level "+fmt.Sprintf("%d.", loggingLevel))
+				}
+
+				logger.LoggingLevel = byte(loggingLevel)
+
 			default:
-				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action build.")
+				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+args[i]+"\" for action build.")
 			}
 		}
 	// Run flags
