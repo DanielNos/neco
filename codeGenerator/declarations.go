@@ -36,7 +36,7 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType *data.DataType, id 
 	*cg.target = append(*cg.target, VM.Instruction{dataTypeToDeclareInstruction[dataType.Type], args})
 
 	// Generate sub-type of composite types
-	if dataType.SubType != nil && dataType.Type != data.DT_Object {
+	if dataType.SubType != nil && (dataType.Type == data.DT_List || dataType.Type == data.DT_Set) {
 		cg.generateVariableDeclarator(dataType.SubType.(*data.DataType), nil)
 	}
 }

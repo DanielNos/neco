@@ -57,15 +57,26 @@ func (p *Parser) collectGlobals() {
 	p.tokenIndex = 1
 
 	// Collect global variables
+	scopeDepth := 0
 	for p.peek().TokenType != lexer.TT_EndOfFile {
-		if p.peek().TokenType.IsVariableType() {
-			p.appendScope(p.parseVariableDeclaration(false))
-		} else if p.peek().TokenType == lexer.TT_KW_const {
-			p.consume()
-			p.appendScope(p.parseVariableDeclaration(true))
-		} else {
-			p.consume()
+		// Enter scope
+		if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+			scopeDepth++
+			// Leave scope
+		} else if p.peek().TokenType == lexer.TT_DL_BraceClose {
+			scopeDepth--
+			// Collect globals only in root scope
+		} else if scopeDepth == 0 {
+			if p.peek().TokenType.IsVariableType() {
+				p.appendScope(p.parseVariableDeclaration(false))
+				continue
+			} else if p.peek().TokenType == lexer.TT_KW_const {
+				p.consume()
+				p.appendScope(p.parseVariableDeclaration(true))
+				continue
+			}
 		}
+		p.consume()
 	}
 	p.tokenIndex = 1
 }
