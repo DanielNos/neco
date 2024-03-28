@@ -61,6 +61,19 @@ func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos)
 	// Uncompatible data types
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
+	// Check if variables are constant
+	for _, target := range assignedTo {
+		symbol := p.findSymbol(target.Value.(*VariableNode).Identifier)
+
+		if symbol == nil || symbol.symbolType != ST_Variable {
+			continue
+		}
+
+		if symbol.value.(*VariableSymbol).isConstant {
+			p.newError(GetExpressionPosition(target), "Variable "+target.Value.(*VariableNode).Identifier+" is constant.")
+		}
+	}
+
 	// Print errors
 	if expressionType.Type != data.DT_Unknown {
 		for _, target := range assignedTo {
