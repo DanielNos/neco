@@ -43,7 +43,7 @@ func (ir *InstructionReader) Read() {
 
 	// Couldn't read file
 	if err != nil {
-		logger.Fatal(errors.READ_PROGRAM, "Can't read file.")
+		logger.Fatal(errors.READ_PROGRAM, "Can't "+err.Error()+".")
 	}
 
 	// Invalid magic number
