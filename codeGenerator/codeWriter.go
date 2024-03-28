@@ -20,8 +20,10 @@ const (
 
 const CODE_SEGMENT = 1
 const (
-	FUNCTIONS_SEGMENT    = 0
-	INSTRUCTIONS_SEGMENT = 1
+	METADATA_SEGMENT          = 0
+	GLOBALS_SEGMENT           = 1
+	FUNCTIONS_INDEXES_SEGMENT = 2
+	FUNCTIONS_SEGMENT         = 3
 )
 
 type CodeWriter struct {
@@ -46,6 +48,24 @@ func (cw *CodeWriter) Write() {
 	file.Close()
 }
 
+func (cw *CodeWriter) writeInstructions(instructions *[]VM.Instruction) {
+	// Write instructions
+	for _, instruction := range *instructions {
+		// Skip instruction removed by code optimizer
+		if instruction.InstructionType == 255 {
+			continue
+		}
+
+		// Convert line offset instruction to single byte
+		if instruction.InstructionType == VM.IT_LineOffset {
+			cw.file.Write([]byte{cw.codeGenerator.lineToInstruction(instruction.InstructionValue[0])})
+			continue
+		}
+		cw.file.Write([]byte{instruction.InstructionType}) // Write instruction
+		cw.file.Write(instruction.InstructionValue)        // Write arguments
+	}
+}
+
 func int64ToByte3(value int64) []byte {
 	intBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(intBytes, uint64(value))
@@ -61,16 +81,38 @@ func (cw *CodeWriter) writeCodeSegment() {
 	startPos := cw.getFilePosition()
 	cw.file.WriteString("CODE")
 
+	cw.writeMetaData()
+	cw.writeGlobals()
+	cw.writeFunctionIndexes()
 	cw.writeFunctions()
-	cw.writeInstructions()
 
 	cw.file.WriteAt([]byte{CODE_SEGMENT}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
-func (cw *CodeWriter) writeFunctions() {
+func (cw *CodeWriter) writeMetaData() {
 	startPos := cw.getFilePosition()
-	cw.file.WriteString("FUNC")
+	cw.file.WriteString("META")
+
+	cw.file.Write([]byte{byte(cw.codeGenerator.FirstLine)}) // Write first line
+
+	cw.file.WriteAt([]byte{METADATA_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeGlobals() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("GLOB")
+
+	cw.writeInstructions(&cw.codeGenerator.GlobalsInstructions)
+
+	cw.file.WriteAt([]byte{GLOBALS_SEGMENT}, startPos)
+	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
+}
+
+func (cw *CodeWriter) writeFunctionIndexes() {
+	startPos := cw.getFilePosition()
+	cw.file.WriteString("FUNI")
 
 	lastFunction := 0
 
@@ -85,31 +127,17 @@ func (cw *CodeWriter) writeFunctions() {
 		lastFunction = function
 	}
 
-	cw.file.WriteAt([]byte{FUNCTIONS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{FUNCTIONS_INDEXES_SEGMENT}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 
-func (cw *CodeWriter) writeInstructions() {
+func (cw *CodeWriter) writeFunctions() {
 	startPos := cw.getFilePosition()
-	cw.file.WriteString("INST")
+	cw.file.WriteString("FUNC")
 
-	// Write instructions
-	for _, instruction := range cw.codeGenerator.instructions {
-		// Skip instruction removed by code optimizer
-		if instruction.InstructionType == 255 {
-			continue
-		}
+	cw.writeInstructions(&cw.codeGenerator.FunctionsInstructions)
 
-		// Convert line offset instruction to single byte
-		if instruction.InstructionType == VM.IT_LineOffset {
-			cw.file.Write([]byte{cw.codeGenerator.lineToInstruction(instruction.InstructionValue[0])})
-			continue
-		}
-		cw.file.Write([]byte{instruction.InstructionType}) // Write instruction
-		cw.file.Write(instruction.InstructionValue)        // Write arguments
-	}
-
-	cw.file.WriteAt([]byte{INSTRUCTIONS_SEGMENT}, startPos)
+	cw.file.WriteAt([]byte{FUNCTIONS_SEGMENT}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 

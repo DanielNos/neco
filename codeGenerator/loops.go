@@ -7,7 +7,7 @@ import (
 
 func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	// Record start position of loop
-	startPosition := len(cg.instructions) - 1
+	startPosition := len(*cg.target) - 1
 
 	// Enter scope
 	cg.enterScope(nil)
@@ -24,15 +24,15 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 
 	// Generate line offset if line changed
 	if cg.line < node.Position.EndLine {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
 		cg.line = node.Position.EndLine
 	}
 
 	// Generate jump instruction back to start
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
+	*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(*cg.target) - startPosition)}})
 
 	// Set destinations of break jumps
-	instructionCount := len(cg.instructions)
+	instructionCount := len(*cg.target)
 
 	for _, b := range cg.scopeBreaks.Pop().([]Break) {
 		updateJumpDistance(b.instruction, instructionCount-b.instructionPosition, VM.IT_JumpEx)
@@ -56,34 +56,34 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 	}
 
 	// Record start position of loop
-	startPosition := len(cg.instructions) - 1
+	startPosition := len(*cg.target) - 1
 
 	// Generate loop body
 	cg.generateStatements(forLoop.Body.Value.(*parser.ScopeNode))
 
 	// Generate line offset if line changed
 	if cg.line < node.Position.EndLine {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
 		cg.line = node.Position.EndLine
 	}
 
 	// Remove jump to start
-	jumpInstruction := cg.instructions[len(cg.instructions)-1]
-	cg.instructions = cg.instructions[:len(cg.instructions)-1]
-	jumpPosition := len(cg.instructions)
+	jumpInstruction := (*cg.target)[len(*cg.target)-1]
+	*cg.target = (*cg.target)[:len(*cg.target)-1]
+	jumpPosition := len(*cg.target)
 
 	// Generate return adjusted jump instruction
-	jumpInstruction.InstructionValue[0] += byte(len(cg.instructions) - jumpPosition)
-	cg.instructions = append(cg.instructions, jumpInstruction)
+	jumpInstruction.InstructionValue[0] += byte(len(*cg.target) - jumpPosition)
+	*cg.target = append(*cg.target, jumpInstruction)
 
 	// Generate jump instruction back to start
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(cg.instructions) - startPosition)}})
+	*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(*cg.target) - startPosition)}})
 
 	// Leave loop scope
 	cg.leaveScope()
 
 	// Set destinations of break jumps
-	instructionCount := len(cg.instructions)
+	instructionCount := len(*cg.target)
 
 	for _, b := range cg.scopeBreaks.Pop().([]Break) {
 		updateJumpDistance(b.instruction, instructionCount-b.instructionPosition, VM.IT_JumpEx)

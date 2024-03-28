@@ -15,11 +15,11 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 		// Generate condition expression
 		cg.generateExpression(statement.Condition)
 		// Generate conditional jump
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
 
 		// Store the jump instruction and it's position so destination position can be set later
-		jumpInstructions[i] = &cg.instructions[len(cg.instructions)-1]
-		jumpInstructionPositions[i] = len(cg.instructions)
+		jumpInstructions[i] = &(*cg.target)[len(*cg.target)-1]
+		jumpInstructionPositions[i] = len(*cg.target)
 	}
 
 	// Generate else body
@@ -28,32 +28,32 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	}
 
 	// Generate jump instruction that will jump over all elifs
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+	*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
 
 	// Store the jump instruction so it's destination can  be set later
-	jumpFromElse := &cg.instructions[len(cg.instructions)-1]
+	jumpFromElse := &(*cg.target)[len(*cg.target)-1]
 
 	// Store jump position
-	jumpFromElsePosition := len(cg.instructions)
+	jumpFromElsePosition := len(*cg.target)
 
 	// Generate else if bodies
 	for i, statement := range ifStatement.IfStatements {
 		// Set if's conditional jump destination to next instruction
-		updateJumpDistance(jumpInstructions[i], len(cg.instructions)-jumpInstructionPositions[i], VM.IT_JumpIfTrueEx)
+		updateJumpDistance(jumpInstructions[i], len(*cg.target)-jumpInstructionPositions[i], VM.IT_JumpIfTrueEx)
 
 		// Generate if's body
 		cg.generateScope(statement.Body.Value.(*parser.ScopeNode), nil)
 
 		// Generate jump instruction to the end of if bodies
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
 
 		// Store it and it's position in the same slice replacing the previous values
-		jumpInstructions[i] = &cg.instructions[len(cg.instructions)-1]
-		jumpInstructionPositions[i] = len(cg.instructions)
+		jumpInstructions[i] = &(*cg.target)[len(*cg.target)-1]
+		jumpInstructionPositions[i] = len(*cg.target)
 	}
 
 	// Calculate distance from end of each of if/elif body to the end. Assign it to the jump instructions.
-	endPosition := len(cg.instructions)
+	endPosition := len(*cg.target)
 	for i, instruction := range jumpInstructions {
 		updateJumpDistance(instruction, endPosition-jumpInstructionPositions[i], VM.IT_JumpEx)
 	}

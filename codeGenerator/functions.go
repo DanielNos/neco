@@ -9,7 +9,7 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	function := functionNode.Value.(*parser.FunctionDeclareNode)
 
 	// Store start position
-	cg.functions = append(cg.functions, len(cg.instructions))
+	cg.functions = append(cg.functions, len(*cg.target))
 
 	// Push scope
 	cg.enterScope(&function.Identifier)
@@ -28,7 +28,7 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
 
 		// Store argument from stack in the variable
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreAndPop, []byte{id}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{id}})
 	}
 
 	// Generate function body
@@ -36,12 +36,12 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 
 	// Generate line offset of closing brace
 	if cg.line < functionNode.Position.EndLine {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(functionNode.Position.EndLine - cg.line)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(functionNode.Position.EndLine - cg.line)}})
 		cg.line = functionNode.Position.EndLine
 	}
 
 	// Return
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
+	*cg.target = append(*cg.target, VM.Instruction{VM.IT_Return, NO_ARGS})
 }
 
 func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
@@ -51,7 +51,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 
 	// Call user defined function
 	if functionCall.Number != -1 {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Call, []byte{byte(functionCall.Number)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Call, []byte{byte(functionCall.Number)}})
 		return
 	}
 
@@ -72,11 +72,11 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 
 	// It's a built-in function
 	if exists {
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
+		*cg.target = append(*cg.target, VM.Instruction{InstructionType: VM.IT_CallBuiltInFunc, InstructionValue: []byte{builtInFunction}})
 		// Function is exit()
 	} else if functionCall.Identifier == "exit" {
 		// Convert exit function to halt instruction
-		cg.instructions = append(cg.instructions, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
+		*cg.target = append(*cg.target, VM.Instruction{InstructionType: VM.IT_Halt, InstructionValue: []byte{byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64))}})
 		// Unknown function
 	} else {
 		panic("Unkown function.")

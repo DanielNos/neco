@@ -33,7 +33,7 @@ func (cg *CodeGenerator) generateVariableDeclarator(dataType *data.DataType, id 
 	}
 
 	// Generate declaration of root type
-	cg.instructions = append(cg.instructions, VM.Instruction{dataTypeToDeclareInstruction[dataType.Type], args})
+	*cg.target = append(*cg.target, VM.Instruction{dataTypeToDeclareInstruction[dataType.Type], args})
 
 	// Generate sub-type of composite types
 	if dataType.SubType != nil && dataType.Type != data.DT_Object {
@@ -55,12 +55,12 @@ func (cg *CodeGenerator) generateDeletion(target *parser.Node) {
 			cg.generateExpression(inNode.Left)  // Generate element
 
 			// Remove it
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
 
 			// Generate set load
 			cg.generateExpression(inNode.Right)
 			// Replace set load instruction type with StoreAndPop
-			cg.instructions[len(cg.instructions)-1].InstructionType = VM.IT_StoreAndPop
+			(*cg.target)[len(*cg.target)-1].InstructionType = VM.IT_StoreAndPop
 		}
 	}
 }

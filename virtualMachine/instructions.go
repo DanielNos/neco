@@ -1,5 +1,7 @@
 package virtualMachine
 
+import "fmt"
+
 const (
 	// 1 argument 2 bytes
 	IT_JumpEx byte = iota
@@ -183,6 +185,14 @@ var InstructionTypeToString = map[byte]string{
 type Instruction struct {
 	InstructionType  byte
 	InstructionValue []byte
+}
+
+func (i Instruction) String() string {
+	if len(i.InstructionValue) == 0 {
+		return InstructionTypeToString[i.InstructionType] + ";"
+	}
+
+	return InstructionTypeToString[i.InstructionType] + " " + fmt.Sprintf("%d", i.InstructionValue[0]) + ";"
 }
 
 type ExpandedInstruction struct {

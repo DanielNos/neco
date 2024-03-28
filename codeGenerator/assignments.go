@@ -18,9 +18,9 @@ func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, 
 	// Assign to a variable
 	case parser.NT_Variable:
 		if isLast {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_StoreAndPop, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
 		} else {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Store, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Store, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
 		}
 	}
 }

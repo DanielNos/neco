@@ -60,12 +60,12 @@ func printTokens(tokens []*lexer.Token) {
 	println()
 }
 
-func printInstructions(instructions *[]VM.Instruction, constants []interface{}) {
-	line := int((*instructions)[0].InstructionValue[0])
+func printInstructions(instructions *[]VM.Instruction, constants []interface{}, firstLine int) {
+	line := firstLine
 	linePadder := "  "
 	justChanged := true
 
-	for i, instruction := range (*instructions)[1:] {
+	for i, instruction := range *instructions {
 		// Skip removed instruction
 		if instruction.InstructionType == 255 {
 			continue
@@ -299,14 +299,14 @@ func compile(path string, showTokens, showTree, printInstruction, optimize bool)
 
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, optimize)
-	instructions := codeGenerator.Generate()
+	codeGenerator.Generate()
 
 	// Generation failed
 	if codeGenerator.ErrorCount != 0 {
 		logger.Fatal(errors.CODE_GENERATION, fmt.Sprintf("Failed code generation with %d error/s.", codeGenerator.ErrorCount))
 	}
 
-	logger.Info(fmt.Sprintf("Generated %d instructions.", len(*instructions)))
+	logger.Info(fmt.Sprintf("Generated %d instructions.", len(codeGenerator.GlobalsInstructions)+len(codeGenerator.FunctionsInstructions)))
 	logger.Success(fmt.Sprintf("😺 Compilation completed in %s.", time.Since(startTime)))
 
 	codeWriter := codeGen.NewCodeWriter(codeGenerator)
@@ -314,7 +314,9 @@ func compile(path string, showTokens, showTree, printInstruction, optimize bool)
 
 	// Print generated instructions
 	if printInstruction {
-		printInstructions(instructions, codeGenerator.Constants)
+		printInstructions(&codeGenerator.GlobalsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
+		printInstructions(&codeGenerator.FunctionsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
+
 		println()
 	}
 }

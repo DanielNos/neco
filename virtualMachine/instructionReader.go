@@ -133,18 +133,43 @@ func (ir *InstructionReader) readFloatConstants() {
 func (ir *InstructionReader) readCode() {
 	ir.byteIndex += 4
 
+	ir.readMetaData()
+	ir.readGlobals()
+	ir.readFunctionIndexes()
 	ir.readFunctions()
-	ir.readInstructions()
 }
 
-func (ir *InstructionReader) readFunctions() {
+func (ir *InstructionReader) readMetaData() {
+	ir.byteIndex++
+
+	// Move past header
+	ir.byteIndex += 3
+
+	// Collect first line number
+	ir.virtualMachine.firstLine = int(ir.bytes[ir.byteIndex])
+	ir.byteIndex++
+}
+
+func (ir *InstructionReader) readGlobals() {
+	ir.byteIndex++
+
+	// Collect header
+	codeSize := byte3ToInt(ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1], ir.bytes[ir.byteIndex+2])
+	ir.byteIndex += 3
+
+	endIndex := ir.byteIndex + codeSize
+
+	ir.readInstructions(&ir.virtualMachine.GlobalsInstructions, endIndex)
+}
+
+func (ir *InstructionReader) readFunctionIndexes() {
 	ir.byteIndex++
 
 	// Collect header
 	functionsSize := byte3ToInt(ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1], ir.bytes[ir.byteIndex+2])
 	ir.byteIndex += 3
 
-	// Allocate array
+	// Allocate slice
 	ir.virtualMachine.functions = make([]int, functionsSize)
 
 	lastFunction := 0
@@ -155,7 +180,7 @@ func (ir *InstructionReader) readFunctions() {
 	}
 }
 
-func (ir *InstructionReader) readInstructions() {
+func (ir *InstructionReader) readFunctions() {
 	ir.byteIndex++
 
 	// Collect header
@@ -164,17 +189,17 @@ func (ir *InstructionReader) readInstructions() {
 
 	endIndex := ir.byteIndex + codeSize
 
-	// Collect first line number
-	ir.virtualMachine.firstLine = int(1 + uint(ir.bytes[ir.byteIndex]) - 128)
-	ir.byteIndex++
+	ir.readInstructions(&ir.virtualMachine.FunctionsInstructions, endIndex)
+}
 
+func (ir *InstructionReader) readInstructions(target *[]ExpandedInstruction, endIndex int) {
 	for ir.byteIndex < endIndex {
 		instructionType := ir.bytes[ir.byteIndex]
 
 		// 1 argument 2 byte instruction
 		if instructionType <= IT_JumpIfTrueEx {
 			ir.byteIndex++
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(binary.LittleEndian.Uint16([]byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}))}})
+			*target = append(*target, ExpandedInstruction{instructionType, []int{int(binary.LittleEndian.Uint16([]byte{ir.bytes[ir.byteIndex], ir.bytes[ir.byteIndex+1]}))}})
 			ir.byteIndex++
 			// 1 argument 1 byte instruction
 		} else if instructionType <= IT_JumpIfTrue {
@@ -183,29 +208,29 @@ func (ir *InstructionReader) readInstructions() {
 			// Declarator of composite variable
 			if IsCompositeDeclarator(instructionType) {
 				// Add declare list instruction with id argument
-				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
+				*target = append(*target, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 				ir.byteIndex++
 
 				// Add instructions for declaring composite sub-types types without arguments
 				for IsCompositeDeclarator(ir.bytes[ir.byteIndex]) {
-					ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
+					*target = append(*target, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
 					ir.byteIndex++
 				}
 
 				// Add inner-most type instructions without arguments
-				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
+				*target = append(*target, ExpandedInstruction{ir.bytes[ir.byteIndex], NO_ARGS})
 
 				// Normal instruction
 			} else {
-				ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
+				*target = append(*target, ExpandedInstruction{instructionType, []int{int(ir.bytes[ir.byteIndex])}})
 			}
 
 			// 0 argument instruction
 		} else if instructionType < IT_LineOffset {
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{instructionType, NO_ARGS})
+			*target = append(*target, ExpandedInstruction{instructionType, NO_ARGS})
 			// Line offset
 		} else {
-			ir.virtualMachine.Instructions = append(ir.virtualMachine.Instructions, ExpandedInstruction{IT_LineOffset, []int{int((ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK)) + 1}})
+			*target = append(*target, ExpandedInstruction{IT_LineOffset, []int{int((ir.bytes[ir.byteIndex] & OFFSET_BYTE_MASK)) + 1}})
 		}
 
 		ir.byteIndex++

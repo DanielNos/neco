@@ -31,7 +31,10 @@ type CodeGenerator struct {
 	stringConstants map[string]int
 	Constants       []interface{} // int64/float64/string
 
-	instructions []VM.Instruction
+	FirstLine             uint
+	GlobalsInstructions   []VM.Instruction
+	FunctionsInstructions []VM.Instruction
+	target                *[]VM.Instruction
 
 	variableIdentifierCounters *data.Stack // of uint8
 	variableIdentifiers        *data.Stack // of map[string]uint8
@@ -57,7 +60,8 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 		stringConstants: stringConstants,
 		Constants:       make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
 
-		instructions: []VM.Instruction{},
+		GlobalsInstructions:   []VM.Instruction{},
+		FunctionsInstructions: []VM.Instruction{},
 
 		variableIdentifierCounters: data.NewStack(),
 		variableIdentifiers:        data.NewStack(),
@@ -82,7 +86,7 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 	return codeGenerator
 }
 
-func (cg *CodeGenerator) Generate() *[]VM.Instruction {
+func (cg *CodeGenerator) Generate() {
 	// Generate constant IDs
 	cg.generateConstantIDs()
 
@@ -91,44 +95,72 @@ func (cg *CodeGenerator) Generate() *[]VM.Instruction {
 
 	// No instructions, generate line offset and halt instruction
 	if len(statements) == 0 {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{1}})
+		cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{VM.IT_LineOffset, []byte{1}})
 
 		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
-
-		return &cg.instructions
+		return
 	}
 
-	// Generate first line index
-	cg.line = statements[0].Position.StartLine
-	cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(cg.line)}})
+	// Store first line
+	cg.FirstLine = statements[0].Position.StartLine
+
+	// Generate code
+	cg.generateGlobals(statements)
 
 	// Generate call to entry function
-	cg.instructions = append(cg.instructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
+	cg.generateFunctions(statements)
+
+	// Optimize instructions
+	if cg.optimize {
+		codeOptimizer.Optimize(&cg.GlobalsInstructions)
+		codeOptimizer.Optimize(&cg.FunctionsInstructions)
+	}
+}
+
+func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
+	// Reset line
+	cg.line = cg.FirstLine
+	cg.target = &cg.GlobalsInstructions
+
+	for _, node := range statements {
+		// Generate line offset if line changed
+		if cg.line < node.Position.StartLine {
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+			cg.line = node.Position.StartLine
+		}
+
+		if node.NodeType == parser.NT_VariableDeclare {
+			cg.generateVariableDeclaration(node)
+		} else if node.NodeType == parser.NT_Assign {
+			cg.generateAssignment(node.Value.(*parser.AssignNode))
+		}
+	}
+}
+
+func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
+	// Reset line
+	cg.line = cg.FirstLine
+	cg.target = &cg.FunctionsInstructions
+
+	cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclare {
 			// Generate line offset if line changed
 			if cg.line < node.Position.StartLine {
-				cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+				*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
 				cg.line = node.Position.StartLine
 			}
 
 			// Set first function call function id
 			if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
-				cg.instructions[1].InstructionType = VM.IT_Call
-				cg.instructions[1].InstructionValue = append(cg.instructions[1].InstructionValue, byte(len(cg.functions)))
+				cg.FunctionsInstructions[0].InstructionType = VM.IT_Call
+				cg.FunctionsInstructions[0].InstructionValue = append(cg.FunctionsInstructions[0].InstructionValue, byte(len(cg.functions)))
 			}
 
 			cg.generateFunction(node)
 		}
 	}
-
-	// Optimize instructions
-	if cg.optimize {
-		codeOptimizer.Optimize(&cg.instructions)
-	}
-
-	return &cg.instructions
 }
 
 func (cg *CodeGenerator) newError(message string) {
@@ -176,7 +208,7 @@ func (cg *CodeGenerator) generateConstantIDs() {
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// If node line has changed, insert line offset instruction
 	if node.Position.StartLine > cg.line {
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
 		cg.line = node.Position.StartLine
 	}
 
@@ -203,7 +235,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		if node.Value != nil {
 			cg.generateExpression(node.Value.(*parser.Node))
 		}
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Return, NO_ARGS})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Return, NO_ARGS})
 
 	// Scope
 	case parser.NT_Scope:
@@ -220,14 +252,14 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Break:
 		// Generate scope drops
 		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int)+1; i++ {
-			cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_PopScope, NO_ARGS})
 		}
 
 		// Generate jump
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_Jump, []byte{0}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
 
 		// Store it so it's destination can be set at the end of the loop
-		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&cg.instructions[len(cg.instructions)-1], len(cg.instructions)})
+		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&(*cg.target)[len(*cg.target)-1], len(*cg.target)})
 
 	case parser.NT_ListAssign:
 		// Generate index expression
@@ -237,7 +269,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression)
 
 		// Generate list assign instruction
-		cg.instructions = append(cg.instructions, VM.Instruction{VM.IT_SetListAtPrevToCurr, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetListAtPrevToCurr, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
 
 	// Delete
 	case parser.NT_Delete:
