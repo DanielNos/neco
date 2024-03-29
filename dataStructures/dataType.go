@@ -44,7 +44,7 @@ func (pt PrimitiveType) String() string {
 
 type DataType struct {
 	Type    PrimitiveType
-	SubType interface{}
+	SubType any
 }
 
 func (dt *DataType) CanBeAssigned(other *DataType) bool {

@@ -154,7 +154,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		*cg.target = append(*cg.target, VM.Instruction{VM.IT_CreateSet, NO_ARGS})
 
 		elements := node.Value.(*parser.ListNode).Nodes
-		usedElements := map[interface{}]struct{}{}
+		usedElements := map[any]struct{}{}
 
 		for _, element := range elements {
 			// Skip literals that were already inserted

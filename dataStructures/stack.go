@@ -1,13 +1,13 @@
 package dataStructures
 
 type Stack struct {
-	Top *StackNode
+	Top    *StackNode
 	Bottom *StackNode
-	Size int
+	Size   int
 }
 
 type StackNode struct {
-	Value interface{}
+	Value    any
 	Previous *StackNode
 }
 
@@ -15,7 +15,7 @@ func NewStack() *Stack {
 	return &Stack{nil, nil, 0}
 }
 
-func (s *Stack) Push(value interface{}) {
+func (s *Stack) Push(value any) {
 	s.Top = &StackNode{value, s.Top}
 	if s.Bottom == nil {
 		s.Bottom = s.Top
@@ -23,7 +23,7 @@ func (s *Stack) Push(value interface{}) {
 	s.Size++
 }
 
-func (s *Stack) Pop() interface{} {
+func (s *Stack) Pop() any {
 	if s.Top == nil {
 		return nil
 	}

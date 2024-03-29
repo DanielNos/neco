@@ -5,7 +5,7 @@ import (
 	"neco/lexer"
 )
 
-type NodeValue interface{}
+type NodeValue any
 
 type Node struct {
 	Position *data.CodePos
@@ -127,7 +127,7 @@ type AssignNode struct {
 	AssignedExpression *Node
 }
 
-type LiteralValue interface{}
+type LiteralValue any
 
 type LiteralNode struct {
 	PrimitiveType data.PrimitiveType

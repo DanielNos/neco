@@ -10,10 +10,10 @@ const (
 
 type Symbol struct {
 	symbolType  SymbolType
-	symbolValue interface{}
+	symbolValue any
 }
 
 type VariableSymbol struct {
 	dataType data.DataType
-	value    interface{}
+	value    any
 }

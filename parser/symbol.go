@@ -34,7 +34,7 @@ func (st SymbolType) String() string {
 	return "UNDEFINED"
 }
 
-type SymbolValue interface{}
+type SymbolValue any
 
 type VariableSymbol struct {
 	VariableType  *data.DataType

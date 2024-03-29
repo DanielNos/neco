@@ -113,7 +113,7 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		vm.stack.Push(int64(len(vm.stack.Pop().(string))))
 
 	case BIF_ListLength:
-		vm.stack.Push(int64(len(vm.stack.Pop().([]interface{}))))
+		vm.stack.Push(int64(len(vm.stack.Pop().([]any))))
 
 	// String functions
 	case BIF_ToLower:
@@ -143,15 +143,15 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 	}
 }
 
-func necoPrint(value interface{}, root bool) {
-	if _, ok := value.([]interface{}); ok {
+func necoPrint(value any, root bool) {
+	if _, ok := value.([]any); ok {
 		// Print list
 		print("{")
-		for _, element := range value.([]interface{})[:len(value.([]interface{}))-1] {
+		for _, element := range value.([]any)[:len(value.([]any))-1] {
 			necoPrint(element, false)
 			print(", ")
 		}
-		necoPrint(value.([]interface{})[len(value.([]interface{}))-1], false)
+		necoPrint(value.([]any)[len(value.([]any))-1], false)
 		print("}")
 
 	} else if _, ok := value.(string); ok && !root {
@@ -163,7 +163,7 @@ func necoPrint(value interface{}, root bool) {
 	}
 }
 
-func necoPrintString(value interface{}, root bool) string {
+func necoPrintString(value any, root bool) string {
 	if object, ok := value.(object); ok {
 		// Print object
 		if len(object.fields) == 0 {
@@ -178,7 +178,7 @@ func necoPrintString(value interface{}, root bool) string {
 
 		return str + necoPrintString(object.fields[len(object.fields)-1], false) + "}"
 
-	} else if valueList, ok := value.([]interface{}); ok {
+	} else if valueList, ok := value.([]any); ok {
 		// Print list
 		if len(valueList) == 0 {
 			return "[]"
@@ -192,7 +192,7 @@ func necoPrintString(value interface{}, root bool) string {
 
 		return str + necoPrintString(valueList[len(valueList)-1], false) + "]"
 
-	} else if valueSet, ok := value.(map[interface{}]struct{}); ok {
+	} else if valueSet, ok := value.(map[any]struct{}); ok {
 		// Print set
 
 		str := "{"

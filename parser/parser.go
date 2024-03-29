@@ -197,7 +197,7 @@ func (p *Parser) parseModule() *Node {
 	return module
 }
 
-func (p *Parser) parseScope(enterScope, packInNode bool) interface{} {
+func (p *Parser) parseScope(enterScope, packInNode bool) any {
 	// Consume opening brace
 	opening := p.peek().Position
 

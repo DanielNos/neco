@@ -26,7 +26,7 @@ var InstructionToDataType = map[byte]data.PrimitiveType{
 }
 
 type VirtualMachine struct {
-	Constants []interface{}
+	Constants []any
 
 	GlobalsInstructions   []ExpandedInstruction
 	FunctionsInstructions []ExpandedInstruction
@@ -79,7 +79,7 @@ var currentObject object
 
 type object struct {
 	identifier *string
-	fields     []interface{}
+	fields     []any
 }
 
 func (vm *VirtualMachine) Execute(filePath string) {
@@ -185,21 +185,21 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 		*endType = InstructionToDataType[(*vm.instructions)[vm.instructionIndex].InstructionType]
 
-		vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []interface{}{}}})
+		vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{dataType, []any{}}})
 
 	case IT_DeclareObject:
 		vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Object, nil}, nil}})
 
 	// Set and load list at index
 	case IT_SetListAtPrevToCurr:
-		vm.findSymbol().symbolValue.(*VariableSymbol).value.([]interface{})[vm.stack.Pop().(int64)] = vm.stack.Pop()
+		vm.findSymbol().symbolValue.(*VariableSymbol).value.([]any)[vm.stack.Pop().(int64)] = vm.stack.Pop()
 
 	// Load and store
 	case IT_LoadConst:
 		vm.stack.Push(vm.Constants[instruction.InstructionValue[0]])
 
 	case IT_LoadConstToList:
-		(*vm.stack.Top()) = append((*vm.stack.Top()).([]interface{}), vm.Constants[instruction.InstructionValue[0]])
+		(*vm.stack.Top()) = append((*vm.stack.Top()).([]any), vm.Constants[instruction.InstructionValue[0]])
 
 	case IT_Load:
 		vm.stack.Push(vm.findSymbol().symbolValue.(*VariableSymbol).value)
@@ -213,7 +213,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 	// Structs
 	case IT_CreateObject:
 		identifier := vm.Constants[instruction.InstructionValue[0]].(string)
-		vm.stack.Push(object{&identifier, []interface{}{}})
+		vm.stack.Push(object{&identifier, []any{}})
 
 	case IT_StoreField:
 		vm.stack.size--
@@ -293,7 +293,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	case IT_ListConcat:
 		vm.stack.size--
-		vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]interface{}), vm.stack.items[vm.stack.size].([]interface{})...)
+		vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]any), vm.stack.items[vm.stack.size].([]any)...)
 
 	// Return from a function
 	case IT_Return:
@@ -377,37 +377,37 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// List operations
 	case IT_CreateList:
-		vm.stack.Push([]interface{}{})
+		vm.stack.Push([]any{})
 
 	case IT_AppendToList:
 		vm.stack.size--
-		vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]interface{}), vm.stack.items[vm.stack.size])
+		vm.stack.items[vm.stack.size-1] = append(vm.stack.items[vm.stack.size-1].([]any), vm.stack.items[vm.stack.size])
 
 	case IT_IndexList:
 		vm.stack.size--
 
-		if int64(len(vm.stack.items[vm.stack.size-1].([]interface{})))-1 < vm.stack.items[vm.stack.size].(int64) {
+		if int64(len(vm.stack.items[vm.stack.size-1].([]any)))-1 < vm.stack.items[vm.stack.size].(int64) {
 			vm.traceLine()
-			logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]interface{})), vm.stack.items[vm.stack.size].(int64)))
+			logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]any)), vm.stack.items[vm.stack.size].(int64)))
 		}
 
-		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]interface{})[vm.stack.items[vm.stack.size].(int64)]
+		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
 
 	// Set operations
 	case IT_CreateSet:
-		vm.stack.Push(map[interface{}]struct{}{})
+		vm.stack.Push(map[any]struct{}{})
 
 	case IT_InsertToSet:
 		vm.stack.size--
-		vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]] = struct{}{}
+		vm.stack.items[vm.stack.size-1].(map[any]struct{})[vm.stack.items[vm.stack.size]] = struct{}{}
 
 	case IT_SetContains:
 		vm.stack.size--
-		_, vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(map[interface{}]struct{})[vm.stack.items[vm.stack.size]]
+		_, vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(map[any]struct{})[vm.stack.items[vm.stack.size]]
 
 	case IT_RemoveSetElement:
 		vm.stack.size--
-		delete(vm.stack.items[vm.stack.size-1].(map[interface{}]struct{}), vm.stack.items[vm.stack.size])
+		delete(vm.stack.items[vm.stack.size-1].(map[any]struct{}), vm.stack.items[vm.stack.size])
 
 	// Ignore line offsets
 	case IT_LineOffset:

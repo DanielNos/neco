@@ -29,7 +29,7 @@ type CodeGenerator struct {
 	intConstants    map[int64]int
 	floatConstants  map[float64]int
 	stringConstants map[string]int
-	Constants       []interface{} // int64/float64/string
+	Constants       []any // int64/float64/string
 
 	FirstLine             uint
 	GlobalsInstructions   []VM.Instruction
@@ -58,7 +58,7 @@ func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]i
 		intConstants:    intConstants,
 		floatConstants:  floatConstants,
 		stringConstants: stringConstants,
-		Constants:       make([]interface{}, len(intConstants)+len(floatConstants)+len(stringConstants)),
+		Constants:       make([]any, len(intConstants)+len(floatConstants)+len(stringConstants)),
 
 		GlobalsInstructions:   []VM.Instruction{},
 		FunctionsInstructions: []VM.Instruction{},

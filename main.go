@@ -62,7 +62,7 @@ func printTokens(tokens []*lexer.Token) {
 	println()
 }
 
-func printInstructions(instructions *[]VM.Instruction, constants []interface{}, firstLine int) {
+func printInstructions(instructions *[]VM.Instruction, constants []any, firstLine int) {
 	line := firstLine
 	linePadder := "  "
 	justChanged := true
