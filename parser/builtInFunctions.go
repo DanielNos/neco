@@ -115,6 +115,17 @@ func (p *Parser) insertBuiltInFunctions() {
 		&data.DataType{data.DT_Unknown, nil}, true},
 	)
 
+	// Parsing numbers
+	p.insertFunction("parseInt", &FunctionSymbol{-1,
+		[]Parameter{{&data.DataType{data.DT_String, nil}, "string", nil}},
+		&data.DataType{data.DT_Int, nil}, true},
+	)
+
+	p.insertFunction("parseFlt", &FunctionSymbol{-1,
+		[]Parameter{{DataType: &data.DataType{data.DT_String, nil}, Identifier: "string", DefaultValue: nil}},
+		&data.DataType{data.DT_Float, nil}, true},
+	)
+
 	// Debug fucntions
 	p.insertFunction("line", &FunctionSymbol{-1, NO_PARAMS, &data.DataType{data.DT_Unknown, nil}, true})
 	p.insertFunction("trace", &FunctionSymbol{-1, NO_PARAMS, &data.DataType{data.DT_Unknown, nil}, true})

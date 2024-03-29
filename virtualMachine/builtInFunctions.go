@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 	"strings"
 )
 
@@ -39,6 +40,9 @@ const (
 	BIF_RandomInt
 	BIF_RandomFloat
 	BIF_RandomRangeInt
+
+	BIF_ParseInt
+	BIF_ParseFloat
 
 	BIF_Trace
 )
@@ -131,6 +135,15 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 
 	case BIF_RandomRangeInt:
 		vm.stack.Push(rand.Int63n(vm.stack.Pop().(int64)-(*vm.stack.Top()).(int64)+1) + vm.stack.Pop().(int64))
+
+	// Parsing numbers
+	case BIF_ParseInt:
+		integer, _ := strconv.ParseInt(vm.stack.items[vm.stack.size-1].(string), 10, 64)
+		vm.stack.items[vm.stack.size-1] = integer
+
+	case BIF_ParseFloat:
+		float, _ := strconv.ParseFloat(vm.stack.items[vm.stack.size-1].(string), 64)
+		vm.stack.items[vm.stack.size-1] = float
 
 	// Trace
 	case BIF_Trace:
@@ -265,6 +278,9 @@ var BuiltInFuncToString = map[byte]string{
 	BIF_RandomInt:      "randomInt",
 	BIF_RandomFloat:    "randomFloat",
 	BIF_RandomRangeInt: "randomRangeInt",
+
+	BIF_ParseInt:   "parseInt",
+	BIF_ParseFloat: "parseFloat",
 
 	BIF_Trace: "trace",
 }
