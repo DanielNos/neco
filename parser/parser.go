@@ -25,6 +25,9 @@ var TokenTypeToDataType = map[lexer.TokenType]data.PrimitiveType{
 
 	lexer.TT_KW_list: data.DT_List,
 	lexer.TT_KW_set:  data.DT_Set,
+
+	lexer.TT_KW_opt:  data.DT_Option,
+	lexer.TT_LT_None: data.DT_None,
 }
 
 type Parser struct {
@@ -383,7 +386,7 @@ func (p *Parser) parseType() *data.DataType {
 	p.consume()
 
 	// Insert subtype to list data type
-	if variableType.Type == data.DT_List || variableType.Type == data.DT_Set {
+	if variableType.IsCompositeType() {
 		p.consume()
 		variableType.SubType = p.parseType()
 		p.consume()

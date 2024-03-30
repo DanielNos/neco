@@ -204,7 +204,7 @@ func (sn *SyntaxAnalyzer) analyzeParameters() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeType() {
-	if sn.peek().TokenType == lexer.TT_KW_list || sn.peek().TokenType == lexer.TT_KW_set {
+	if sn.peek().TokenType.IsCompositeType() {
 		sn.analyzeCompositeType()
 	} else {
 		sn.consume()

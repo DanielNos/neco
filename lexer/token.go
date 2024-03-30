@@ -48,6 +48,7 @@ const (
 	TT_LT_Int
 	TT_LT_Float
 	TT_LT_String
+	TT_LT_None
 
 	TT_KW_global
 	TT_KW_const
@@ -58,6 +59,7 @@ const (
 	TT_KW_str
 	TT_KW_list
 	TT_KW_set
+	TT_KW_opt
 
 	TT_KW_Assign
 	TT_KW_AddAssign
@@ -130,6 +132,7 @@ var TokenTypeToString = map[TokenType]string{
 	TT_LT_Int:    "Int",
 	TT_LT_Float:  "Float",
 	TT_LT_String: "String",
+	TT_LT_None:   "None",
 
 	TT_KW_global: "global",
 	TT_KW_const:  "const",
@@ -139,6 +142,7 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_flt:    "flt",
 	TT_KW_str:    "str",
 	TT_KW_list:   "list",
+	TT_KW_opt:    "opt",
 
 	TT_KW_Assign:         "=",
 	TT_KW_AddAssign:      "+=",
@@ -177,11 +181,11 @@ func (tt TokenType) String() string {
 }
 
 func (tt TokenType) IsVariableType() bool {
-	return tt >= TT_KW_var && tt <= TT_KW_set
+	return tt >= TT_KW_var && tt <= TT_KW_opt
 }
 
 func (tt TokenType) IsLiteral() bool {
-	return tt >= TT_LT_Bool && tt <= TT_LT_String
+	return tt >= TT_LT_Bool && tt <= TT_LT_None
 }
 
 func (tt TokenType) IsOperator() bool {
@@ -202,6 +206,10 @@ func (tt TokenType) IsAssignKeyword() bool {
 
 func (tt TokenType) IsDelimiter() bool {
 	return tt >= TT_DL_ParenthesisOpen && tt <= TT_DL_Comma
+}
+
+func (tt TokenType) IsCompositeType() bool {
+	return tt >= TT_KW_list && tt <= TT_KW_opt
 }
 
 type Token struct {
@@ -228,6 +236,8 @@ func (t *Token) String() string {
 			return "false"
 		}
 		return "true"
+	case TT_LT_None:
+		return "none"
 	default:
 		if t.TokenType.IsLiteral() {
 			return t.Value

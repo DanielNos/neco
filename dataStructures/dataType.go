@@ -9,10 +9,12 @@ const (
 	DT_Float
 	DT_String
 	DT_Any
+	DT_None
 	DT_Enum
 	DT_Object
 	DT_List
 	DT_Set
+	DT_Option
 )
 
 func (pt PrimitiveType) String() string {
@@ -29,6 +31,8 @@ func (pt PrimitiveType) String() string {
 		return "string"
 	case DT_Any:
 		return "any"
+	case DT_None:
+		return "none"
 	case DT_Enum:
 		return "enum"
 	case DT_Object:
@@ -37,6 +41,8 @@ func (pt PrimitiveType) String() string {
 		return "list"
 	case DT_Set:
 		return "set"
+	case DT_Option:
+		return "opt"
 	}
 
 	return "[INVALID DATA TYPE]"
@@ -86,6 +92,15 @@ func (dt *DataType) CanBeAssigned(other *DataType) bool {
 		return dt.SubType.(*DataType).CanBeAssigned(other.SubType.(*DataType))
 	}
 
+	// Compare options/nones
+	if dt.Type == DT_Option {
+		if other.Type == DT_None {
+			return true
+		}
+
+		return dt.SubType.(*DataType).CanBeAssigned(other)
+	}
+
 	return false
 }
 
@@ -98,7 +113,7 @@ func (dt *DataType) IsComplete() bool {
 }
 
 func (dt *DataType) GetDepth() int {
-	if dt.Type == DT_List || dt.Type == DT_Set {
+	if dt.IsCompositeType() {
 		return 1 + dt.SubType.(*DataType).GetDepth()
 	}
 
@@ -106,7 +121,7 @@ func (dt *DataType) GetDepth() int {
 }
 
 func (dt *DataType) GetLeafType() *DataType {
-	if dt.Type == DT_List || dt.Type == DT_Set {
+	if dt.IsCompositeType() {
 		return dt.SubType.(*DataType).GetLeafType()
 	}
 
@@ -114,15 +129,19 @@ func (dt *DataType) GetLeafType() *DataType {
 }
 
 func (dt *DataType) SetLeafType(dataType *DataType) {
-	if dt.Type == DT_List || dt.Type == DT_Set {
+	if dt.IsCompositeType() {
 		dt.SubType.(*DataType).SetLeafType(dataType)
 	} else {
 		*dt = *dataType
 	}
 }
 
+func (dt *DataType) IsCompositeType() bool {
+	return dt.Type >= DT_List && dt.Type <= DT_Option
+}
+
 func (dt *DataType) String() string {
-	if dt.Type <= DT_Any {
+	if dt.Type <= DT_None {
 		return dt.Type.String()
 	} else if dt.Type <= DT_Object {
 		if dt.SubType == nil {

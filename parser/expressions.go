@@ -41,6 +41,8 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			literalValue, _ = strconv.ParseFloat(p.peek().Value, 64)
 		case lexer.TT_LT_String:
 			literalValue = p.peek().Value
+		case lexer.TT_LT_None:
+			literalValue = ""
 		}
 
 		left = &Node{p.peek().Position, NT_Literal, &LiteralNode{TokenTypeToDataType[p.consume().TokenType], literalValue}}

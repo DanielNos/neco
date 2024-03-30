@@ -166,6 +166,10 @@ func (sn *SyntaxAnalyzer) consumeEOCs() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
+	if sn.peek().TokenType.IsVariableType() {
+		sn.analyzeVariableDeclaration(false)
+	}
+
 	switch sn.peek().TokenType {
 
 	case lexer.TT_KW_fun: // Function declaration
@@ -178,9 +182,6 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		startChar := sn.peek().Position.StartChar
 		sn.analyzeExpression()
 		sn.newErrorFromTo(sn.peek().Position.StartLine, startChar, sn.peek().Position.StartChar, "Expression can't be a statement.")
-
-	case lexer.TT_KW_var, lexer.TT_KW_bool, lexer.TT_KW_int, lexer.TT_KW_flt, lexer.TT_KW_str, lexer.TT_KW_list, lexer.TT_KW_set: // Variable declarations
-		sn.analyzeVariableDeclaration(false)
 
 	case lexer.TT_KW_const: // Constant declarations
 		sn.consume()

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"neco/dataStructures"
+	data "neco/dataStructures"
 	"neco/errors"
 	"neco/logger"
 )
@@ -74,7 +74,8 @@ func (l *Lexer) Lex() []*Token {
 		logger.Fatal(errors.LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
 	}
 
-	l.newTokenFrom(0, 0, TT_StartOfFile, l.filePath)
+	// Insert StartOfFile token
+	l.tokens = append(l.tokens, &Token{&data.CodePos{&l.filePath, 0, 0, 0, 0}, TT_StartOfFile, l.filePath})
 
 	// Read first 2 chars
 	l.reader = bufio.NewReader(file)
@@ -146,7 +147,7 @@ func (l *Lexer) newToken(startLine, startChar uint, tokenType TokenType) {
 }
 
 func (l *Lexer) newTokenFrom(startLine, startChar uint, tokenType TokenType, value string) {
-	l.tokens = append(l.tokens, &Token{&dataStructures.CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex - 1}, tokenType, value})
+	l.tokens = append(l.tokens, &Token{&data.CodePos{&l.filePath, startLine, l.lineIndex, startChar, l.charIndex - 1}, tokenType, value})
 }
 
 func (l *Lexer) collectRestOfToken() {
@@ -189,7 +190,7 @@ func (l *Lexer) lexRune() {
 
 			// Invalid windows line ending
 			if l.currRune != '\n' {
-				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line ending.")
+				l.newError(l.lineIndex, l.charIndex-1, true, "Invalid Windows line terminator.")
 			} else {
 				l.advance()
 			}
