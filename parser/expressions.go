@@ -172,8 +172,16 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 			return binaryNode.DataType
 		}
 
-		// Same type on both sides
+		// Compatible data types, check if operator is allowed
 		if leftType.CanBeAssigned(rightType) {
+			// Can't do any operations on options without unpacking
+			if leftType.Type == data.DT_Option {
+				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left), "Options need to be unpacked to access their values. Use unpack() or match.")
+			}
+			if rightType.Type == data.DT_Option {
+				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right), "Options need to be unpacked to access their values. Use unpack() or match.")
+			}
+
 			// Logic operators can be used only on booleans
 			if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
 				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can be only used on expressions of type bool.")
