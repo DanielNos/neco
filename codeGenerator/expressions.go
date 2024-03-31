@@ -211,6 +211,10 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	// String
 	case data.DT_String:
 		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
+
+	// None
+	case data.DT_None:
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushNone, []byte{}})
 	}
 }
 

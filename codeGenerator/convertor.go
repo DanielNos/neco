@@ -48,6 +48,7 @@ var dataTypeToDeclareInstruction = map[data.PrimitiveType]byte{
 	data.DT_Enum:   VM.IT_DeclareInt,
 	data.DT_Object: VM.IT_DeclareObject,
 	data.DT_Set:    VM.IT_DeclareSet,
+	data.DT_Option: VM.IT_DeclareOption,
 }
 
 func (cg *CodeGenerator) lineToInstruction(line byte) byte {

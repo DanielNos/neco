@@ -22,6 +22,7 @@ const (
 	IT_DeclareList
 	IT_DeclareSet
 	IT_DeclareObject
+	IT_DeclareOption
 
 	IT_SetListAtPrevToCurr
 
@@ -74,6 +75,7 @@ const (
 
 	IT_PushTrue
 	IT_PushFalse
+	IT_PushNone
 
 	IT_PushScopeUnnamed
 	IT_PopScope
@@ -112,6 +114,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareList:   "decl_list",
 	IT_DeclareSet:    "decl_set",
 	IT_DeclareObject: "decl_object",
+	IT_DeclareOption: "decl_option",
 
 	IT_SetListAtPrevToCurr: "set_list",
 
@@ -164,6 +167,7 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PushTrue:  "push_true",
 	IT_PushFalse: "push_false",
+	IT_PushNone:  "push_none",
 
 	IT_PushScopeUnnamed: "push_scope_unnamed",
 	IT_PopScope:         "pop_scope",

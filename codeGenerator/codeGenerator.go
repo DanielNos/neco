@@ -135,7 +135,7 @@ func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 		} else if node.NodeType == parser.NT_Assign {
 			cg.generateAssignment(node.Value.(*parser.AssignNode))
 		} else {
-			// Stop if something else is found (globals are before everything else in tree)
+			// Stop if something else is found (globals are only at the start of the tree)
 			break
 		}
 	}
