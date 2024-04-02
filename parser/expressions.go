@@ -96,7 +96,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		nodeType := TokenTypeToNodeType[operator.TokenType]
 
 		// Combine two literals into single node
-		if left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).PrimitiveType == right.Value.(*LiteralNode).PrimitiveType {
+		if p.optimize && left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).PrimitiveType == right.Value.(*LiteralNode).PrimitiveType {
 			left = combineLiteralNodes(left, right, nodeType)
 			continue
 		}

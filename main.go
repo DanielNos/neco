@@ -341,6 +341,10 @@ func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 }
 
 func compile(configuration *Configuration) {
+	if !configuration.Optimize {
+		logger.Warning("Code optimization disabled.")
+	}
+
 	startTime := time.Now()
 
 	tree, p := analyze(configuration)
