@@ -19,6 +19,25 @@ import (
 	VM "neco/virtualMachine"
 )
 
+type Action byte
+
+const (
+	A_Build Action = iota
+	A_Run
+	A_Analyze
+)
+
+type Configuration struct {
+	PrintTokens       bool
+	DrawTree          bool
+	PrintInstructions bool
+	Optimize          bool
+	Silent            bool
+
+	Action     Action
+	TargetPath string
+}
+
 func printHelp() {
 	color.Set(color.Bold)
 	color.Set(color.FgHiYellow)
@@ -26,16 +45,19 @@ func printHelp() {
 
 	color.Set(color.Reset)
 	println("build [target]")
-	println("                 -to --tokens           Prints lexed tokens.")
-	println("                 -tr --tree             Draws abstract syntax tree.")
-	println("                 -i  --instructions     Prints generated instructions.")
-	println("                 -d  --dontOptimize     Compiler won't optimize byte code.")
-	println("                 -s  --silent           Doesn't produce info messages when possible.")
-	println("                 -n  --noLog            Doesn't produce any log messages, even if there are errors.")
-	println("                 -l  --logLevel [LEVEL] Sets logging level. Possible values are 0 to 5.")
+	println("                 -to --tokens            Prints lexed tokens.")
+	println("                 -tr --tree              Draws abstract syntax tree.")
+	println("                 -i  --instructions      Prints generated instructions.")
+	println("                 -d  --dontOptimize      Compiler won't optimize byte code.")
+	println("                 -s  --silent            Doesn't produce info messages when possible.")
+	println("                 -n  --noLog             Doesn't produce any log messages, even if there are errors.")
+	println("                 -l  --logLevel [LEVEL]  Sets logging level. Possible values are 0 to 5.")
 	println("\nrun [target]")
-	println("\nanalyze [target] -to --tokens  Prints lexed tokens.")
-	println("                 -tr --tree    Draws abstract syntax tree.")
+	println("\nanalyze [target]")
+	println("                 -to --tokens        Prints lexed tokens.")
+	println("                 -tr --tree          Draws abstract syntax tree.")
+	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
+
 }
 
 func printTokens(tokens []*lexer.Token) {
@@ -132,7 +154,7 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 	}
 }
 
-func processArguments() (string, string, []bool) {
+func processArguments() *Configuration {
 	args := os.Args[1:]
 
 	// No action
@@ -144,14 +166,14 @@ func processArguments() (string, string, []bool) {
 	argumentsStart := 2
 
 	// Collect target
-	target := ""
+	configuration := &Configuration{Optimize: true}
 
 	switch action {
 	case "build", "run", "analyze":
 		if len(args) == 1 {
 			logger.Fatal(errors.INVALID_FLAGS, "No target specified.")
 		}
-		target = args[1]
+		configuration.TargetPath = args[1]
 	case "help", "--help", "-h":
 		printHelp()
 		os.Exit(0)
@@ -162,27 +184,24 @@ func processArguments() (string, string, []bool) {
 			action = "run"
 		}
 
-		target = args[0]
+		configuration.TargetPath = args[0]
 		argumentsStart = 1
 	}
 
 	// Collect flags
-	var flags []bool
-
 	switch action {
 	// Build flags
 	case "build":
-		flags = []bool{false, false, false, false}
 		for i := argumentsStart; i < len(args); i++ {
 			switch args[i] {
 			case "--tokens", "-to":
-				flags[0] = true
+				configuration.PrintTokens = true
 			case "--tree", "-tr":
-				flags[1] = true
+				configuration.DrawTree = true
 			case "--instructions", "-i":
-				flags[2] = true
+				configuration.PrintInstructions = true
 			case "--dontOptimize", "-d":
-				flags[3] = true
+				configuration.Optimize = false
 			case "--silent", "-s":
 				logger.LoggingLevel = logger.LL_Error
 			case "--noLog", "-n":
@@ -219,30 +238,31 @@ func processArguments() (string, string, []bool) {
 		}
 	// Analyze flags
 	case "analyze":
-		flags = []bool{false, false}
 		for _, flag := range args[2:] {
 			switch flag {
 			case "--tokens", "-to":
-				flags[0] = true
+				configuration.PrintTokens = true
 			case "--tree", "-tr":
-				flags[1] = true
+				configuration.DrawTree = true
+			case "--dontOptimize", "-d":
+				configuration.Optimize = false
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action analyze.")
 			}
 		}
 	}
 
-	return action, target, flags
+	return configuration
 }
 
-func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node, *parser.Parser) {
+func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 	action := "Analysis"
-	if isCompiling {
+	if configuration.Action == A_Build {
 		action = "Compilation"
 	}
 
 	// Tokenize
-	lexer := lexer.NewLexer(path)
+	lexer := lexer.NewLexer(configuration.TargetPath)
 	tokens := lexer.Lex()
 
 	exitCode := 0
@@ -263,7 +283,7 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))
 
 		// Print tokens
-		if showTokens {
+		if configuration.PrintTokens {
 			printTokens(tokens)
 		}
 
@@ -278,7 +298,7 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 	}
 
 	// Construct AST
-	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount)
+	p := parser.NewParser(tokens, syntaxAnalyzer.ErrorCount, configuration.Optimize)
 	tree := p.Parse()
 
 	// Print info
@@ -292,13 +312,13 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 	}
 
 	// Print tokens
-	if showTokens {
+	if configuration.PrintTokens {
 		printTokens(tokens)
 	}
 
 	// Visualize tree
-	if showTree {
-		if !showTokens {
+	if configuration.DrawTree {
+		if !configuration.PrintTokens {
 			println()
 		}
 		parser.Visualize(tree)
@@ -312,13 +332,13 @@ func analyze(path string, showTokens, showTree, isCompiling bool) (*parser.Node,
 	return tree, &p
 }
 
-func compile(path string, showTokens, showTree, printInstruction, optimize bool) {
+func compile(configuration *Configuration) {
 	startTime := time.Now()
 
-	tree, p := analyze(path, showTokens, showTree, true)
+	tree, p := analyze(configuration)
 
 	// Generate code
-	codeGenerator := codeGen.NewGenerator(tree, path[:len(path)-5], p.IntConstants, p.FloatConstants, p.StringConstants, optimize)
+	codeGenerator := codeGen.NewGenerator(tree, configuration.TargetPath[:len(configuration.TargetPath)-5], p.IntConstants, p.FloatConstants, p.StringConstants, configuration.Optimize)
 	codeGenerator.Generate()
 
 	// Generation failed
@@ -333,7 +353,7 @@ func compile(path string, showTokens, showTree, printInstruction, optimize bool)
 	codeWriter.Write()
 
 	// Print generated instructions
-	if printInstruction {
+	if configuration.PrintInstructions {
 		printInstructions(&codeGenerator.GlobalsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
 		printInstructions(&codeGenerator.FunctionsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
 
@@ -342,22 +362,22 @@ func compile(path string, showTokens, showTree, printInstruction, optimize bool)
 }
 
 func main() {
-	action, target, flags := processArguments()
+	configuration := processArguments()
 
 	// Build target
-	if action == "build" {
-		logger.Info("🐱 Compiling " + target)
-		compile(target, flags[0], flags[1], flags[2], !flags[3])
+	if configuration.Action == A_Build {
+		logger.Info("🐱 Compiling " + configuration.TargetPath)
+		compile(configuration)
 		// Run target
-	} else if action == "run" {
+	} else if configuration.Action == A_Run {
 		virtualMachine := VM.NewVirutalMachine()
-		virtualMachine.Execute(target)
+		virtualMachine.Execute(configuration.TargetPath)
 		// Analyze target
-	} else if action == "analyze" {
-		logger.Info("🐱 Analyzing " + target)
+	} else if configuration.Action == A_Analyze {
+		logger.Info("🐱 Analyzing " + configuration.TargetPath)
 		startTime := time.Now()
 
-		analyze(target, flags[0], flags[1], false)
+		analyze(configuration)
 
 		logger.Success(fmt.Sprintf("😺 Analyze completed in %s.", time.Since(startTime)))
 	}

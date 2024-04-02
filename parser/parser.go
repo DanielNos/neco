@@ -49,9 +49,11 @@ type Parser struct {
 	IntConstants    map[int64]int
 	FloatConstants  map[float64]int
 	StringConstants map[string]int
+
+	optimize bool
 }
 
-func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
+func NewParser(tokens []*lexer.Token, previousErrors uint, optimize bool) Parser {
 	return Parser{
 		tokens: tokens,
 
@@ -71,6 +73,8 @@ func NewParser(tokens []*lexer.Token, previousErrors uint) Parser {
 		IntConstants:    map[int64]int{},
 		FloatConstants:  map[float64]int{},
 		StringConstants: map[string]int{},
+
+		optimize: optimize,
 	}
 }
 

@@ -6,17 +6,6 @@ import (
 )
 
 func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
-	// Check if one of if statements' condition is always true
-	if cg.optimize {
-		for i, statement := range ifStatement.IfStatements {
-			// Generate only the always true body
-			if statement.Condition.NodeType == parser.NT_Literal && statement.Condition.Value.(*parser.LiteralNode).Value == true {
-				cg.generateScope(ifStatement.IfStatements[i].Body.Value.(*parser.ScopeNode), nil)
-				return
-			}
-		}
-	}
-
 	// Create slice for jump instructions and their positions so their destination can be set later
 	jumpInstructions := make([]*VM.Instruction, len(ifStatement.IfStatements))
 	jumpInstructionPositions := make([]int, len(ifStatement.IfStatements))
