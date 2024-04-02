@@ -307,7 +307,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	// If statement
 	case lexer.TT_KW_if:
-		return p.parseIfStatement()
+		return p.parseIfStatement(enteredScope)
 
 	// Loop
 	case lexer.TT_KW_loop:
