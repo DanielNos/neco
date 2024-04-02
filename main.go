@@ -162,26 +162,34 @@ func processArguments() *Configuration {
 		logger.Fatal(errors.INVALID_FLAGS, "No action specified. Use neco help for more info.")
 	}
 
-	action := args[0]
 	argumentsStart := 2
 
 	// Collect target
 	configuration := &Configuration{Optimize: true}
 
-	switch action {
+	switch args[0] {
 	case "build", "run", "analyze":
 		if len(args) == 1 {
 			logger.Fatal(errors.INVALID_FLAGS, "No target specified.")
 		}
 		configuration.TargetPath = args[1]
+
+		switch args[0] {
+		case "build":
+			configuration.Action = A_Build
+		case "run":
+			configuration.Action = A_Run
+		case "analyze":
+			configuration.Action = A_Analyze
+		}
 	case "help", "--help", "-h":
 		printHelp()
 		os.Exit(0)
 	default:
 		if strings.HasSuffix(args[0], ".neco") {
-			action = "build"
+			configuration.Action = A_Build
 		} else {
-			action = "run"
+			configuration.Action = A_Run
 		}
 
 		configuration.TargetPath = args[0]
@@ -189,9 +197,9 @@ func processArguments() *Configuration {
 	}
 
 	// Collect flags
-	switch action {
+	switch configuration.Action {
 	// Build flags
-	case "build":
+	case A_Build:
 		for i := argumentsStart; i < len(args); i++ {
 			switch args[i] {
 			case "--tokens", "-to":
@@ -229,7 +237,7 @@ func processArguments() *Configuration {
 			}
 		}
 	// Run flags
-	case "run":
+	case A_Run:
 		for _, flag := range args[argumentsStart:] {
 			switch flag {
 			default:
@@ -237,7 +245,7 @@ func processArguments() *Configuration {
 			}
 		}
 	// Analyze flags
-	case "analyze":
+	case A_Analyze:
 		for _, flag := range args[2:] {
 			switch flag {
 			case "--tokens", "-to":
