@@ -84,7 +84,7 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 				if expressionType.IsComplete() {
 					targetType = expressionType
 				} else {
-					p.newError(&expressionPosition, "Can't assign expression with type "+expressionType.String()+" to a variable declared using var, because sub-type can't be determined. Replace var with desired type or add type before expression.")
+					p.newError(&expressionPosition, "Can't assign expression with type "+expressionType.String()+" to a variable declared using var, because sub-type can't be determined. Replace var with desired type or add type hint before expression.")
 				}
 				continue
 			}

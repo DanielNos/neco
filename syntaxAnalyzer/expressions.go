@@ -4,6 +4,13 @@ import (
 	"neco/lexer"
 )
 
+func (sn *SyntaxAnalyzer) analyzeRestOfExpression() {
+	if sn.peek().TokenType.IsBinaryOperator() {
+		sn.consume()
+		sn.analyzeExpression()
+	}
+}
+
 func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// No expression
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -20,24 +27,37 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// Literal
 	if sn.peek().TokenType.IsLiteral() {
 		sn.consume()
-
-		// Not end of expression
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-		}
+		sn.analyzeRestOfExpression()
 		return
 	}
 
 	// Set
 	if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 		sn.analyzeSet()
+		sn.analyzeRestOfExpression()
+		return
+	}
 
-		// Not end of expression
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
+	// List
+	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
+		sn.analyzeList()
+		sn.analyzeRestOfExpression()
+		return
+	}
+
+	// Set/List with it's type specified
+	if sn.peek().TokenType.IsCompositeType() {
+		sn.analyzeCompositeType()
+
+		if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
+			sn.analyzeList()
+		} else if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
+			sn.analyzeSet()
+		} else {
 			sn.analyzeExpression()
 		}
+
+		sn.analyzeRestOfExpression()
 		return
 	}
 
@@ -52,12 +72,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			// Function call
 		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 			sn.analyzeFunctionCall()
-
-			// Not end of expression
-			if sn.peek().TokenType.IsBinaryOperator() {
-				sn.consume()
-				sn.analyzeExpression()
-			}
+			sn.analyzeRestOfExpression()
 			// List index
 		} else if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
 			for sn.peek().TokenType == lexer.TT_DL_BracketOpen {
@@ -125,12 +140,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	// Sub-Expression
 	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		sn.analyzeSubExpression()
-
-		// Not end of expression
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-		}
+		sn.analyzeRestOfExpression()
 		return
 	}
 	// Function call of function with same name as keyword
@@ -142,23 +152,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		sn.consume()
 		sn.analyzeFunctionCall()
 
-		// Not end of expression
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-		}
-		return
-	}
-
-	// List
-	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
-		sn.analyzeList()
-
-		// Not end of expression
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-		}
+		sn.analyzeRestOfExpression()
 		return
 	}
 

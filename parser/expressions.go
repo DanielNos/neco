@@ -83,11 +83,32 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// List
 	} else if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-		left = p.parseEnumeration("List", NT_List, data.DT_List)
+		left = p.parseEnumeration(false)
 
 		// Set
 	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
-		left = p.parseEnumeration("Set", NT_Set, data.DT_Set)
+		left = p.parseEnumeration(true)
+
+		// List/Set with a type specified
+	} else if p.peek().TokenType.IsCompositeType() {
+		specifiedType := p.parseType()
+
+		// Expression after type isn't a list/set
+		if p.peek().TokenType != lexer.TT_DL_BraceOpen && p.peek().TokenType != lexer.TT_DL_BracketOpen {
+			left = p.parseExpression(currentPrecedence)
+			p.newError(GetExpressionPosition(left), "Expected expression of the type "+specifiedType.String()+".")
+			// Try to set the type of the expression
+		} else {
+			left = p.parseEnumeration(p.peek().TokenType == lexer.TT_DL_BraceOpen)
+			expressionType := left.Value.(*ListNode).DataType.Copy()
+			expressionType.TryCompleteFrom(specifiedType)
+
+			// Type of expression after type hint is incompatible with it
+			if !specifiedType.CanBeAssigned(expressionType) {
+				p.newError(GetExpressionPosition(left), "Expression after type hint "+specifiedType.String()+" has thew wrong type "+left.Value.(*ListNode).DataType.String()+".")
+			}
+			left.Value.(*ListNode).DataType = specifiedType
+		}
 
 		// Invalid token
 	} else {
@@ -515,7 +536,20 @@ func (p *Parser) parseAnyProperties() {
 	}
 }
 
-func (p *Parser) parseEnumeration(structureName string, nodeType NodeType, dataType data.PrimitiveType) *Node {
+func (p *Parser) parseEnumeration(isSet bool) *Node {
+	// Select collect properties for the structure
+	structureName := "List"
+	nodeType := NT_List
+	dataType := data.DT_List
+	closingToken := lexer.TT_DL_BracketClose
+
+	if isSet {
+		structureName = "Set"
+		nodeType = NT_Set
+		dataType = data.DT_Set
+		closingToken = lexer.TT_DL_BraceClose
+	}
+
 	startPosition := p.consume().Position
 
 	// Skip EOC
@@ -528,7 +562,7 @@ func (p *Parser) parseEnumeration(structureName string, nodeType NodeType, dataT
 	expressionTypes := map[string]*dataTypeCount{}
 	elementType := &data.DataType{data.DT_Unknown, nil}
 
-	for p.peek().TokenType != lexer.TT_DL_BracketClose {
+	for p.peek().TokenType != closingToken {
 		// Collect expression
 		expressions = append(expressions, p.parseExpressionRoot())
 
