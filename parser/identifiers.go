@@ -52,7 +52,7 @@ func (p *Parser) parseIdentifierStatement() *Node {
 		}
 	}
 
-	node, _ := p.parseAssign(expressions, startPosition)
+	node, _ := p.parseAssignment(expressions, startPosition)
 	return node
 }
 

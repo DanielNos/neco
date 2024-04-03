@@ -33,7 +33,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 
 		// Parse expression and collect type
 		var expressionType *data.DataType
-		declareNode, expressionType = p.parseAssign(variableNodes, startPosition)
+		declareNode, expressionType = p.parseAssignment(variableNodes, startPosition)
 
 		// Change variable type if no was provided
 		if variableType.Type == data.DT_Unknown {
@@ -50,7 +50,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	return declareNode
 }
 
-func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos) (*Node, *data.DataType) {
+func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.CodePos) (*Node, *data.DataType) {
 	assign := p.consume()
 	expressionStart := p.peek().Position
 
@@ -61,7 +61,7 @@ func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos)
 	// Uncompatible data types
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
-	// Check if variables are constant
+	// Check if variables are constants
 	for _, target := range assignedTo {
 		symbol := p.findSymbol(target.Value.(*VariableNode).Identifier)
 
@@ -91,12 +91,6 @@ func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos)
 
 			// Can't be assgined
 			if !targetType.CanBeAssigned(expressionType) {
-				// Depths are different, types can't be same
-				if expressionType.GetDepth() != targetType.GetDepth() {
-					p.newError(&expressionPosition, "Cant't assign expression with type "+expressionType.String()+" to variable with type "+targetType.String()+".")
-					continue
-				}
-
 				// Type is complete
 				if expressionType.IsComplete() {
 					p.newError(&expressionPosition, "Cant't assign expression with type "+expressionType.String()+" to variable with type "+targetType.String()+".")
@@ -105,12 +99,11 @@ func (p *Parser) parseAssign(assignedTo []*Node, startOfStatement *data.CodePos)
 
 				// Type doesn't have a leaf type, set it to the same as target
 				originalExpressionType := expressionType.String()
-				expressionType.SetLeafType(targetType.GetLeafType())
+				expressionTypeCopy := expressionType.Copy()
+				expressionTypeCopy.TryCompleteFrom(targetType)
 
 				// Check if now it can be assigned
-				if targetType.CanBeAssigned(expressionType) {
-					expression.Value.(*ListNode).DataType = targetType
-				} else {
+				if !targetType.CanBeAssigned(expressionTypeCopy) {
 					p.newError(&expressionPosition, "Cant't assign expression with type "+originalExpressionType+" to variable with type "+targetType.String()+".")
 				}
 			}

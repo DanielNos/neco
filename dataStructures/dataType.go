@@ -112,6 +112,27 @@ func (dt *DataType) IsComplete() bool {
 	return dt.SubType.(*DataType).IsComplete()
 }
 
+func (dt *DataType) Copy() *DataType {
+	if dt.Type <= DT_Object {
+		return &DataType{dt.Type, dt.SubType}
+	}
+
+	return &DataType{dt.Type, dt.SubType.(*DataType).Copy()}
+}
+
+func (dt *DataType) TryCompleteFrom(from *DataType) {
+	if dt.GetDepth() > from.GetDepth() {
+		return
+	}
+
+	if dt.IsCompositeType() && dt.SubType != nil {
+		dt.SubType.(*DataType).TryCompleteFrom(from.SubType.(*DataType))
+	} else {
+		dt.Type = from.Type
+		dt.SubType = from.SubType
+	}
+}
+
 func (dt *DataType) GetDepth() int {
 	if dt.IsCompositeType() {
 		return 1 + dt.SubType.(*DataType).GetDepth()

@@ -12,6 +12,11 @@ import (
 
 const MINIMAL_PRECEDENCE = -100
 
+type dataTypeCount struct {
+	DataType *data.DataType
+	Count    int
+}
+
 func (p *Parser) parseExpressionRoot() *Node {
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
 	p.collectConstant(expression)
@@ -78,11 +83,11 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// List
 	} else if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-		left = p.parseList()
+		left = p.parseEnumeration("List", NT_List, data.DT_List)
 
-		// Sets
+		// Set
 	} else if p.peek().TokenType == lexer.TT_DL_BraceOpen {
-		left = p.parseSet()
+		left = p.parseEnumeration("Set", NT_Set, data.DT_Set)
 
 		// Invalid token
 	} else {
@@ -510,7 +515,7 @@ func (p *Parser) parseAnyProperties() {
 	}
 }
 
-func (p *Parser) parseList() *Node {
+func (p *Parser) parseEnumeration(structureName string, nodeType NodeType, dataType data.PrimitiveType) *Node {
 	startPosition := p.consume().Position
 
 	// Skip EOC
@@ -520,7 +525,7 @@ func (p *Parser) parseList() *Node {
 
 	// Collect elements
 	expressions := []*Node{}
-	expressionTypes := map[*data.DataType]int{}
+	expressionTypes := map[string]*dataTypeCount{}
 	elementType := &data.DataType{data.DT_Unknown, nil}
 
 	for p.peek().TokenType != lexer.TT_DL_BracketClose {
@@ -529,7 +534,14 @@ func (p *Parser) parseList() *Node {
 
 		// Assign list type
 		elementType = p.GetExpressionType(expressions[len(expressions)-1])
-		expressionTypes[elementType] += 1
+		signature := elementType.Signature()
+
+		typeAndCount, exists := expressionTypes[signature]
+		if !exists {
+			expressionTypes[signature] = &dataTypeCount{elementType, 1}
+		} else {
+			typeAndCount.Count++
+		}
 
 		// Consume comma
 		if p.peek().TokenType == lexer.TT_DL_Comma {
@@ -546,47 +558,13 @@ func (p *Parser) parseList() *Node {
 
 	// Check if all list elements have the same type and set element type to the most common type
 	if len(expressionTypes) > 1 {
-		elementType = p.checkElementTypes(expressionTypes, expressions, "List")
+		elementType = p.checkElementTypes(expressionTypes, expressions, structureName)
 	}
 
-	return &Node{startPosition.SetEndPos(p.consume().Position), NT_List, &ListNode{expressions, &data.DataType{data.DT_List, elementType}}}
+	return &Node{startPosition.SetEndPos(p.consume().Position), nodeType, &ListNode{expressions, &data.DataType{dataType, elementType}}}
 }
 
-func (p *Parser) parseSet() *Node {
-	startPosition := p.consume().Position
-
-	// Collect elements
-	expressions := []*Node{}
-	expressionTypes := map[*data.DataType]int{}
-	elementType := &data.DataType{data.DT_Unknown, nil}
-
-	p.consumeEOCs()
-
-	for p.peek().TokenType != lexer.TT_DL_BraceClose {
-		// Collect element
-		expressions = append(expressions, p.parseExpressionRoot())
-
-		// Assign set type
-		elementType = p.GetExpressionType(expressions[len(expressions)-1])
-		expressionTypes[elementType] += 1
-
-		// More elements
-		if p.peek().TokenType == lexer.TT_DL_Comma {
-			p.consume()
-		}
-
-		p.consumeEOCs()
-	}
-
-	// Check if all set elements have the same type and set element type to the most common type
-	if len(expressions) > 1 {
-		elementType = p.checkElementTypes(expressionTypes, expressions, "Set")
-	}
-
-	return &Node{startPosition.SetEndPos(p.consume().Position), NT_Set, &ListNode{expressions, &data.DataType{data.DT_Set, elementType}}}
-}
-
-func (p *Parser) checkElementTypes(expressionTypes map[*data.DataType]int, expressions []*Node, structureName string) *data.DataType {
+func (p *Parser) checkElementTypes(expressionTypes map[string]*dataTypeCount, expressions []*Node, structureName string) *data.DataType {
 	// Find type with lowest count and highest count
 	lowestCount := 999999
 	lowestType := &data.DataType{}
@@ -594,16 +572,16 @@ func (p *Parser) checkElementTypes(expressionTypes map[*data.DataType]int, expre
 	highestCount := 0
 	highestType := &data.DataType{}
 
-	for t, count := range expressionTypes {
+	for _, typeCount := range expressionTypes {
 		// Update lowest count
-		if count < lowestCount {
-			lowestCount = count
-			lowestType = t
+		if typeCount.Count < lowestCount {
+			lowestCount = typeCount.Count
+			lowestType = typeCount.DataType
 		}
 		// Update highest count
-		if count > highestCount {
-			highestCount = count
-			highestType = t
+		if typeCount.Count > highestCount {
+			highestCount = typeCount.Count
+			highestType = typeCount.DataType
 		}
 	}
 
