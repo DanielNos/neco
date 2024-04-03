@@ -53,6 +53,8 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 			sn.analyzeList()
 		} else if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
 			sn.analyzeSet()
+		} else if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.newError(sn.peek(), "Missing literal after type hint.")
 		} else {
 			sn.analyzeExpression()
 		}
