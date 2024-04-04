@@ -36,6 +36,7 @@ type Configuration struct {
 
 	Action     Action
 	TargetPath string
+	OutputPath string
 }
 
 func printHelp() {
@@ -52,6 +53,7 @@ func printHelp() {
 	println("                 -s  --silent            Doesn't produce info messages when possible.")
 	println("                 -n  --noLog             Doesn't produce any log messages, even if there are errors.")
 	println("                 -l  --logLevel [LEVEL]  Sets logging level. Possible values are 0 to 5.")
+	println("                 -o  --out               Sets output file path.")
 	println("\nrun [target]")
 	println("\nanalyze [target]")
 	println("                 -to --tokens        Prints lexed tokens.")
@@ -232,6 +234,14 @@ func processArguments() *Configuration {
 
 				logger.LoggingLevel = byte(loggingLevel)
 
+			case "--out", "-o":
+				if i+1 == len(args) {
+					logger.Fatal(errors.INVALID_FLAGS, "No output path provided after "+args[i]+" flag.")
+				}
+				i++
+
+				configuration.OutputPath = args[i]
+
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+args[i]+"\" for action build.")
 			}
@@ -258,6 +268,11 @@ func processArguments() *Configuration {
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action analyze.")
 			}
 		}
+	}
+
+	// Set output binary path
+	if configuration.OutputPath == "" {
+		configuration.OutputPath = configuration.TargetPath[:len(configuration.TargetPath)-5]
 	}
 
 	return configuration
@@ -350,7 +365,7 @@ func compile(configuration *Configuration) {
 	tree, p := analyze(configuration)
 
 	// Generate code
-	codeGenerator := codeGen.NewGenerator(tree, configuration.TargetPath[:len(configuration.TargetPath)-5], p.IntConstants, p.FloatConstants, p.StringConstants, configuration.Optimize)
+	codeGenerator := codeGen.NewGenerator(tree, p.IntConstants, p.FloatConstants, p.StringConstants, configuration.Optimize)
 	codeGenerator.Generate()
 
 	// Generation failed
@@ -362,7 +377,7 @@ func compile(configuration *Configuration) {
 	logger.Success(fmt.Sprintf("😺 Compilation completed in %s.", time.Since(startTime)))
 
 	codeWriter := codeGen.NewCodeWriter(codeGenerator)
-	codeWriter.Write()
+	codeWriter.Write(configuration.OutputPath)
 
 	// Print generated instructions
 	if configuration.PrintInstructions {

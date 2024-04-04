@@ -35,8 +35,8 @@ func NewCodeWriter(codeGenerator *CodeGenerator) *CodeWriter {
 	return &CodeWriter{codeGenerator, nil}
 }
 
-func (cw *CodeWriter) Write() {
-	file, _ := os.Create(cw.codeGenerator.filePath)
+func (cw *CodeWriter) Write(path string) {
+	file, _ := os.Create(path)
 	cw.file = file
 
 	file.WriteString("NeCo")

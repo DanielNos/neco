@@ -22,7 +22,6 @@ type Break struct {
 }
 
 type CodeGenerator struct {
-	filePath string
 	tree     *parser.Node
 	optimize bool
 
@@ -49,9 +48,8 @@ type CodeGenerator struct {
 	ErrorCount int
 }
 
-func NewGenerator(tree *parser.Node, outputFile string, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
+func NewGenerator(tree *parser.Node, intConstants map[int64]int, floatConstants map[float64]int, stringConstants map[string]int, optimize bool) *CodeGenerator {
 	codeGenerator := &CodeGenerator{
-		filePath: outputFile,
 		tree:     tree,
 		optimize: optimize,
 
