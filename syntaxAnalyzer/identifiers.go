@@ -63,7 +63,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 		// Assigning to list index
 		if sn.peekNext().TokenType == lexer.TT_DL_BracketOpen {
 			startChar := sn.consume().Position.StartChar
-			openingBracket := sn.consume() // Collect [
+			openingBracket := sn.consume() // [
 
 			// Analyze index expression
 			sn.analyzeExpression()
@@ -74,7 +74,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 				return
 			}
 
-			sn.consume() // Collect ]
+			sn.consume() // ]
 
 			// End of expression
 			if sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -88,9 +88,17 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 			}
 
 			// Assign expression
-			sn.consume() // Collect =
+			sn.consume() // =
 			sn.analyzeExpression()
 
+			return
+		}
+
+		// Assigning to an object field
+		if sn.peekNext().TokenType == lexer.TT_OP_Dot {
+			sn.consume()
+			sn.consume()
+			sn.analyzeIdentifier()
 			return
 		}
 

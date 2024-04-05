@@ -105,7 +105,7 @@ func (dt *DataType) CanBeAssigned(other *DataType) bool {
 }
 
 func (dt *DataType) IsComplete() bool {
-	if dt.SubType == nil || dt.Type == DT_Enum {
+	if dt.SubType == nil || dt.Type == DT_Enum || dt.Type == DT_Object {
 		return dt.Type != DT_Unknown
 	}
 

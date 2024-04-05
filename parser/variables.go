@@ -63,7 +63,14 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 
 	// Check if variables are constants
 	for _, target := range assignedTo {
-		symbol := p.findSymbol(target.Value.(*VariableNode).Identifier)
+		var symbol *Symbol
+		if target.NodeType == NT_Variable {
+			symbol = p.findSymbol(target.Value.(*VariableNode).Identifier)
+		} else if target.NodeType == NT_ObjectField {
+			symbol = p.findSymbol(target.Value.(*ObjectFieldNode).Identifier)
+		} else {
+			panic("Can't check if node is constant.")
+		}
 
 		if symbol == nil || symbol.symbolType != ST_Variable {
 			continue

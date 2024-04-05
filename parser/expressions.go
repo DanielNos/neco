@@ -351,7 +351,7 @@ func (p *Parser) parseIdentifier() *Node {
 				if !propertyExists {
 					p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
 				} else {
-					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_StructField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
+					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
 				}
 			}
 
@@ -789,7 +789,7 @@ func GetExpressionType(expression *Node) *data.DataType {
 		return &data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Object:
 		return &data.DataType{data.DT_Object, expression.Value.(*ObjectNode).Identifier}
-	case NT_StructField:
+	case NT_ObjectField:
 		return expression.Value.(*ObjectFieldNode).DataType
 	case NT_Set:
 		return expression.Value.(*ListNode).DataType

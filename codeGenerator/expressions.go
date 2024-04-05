@@ -146,7 +146,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		}
 
 	// Struct fields
-	case parser.NT_StructField:
+	case parser.NT_ObjectField:
 		ObjectFieldNode := node.Value.(*parser.ObjectFieldNode)
 
 		cg.generateVariable(ObjectFieldNode.Identifier)

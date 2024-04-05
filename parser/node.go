@@ -54,7 +54,7 @@ const (
 	NT_Delete
 	NT_Enum
 	NT_Object
-	NT_StructField
+	NT_ObjectField
 	NT_Set
 )
 
@@ -97,7 +97,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Delete:          "Delete",
 	NT_Enum:            "Enum",
 	NT_Object:          "Object",
-	NT_StructField:     "ObjectField",
+	NT_ObjectField:     "ObjectField",
 	NT_Set:             "Set",
 }
 
