@@ -36,7 +36,7 @@ func (p *Parser) parseIfStatement(enteredScope bool) *Node {
 			p.consume()
 
 			// Check condition type
-			elifConditionType := p.GetExpressionType(elifCondition)
+			elifConditionType := GetExpressionType(elifCondition)
 
 			if elifConditionType.Type != data.DT_Unknown && elifConditionType.Type != data.DT_Bool {
 				p.newError(elifCondition.Position, "Condition expression data type has to be Bool.")
@@ -132,7 +132,7 @@ func (p *Parser) parseCondition(removeParenthesis bool) *Node {
 	}
 
 	// Check condition type
-	conditionType := p.GetExpressionType(condition)
+	conditionType := GetExpressionType(condition)
 
 	if conditionType.Type != data.DT_Unknown && conditionType.Type != data.DT_Bool {
 		p.newError(condition.Position, "Condition expression data type has to be Bool.")

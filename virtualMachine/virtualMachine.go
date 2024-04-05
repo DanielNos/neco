@@ -396,6 +396,17 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
 
+	// String operations
+	case IT_IndexString:
+		vm.stack.size--
+
+		if int64(len(vm.stack.items[vm.stack.size-1].(string)))-1 < vm.stack.items[vm.stack.size].(int64) {
+			vm.traceLine()
+			logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: String index out of range. String length: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].(string)), vm.stack.items[vm.stack.size].(int64)))
+		}
+
+		vm.stack.items[vm.stack.size-1] = string([]rune(vm.stack.items[vm.stack.size-1].(string))[vm.stack.items[vm.stack.size].(int64)])
+
 	// Set operations
 	case IT_CreateSet:
 		vm.stack.Push(map[any]struct{}{})

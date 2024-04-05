@@ -86,6 +86,8 @@ const (
 	IT_AppendToList
 	IT_IndexList
 
+	IT_IndexString
+
 	IT_CreateSet
 	IT_InsertToSet
 	IT_SetContains
@@ -177,6 +179,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_CreateList:   "list_new",
 	IT_AppendToList: "list_append",
 	IT_IndexList:    "list_index",
+
+	IT_IndexString: "str_index",
 
 	IT_CreateSet:        "set_new",
 	IT_InsertToSet:      "set_insert",

@@ -272,7 +272,11 @@ func processArguments() *Configuration {
 
 	// Set output binary path
 	if configuration.OutputPath == "" {
-		configuration.OutputPath = configuration.TargetPath[:len(configuration.TargetPath)-5]
+		if strings.HasSuffix(configuration.TargetPath, ".neco") && len(configuration.TargetPath) > 5 {
+			configuration.OutputPath = configuration.TargetPath[:len(configuration.TargetPath)-5]
+		} else {
+			configuration.OutputPath = configuration.TargetPath + "_bin"
+		}
 	}
 
 	return configuration

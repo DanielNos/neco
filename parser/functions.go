@@ -122,7 +122,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 	argumentTypes := make([]*data.DataType, len(arguments))
 
 	for i, argument := range arguments {
-		argumentTypes[i] = p.GetExpressionType(argument)
+		argumentTypes[i] = GetExpressionType(argument)
 	}
 
 	for _, function := range bucket.value.(symbolTable) {
@@ -172,7 +172,7 @@ func (p *Parser) parseArguments() ([]*Node, []*data.DataType, bool) {
 		}
 
 		argument = p.parseExpressionRoot()
-		argumentTypes = append(argumentTypes, p.GetExpressionType(argument))
+		argumentTypes = append(argumentTypes, GetExpressionType(argument))
 		arguments = append(arguments, argument)
 
 		if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -197,7 +197,7 @@ func (p *Parser) verifyReturns(statementList *Node, returnType *data.DataType) b
 				p.newError(statement.Position, "Return statement has no return value, but function has return type "+returnType.String()+".")
 			} else {
 				// Incorrect return value data type
-				expressionType := p.GetExpressionType(statement.Value.(*Node))
+				expressionType := GetExpressionType(statement.Value.(*Node))
 
 				if !returnType.CanBeAssigned(expressionType) {
 					p.newError(statement.Value.(*Node).Position, "Return statement has return value with type "+expressionType.String()+", but function has return type "+returnType.String()+".")

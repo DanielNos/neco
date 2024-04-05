@@ -56,7 +56,7 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 
 	// Collect expression
 	expression := p.parseExpressionRoot()
-	expressionType := p.GetExpressionType(expression)
+	expressionType := GetExpressionType(expression)
 
 	// Uncompatible data types
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
@@ -77,7 +77,7 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 	// Print errors
 	if expressionType.Type != data.DT_Unknown {
 		for _, target := range assignedTo {
-			targetType := p.GetExpressionType(target)
+			targetType := GetExpressionType(target)
 
 			if targetType.Type == data.DT_Unknown {
 				// Sub-type can be determined, assign it to expression

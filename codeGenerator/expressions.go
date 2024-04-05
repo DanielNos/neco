@@ -117,7 +117,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 
 		// Generate indexing instruction
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_IndexList, NO_ARGS})
+		if parser.GetExpressionType(node.Value.(*parser.TypedBinaryNode).Left).Type == data.DT_String {
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_IndexString, NO_ARGS})
+		} else {
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_IndexList, NO_ARGS})
+		}
 
 	// Logical not
 	case parser.NT_Not:

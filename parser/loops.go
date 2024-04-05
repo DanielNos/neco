@@ -126,17 +126,18 @@ func (p *Parser) parseForEach() *Node {
 	// Generate assignment of zero to iterator index variable
 	zeroLiteral := &Node{iteratorPosition, NT_Literal, &LiteralNode{data.DT_Int, int64(0)}}
 	p.IntConstants[0] = -1 // Store zero in constants
-	p.appendScope(&Node{iteratorPosition, NT_Assign, &BinaryNode{indexIdentifierVariable, zeroLiteral}})
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{[]*Node{indexIdentifierVariable}, zeroLiteral}})
 
 	// Generate variable declaration for list size
 	sizeIdentifier := fmt.Sprintf("@LIST_SIZE_%d", p.tokenIndex)
+	sizeIdentifierVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, &data.DataType{data.DT_Int, nil}}}
 	sizeDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{&data.DataType{data.DT_Int, nil}, false, []string{sizeIdentifier}}}
 	p.appendScope(sizeDeclaration)
 
 	// Set list size variable to list size
-	functionCallNode := &FunctionCallNode{-1, "length", nil, nil, &data.DataType{data.DT_Int, nil}}
+	functionCallNode := &FunctionCallNode{-1, "size", nil, nil, &data.DataType{data.DT_Int, nil}}
 	sizeFunctionCall := &Node{iteratorPosition, NT_FunctionCall, functionCallNode}
-	p.appendScope(&Node{iteratorPosition, NT_Assign, &BinaryNode{indexIdentifierVariable, sizeFunctionCall}})
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{[]*Node{sizeIdentifierVariable}, sizeFunctionCall}})
 
 	// Enter loop scope
 	p.enterScope()
@@ -158,7 +159,6 @@ func (p *Parser) parseForEach() *Node {
 
 	iteratorIdentifier := p.consume().Value
 	iteratorVariable := &Node{p.peekPrevious().Position, NT_Variable, &VariableNode{iteratorIdentifier, iteratorType}}
-
 	// Declare it and insert to scope
 	iteratorDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{iteratorType, false, []string{iteratorIdentifier}}}
 	p.appendScope(iteratorDeclaration)
@@ -171,11 +171,18 @@ func (p *Parser) parseForEach() *Node {
 
 	// Collect enumerated expression
 	expression := p.parseExpressionRoot()
-	elementType := p.GetExpressionType(expression)
+	elementType := GetExpressionType(expression)
 
 	// Set element type to list subtype (if type was derived)
 	if elementType.Type != data.DT_Unknown {
-		elementType = elementType.SubType.(*data.DataType)
+		// Element type is expression sub-type
+		if elementType.Type != data.DT_String {
+			elementType = elementType.SubType.(*data.DataType)
+			// Enumerated expression is a string (element is also a string)
+		} else {
+			// Change size function to length
+			functionCallNode.Identifier = "length"
+		}
 	}
 
 	// Check if list element can be assigned to iterator
@@ -187,7 +194,7 @@ func (p *Parser) parseForEach() *Node {
 	// Assign to iterated_expression[interator_index] to iterator
 	iteratorIndexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, &data.DataType{data.DT_Int, nil}}}
 	indexExpression := &Node{iteratorPosition, NT_ListValue, &TypedBinaryNode{expression, iteratorIndexVariable, elementType}}
-	p.appendScope(&Node{iteratorPosition, NT_Assign, &BinaryNode{iteratorVariable, indexExpression}})
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{[]*Node{iteratorVariable}, indexExpression}})
 
 	// Add enumerated expression to previous length() function call
 	functionCallNode.Arguments = []*Node{expression}
@@ -206,7 +213,7 @@ func (p *Parser) parseForEach() *Node {
 	addOne := &Node{iteratorPosition, NT_Add, &TypedBinaryNode{iteratorIndexVariable, oneLiteral, &data.DataType{data.DT_Int, nil}}}
 
 	// Insert iterator_index = iterator_index + 1
-	p.appendScope(&Node{iteratorPosition, NT_Assign, &BinaryNode{iteratorVariable, addOne}})
+	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{[]*Node{iteratorIndexVariable}, addOne}})
 
 	// Leave scope
 	p.leaveScope()

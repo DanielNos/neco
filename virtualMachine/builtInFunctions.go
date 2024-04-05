@@ -112,9 +112,9 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		char, _, _ := vm.reader.ReadRune()
 		vm.stack.Push(string(char))
 
-	// Lengths
+	// Sizes
 	case BIF_StringLength:
-		vm.stack.Push(int64(len(vm.stack.Pop().(string))))
+		vm.stack.Push(int64(len([]rune(vm.stack.Pop().(string)))))
 
 	case BIF_ListLength:
 		vm.stack.Push(int64(len(vm.stack.Pop().([]any))))

@@ -172,7 +172,7 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 
 		// Unary operator
 		if binaryNode.Left == nil {
-			return p.GetExpressionType(binaryNode.Right)
+			return GetExpressionType(binaryNode.Right)
 		}
 
 		// Collect left and right node data types
@@ -259,7 +259,7 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 		return &data.DataType{data.DT_Unknown, nil}
 	}
 
-	return p.GetExpressionType(expression)
+	return GetExpressionType(expression)
 }
 
 func operatorPrecedence(operator lexer.TokenType) int {
@@ -433,7 +433,7 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 
 			// Check if expression has correct type
 			if exists {
-				expressionType := p.GetExpressionType(expression)
+				expressionType := GetExpressionType(expression)
 				if !property.dataType.CanBeAssigned(expressionType) {
 					p.newError(expression.Position, "Field "+propertyName.Value+" of struct "+structName+" has type "+property.dataType.String()+", but is assigned expression of type "+expressionType.String()+".")
 				}
@@ -493,7 +493,7 @@ func (p *Parser) parseProperties(properties map[string]PropertySymbol, structNam
 		} else {
 			// Collect field expression
 			expression := p.parseExpressionRoot()
-			expressionType := p.GetExpressionType(expression)
+			expressionType := GetExpressionType(expression)
 
 			// Check type
 			if !orderedProperties[propertyIndex].dataType.CanBeAssigned(expressionType) {
@@ -567,7 +567,7 @@ func (p *Parser) parseEnumeration(isSet bool) *Node {
 		expressions = append(expressions, p.parseExpressionRoot())
 
 		// Assign list type
-		elementType = p.GetExpressionType(expressions[len(expressions)-1])
+		elementType = GetExpressionType(expressions[len(expressions)-1])
 		signature := elementType.Signature()
 
 		typeAndCount, exists := expressionTypes[signature]
@@ -623,7 +623,7 @@ func (p *Parser) checkElementTypes(expressionTypes map[string]*dataTypeCount, ex
 	if len(expressionTypes) > 1 {
 		// Find it's expression and print error
 		for _, expression := range expressions {
-			if p.GetExpressionType(expression).CanBeAssigned(lowestType) {
+			if GetExpressionType(expression).CanBeAssigned(lowestType) {
 				p.newError(expression.Position, structureName+" can't contain elements of multiple data types.")
 				break
 			}
@@ -768,7 +768,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &TypedBinaryNode{left, right, &data.DataType{data.DT_Unknown, nil}}}
 }
 
-func (p *Parser) GetExpressionType(expression *Node) *data.DataType {
+func GetExpressionType(expression *Node) *data.DataType {
 	// Binary nodes store their type
 	if expression.NodeType.IsOperator() {
 		return expression.Value.(*TypedBinaryNode).DataType
@@ -784,7 +784,7 @@ func (p *Parser) GetExpressionType(expression *Node) *data.DataType {
 	case NT_List:
 		return expression.Value.(*ListNode).DataType
 	case NT_ListValue:
-		return p.GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(*data.DataType)
+		return GetExpressionType(expression.Value.(*TypedBinaryNode).Left).SubType.(*data.DataType)
 	case NT_Enum:
 		return &data.DataType{data.DT_Enum, expression.Value.(*EnumNode).Identifier}
 	case NT_Object:
