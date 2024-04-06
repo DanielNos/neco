@@ -251,7 +251,7 @@ func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 
 func Fatal(error_code int, message string) {
 	if LoggingLevel > LL_Fatal {
-		return
+		os.Exit(error_code)
 	}
 
 	color.Set(color.FgHiRed)
