@@ -5,7 +5,7 @@ import (
 )
 
 func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
-	sn.consume()
+	sn.consume() // (
 	sn.analyzeAruments()
 
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -22,7 +22,8 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 
 		return
 	}
-	sn.consume()
+
+	sn.consume() // )
 }
 
 func (sn *SyntaxAnalyzer) analyzeAruments() {

@@ -213,20 +213,16 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_StoreAndPop:
 		vm.findSymbol().symbolValue.(*VariableSymbol).value = vm.stack.Pop()
 
-	// Structs
+	// Objects
 	case IT_CreateObject:
 		identifier := vm.Constants[instruction.InstructionValue[0]].(string)
 		vm.stack.Push(object{&identifier, []any{}})
 
-	case IT_StoreField:
-		vm.stack.size--
-
-		currentObject, _ = vm.stack.items[vm.stack.size-1].(object)
-		currentObject.fields = append(currentObject.fields, vm.stack.items[vm.stack.size])
-		vm.stack.items[vm.stack.size-1] = currentObject
-
 	case IT_GetField:
 		vm.stack.Push(vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]])
+
+	case IT_SetField:
+		vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]] = vm.stack.items[vm.stack.size-2]
 
 	// NO ARGUMENT INSTRUCTIONS -------------------------------------------------------------------------
 
@@ -378,6 +374,14 @@ func (vm *VirtualMachine) interpretInstruction() {
 			return
 		}
 
+	// Adding fields to an object
+	case IT_AddField:
+		vm.stack.size--
+
+		currentObject, _ = vm.stack.items[vm.stack.size-1].(object)
+		currentObject.fields = append(currentObject.fields, vm.stack.items[vm.stack.size])
+		vm.stack.items[vm.stack.size-1] = currentObject
+
 	// List operations
 	case IT_CreateList:
 		vm.stack.Push([]any{})
@@ -422,6 +426,10 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_RemoveSetElement:
 		vm.stack.size--
 		delete(vm.stack.items[vm.stack.size-1].(map[any]struct{}), vm.stack.items[vm.stack.size])
+
+	// Pop
+	case IT_Pop:
+		vm.stack.size--
 
 	// Ignore line offsets
 	case IT_LineOffset:

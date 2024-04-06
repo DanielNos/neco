@@ -176,7 +176,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeFunctionDeclaration()
 
 	case lexer.TT_Identifier: // Identifiers
-		sn.analyzeIdentifier()
+		sn.analyzeIdentifierStatement()
 
 	case lexer.TT_LT_Bool, lexer.TT_LT_Int, lexer.TT_LT_Float, lexer.TT_LT_String: // Literals
 		startChar := sn.peek().Position.StartChar

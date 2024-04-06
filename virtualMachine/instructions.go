@@ -34,6 +34,7 @@ const (
 
 	IT_CreateObject
 	IT_GetField
+	IT_SetField
 
 	IT_JumpBack
 	IT_Jump
@@ -80,7 +81,7 @@ const (
 	IT_PushScopeUnnamed
 	IT_PopScope
 
-	IT_StoreField
+	IT_AddField
 
 	IT_CreateList
 	IT_AppendToList
@@ -92,6 +93,8 @@ const (
 	IT_InsertToSet
 	IT_SetContains
 	IT_RemoveSetElement
+
+	IT_Pop
 
 	IT_LineOffset
 )
@@ -127,7 +130,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_StoreAndPop:     "store_pop",
 
 	IT_CreateObject: "new_object",
-	IT_GetField:     "get_field",
+	IT_GetField:     "field_get",
+	IT_SetField:     "field_set",
 
 	IT_JumpBack:   "jump_back",
 	IT_Jump:       "jump",
@@ -174,7 +178,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_PushScopeUnnamed: "push_scope_unnamed",
 	IT_PopScope:         "pop_scope",
 
-	IT_StoreField: "store_field",
+	IT_AddField: "field_add",
 
 	IT_CreateList:   "list_new",
 	IT_AppendToList: "list_append",
@@ -186,6 +190,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_InsertToSet:      "set_insert",
 	IT_SetContains:      "set_contains",
 	IT_RemoveSetElement: "set_remove",
+
+	IT_Pop: "pop",
 
 	IT_LineOffset: "line_offset",
 }

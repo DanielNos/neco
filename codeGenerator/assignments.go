@@ -22,5 +22,21 @@ func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, 
 		} else {
 			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Store, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
 		}
+
+	// Assign to an object property
+	case parser.NT_ObjectField:
+		objectFieldNode := assignedTo.Value.(*parser.ObjectFieldNode)
+		objectId := cg.findVariableIdentifier(objectFieldNode.Identifier)
+
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Load, []byte{objectId}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetField, []byte{byte(objectFieldNode.PropertyIndex)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{objectId}})
+
+		if isLast {
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Pop, NO_ARGS})
+		}
+
+	default:
+		panic("Not implemented exception: CodeGenerator -> generateAssignmentInstruction for node" + assignedTo.NodeType.String())
 	}
 }

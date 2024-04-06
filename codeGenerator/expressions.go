@@ -142,7 +142,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		// Generate properties
 		for _, property := range ObjectNode.Properties {
 			cg.generateExpression(property)
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreField, NO_ARGS})
+			*cg.target = append(*cg.target, VM.Instruction{VM.IT_AddField, NO_ARGS})
 		}
 
 	// Struct fields
