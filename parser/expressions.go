@@ -316,49 +316,7 @@ func (p *Parser) parseIdentifier() *Node {
 		return p.parseFunctionCall(symbol, p.consume())
 		// Variable
 	} else if symbol.symbolType == ST_Variable {
-		// Uninitialized variable
-		if !symbol.value.(*VariableSymbol).isInitialized {
-			p.newError(p.peek().Position, "Variable "+p.peek().String()+" is not initialized.")
-		}
-
-		identifierToken := p.consume()
-
-		// List element
-		if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-			// Consume index
-			for p.peek().TokenType == lexer.TT_DL_BracketOpen {
-				p.consume() // [
-				variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-				listValue := &Node{identifierToken.Position, NT_ListValue, &TypedBinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(*data.DataType)}}
-				p.consume() // ]
-
-				return listValue
-			}
-			// Struct property
-		} else if p.peek().TokenType == lexer.TT_OP_Dot {
-			p.consume()
-			// Can access properties of structs only
-			if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Object {
-				p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
-			} else {
-				// Find struct definition
-				structName := symbol.value.(*VariableSymbol).VariableType.SubType.(string)
-				structSymbol := p.getGlobalSymbol(structName)
-
-				// Check if field exists
-				property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
-
-				if !propertyExists {
-					p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
-				} else {
-					return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
-				}
-			}
-
-			// Normal variable
-		} else {
-			return &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
-		}
+		return p.parseVariable(symbol)
 		// Enum
 	} else if symbol.symbolType == ST_Enum {
 		identifierToken := p.consume()
@@ -371,6 +329,51 @@ func (p *Parser) parseIdentifier() *Node {
 	}
 
 	return nil
+}
+
+func (p *Parser) parseVariable(symbol *Symbol) *Node {
+	// Uninitialized variable
+	if !symbol.value.(*VariableSymbol).isInitialized {
+		p.newError(p.peek().Position, "Variable "+p.peek().String()+" is not initialized.")
+	}
+
+	identifierToken := p.consume()
+
+	// List element
+	if p.peek().TokenType == lexer.TT_DL_BracketOpen {
+		// Consume index
+		for p.peek().TokenType == lexer.TT_DL_BracketOpen {
+			p.consume() // [
+			variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
+			listValue := &Node{identifierToken.Position, NT_ListValue, &TypedBinaryNode{variable, p.parseExpressionRoot(), symbol.value.(*VariableSymbol).VariableType.SubType.(*data.DataType)}}
+			p.consume() // ]
+
+			return listValue
+		}
+		// Struct property
+	} else if p.peek().TokenType == lexer.TT_OP_Dot {
+		p.consume()
+		// Can access properties of structs only
+		if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Object {
+			p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
+		} else {
+			// Find struct definition
+			structName := symbol.value.(*VariableSymbol).VariableType.SubType.(string)
+			structSymbol := p.getGlobalSymbol(structName)
+
+			// Check if field exists
+			property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
+
+			if !propertyExists {
+				p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
+			} else {
+				return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
+			}
+		}
+	}
+
+	// Normal variable
+	return &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
 }
 
 func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node {

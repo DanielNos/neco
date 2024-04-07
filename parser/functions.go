@@ -150,7 +150,7 @@ func (p *Parser) matchArguments(bucket *Symbol, arguments []*Node, identifierTok
 	}
 
 	// Failed to match to all functions in a bucket
-	p.newError(identifierToken.Position, "Failed to match function "+identifierToken.Value+" to any header.")
+	p.newError(identifierToken.Position, "Failed to match function "+identifierToken.Value+" to any function header. Check if all arguments have the correct type and if there is the correct amount of them.")
 	return nil
 }
 
