@@ -1,0 +1,43 @@
+fun entry()
+{
+	for (int y = 0; y < 10; y += 1) {
+		for (int x = 0; x < 10; x += 1) {
+			print(str(y) + str(x) + " ")
+		}
+		printLine("")
+	}
+
+	printLine("")
+
+	int i = 3
+
+	loop {
+		if (i == 0) {
+			break
+		}
+
+		print(str(i) + "... ")
+		i -= 1
+	}
+
+	printLine("Start!")
+	printLine("")
+
+	i = 2
+	while (i < 2^12) {
+		print(str(i) + " ")
+		i *= 2
+	}
+
+	printLine(str(i))
+
+	printLine("")
+	print("Cats: ")
+	str cats = "😺😸😻😽😼"
+
+	forEach (str cat in cats) {
+		print(cat + " ")
+	}
+
+	printLine("")
+}
