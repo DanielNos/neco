@@ -1,0 +1,27 @@
+struct Person {
+	str name
+	int height
+}
+
+fun entry() {
+	var person = Person{"Daniel", 173}
+	printLine(str(person))
+	printLine(person.name)
+
+	person.name = "Petr"
+	person.height += 8
+	printLine(str(person))
+
+	Pet dog = Pet{"Fluffy", person}
+
+	printLine(str(dog))
+	printLine(dog.owner.name)
+
+	dog.owner.name = "Dan"
+	printLine(str(dog))
+}
+
+struct Pet {
+	str name
+	Person owner
+}
