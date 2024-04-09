@@ -32,7 +32,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	switch node.NodeType {
 
-	case NT_VariableDeclare:
+	case NT_VariableDeclaration:
 		declare := node.Value.(*VariableDeclareNode)
 
 		fmt.Printf("Declare %s:", declare.DataType)
@@ -85,7 +85,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Variable:
 		println(node.Value.(*VariableNode).Identifier)
 
-	case NT_FunctionDeclare:
+	case NT_FunctionDeclaration:
 		functionDeclareNode := node.Value.(*FunctionDeclareNode)
 
 		fmt.Printf("fun %s(", functionDeclareNode.Identifier)
@@ -220,7 +220,7 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Object:
 		ObjectNode := node.Value.(*ObjectNode)
 
-		fmt.Printf("%s\n", ObjectNode.Identifier)
+		fmt.Printf("obj %s\n", ObjectNode.Identifier)
 
 		for i, n := range ObjectNode.Properties {
 			visualize(n, indent, i == len(ObjectNode.Properties)-1)
@@ -229,6 +229,11 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Delete:
 		println("Delete")
 		visualize(node.Value.(*Node), indent, true)
+
+	case NT_ObjectField:
+		objectFieldNode := node.Value.(*ObjectFieldNode)
+		println("Field " + fmt.Sprintf("%d", objectFieldNode.FieldIndex))
+		visualize(objectFieldNode.Object, indent, true)
 
 	default:
 		println(NodeTypeToString[node.NodeType])

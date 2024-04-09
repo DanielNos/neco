@@ -147,11 +147,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 	// Struct fields
 	case parser.NT_ObjectField:
-		ObjectFieldNode := node.Value.(*parser.ObjectFieldNode)
+		objectFieldNode := node.Value.(*parser.ObjectFieldNode)
 
-		cg.generateVariable(ObjectFieldNode.Identifier)
+		cg.generateExpression(objectFieldNode.Object)
 
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_GetField, []byte{byte(ObjectFieldNode.PropertyIndex)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_GetField, []byte{byte(objectFieldNode.FieldIndex)}})
 
 	// Set literals
 	case parser.NT_Set:

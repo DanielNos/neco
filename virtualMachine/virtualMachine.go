@@ -219,7 +219,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack.Push(object{&identifier, []any{}})
 
 	case IT_GetField:
-		vm.stack.Push(vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]])
+		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]]
 
 	case IT_SetField:
 		vm.stack.items[vm.stack.size-1].(object).fields[instruction.InstructionValue[0]] = vm.stack.items[vm.stack.size-2]

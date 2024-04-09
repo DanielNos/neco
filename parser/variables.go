@@ -15,7 +15,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	variableNodes, variableIdentifiers := p.parseVariableIdentifiers(variableType)
 
 	// Create node
-	declareNode := &Node{startPosition.SetEndPos(variableNodes[len(variableNodes)-1].Position), NT_VariableDeclare, &VariableDeclareNode{variableType, constant, variableIdentifiers}}
+	declareNode := &Node{startPosition.SetEndPos(variableNodes[len(variableNodes)-1].Position), NT_VariableDeclaration, &VariableDeclareNode{variableType, constant, variableIdentifiers}}
 
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -67,7 +67,13 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 		if target.NodeType == NT_Variable {
 			symbol = p.findSymbol(target.Value.(*VariableNode).Identifier)
 		} else if target.NodeType == NT_ObjectField {
-			symbol = p.findSymbol(target.Value.(*ObjectFieldNode).Identifier)
+			// Find object variable
+			objectNode := target.Value.(*ObjectFieldNode).Object
+			for objectNode.NodeType == NT_ObjectField {
+				objectNode = objectNode.Value.(*ObjectFieldNode).Object
+			}
+
+			symbol = p.findSymbol(objectNode.Value.(*VariableNode).Identifier)
 		} else {
 			panic("Can't check if node is constant.")
 		}

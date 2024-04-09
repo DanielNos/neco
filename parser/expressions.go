@@ -118,6 +118,8 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	// Operators
 	for p.peek().TokenType.IsBinaryOperator() && operatorPrecedence(p.peek().TokenType) >= currentPrecedence {
 		operator := p.consume()
+
+		// Parse right side of expression
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 		nodeType := TokenTypeToNodeType[operator.TokenType]
 
@@ -332,8 +334,10 @@ func (p *Parser) parseIdentifier() *Node {
 }
 
 func (p *Parser) parseVariable(symbol *Symbol) *Node {
+	variableSymbol := symbol.value.(*VariableSymbol)
+
 	// Uninitialized variable
-	if !symbol.value.(*VariableSymbol).isInitialized {
+	if !variableSymbol.isInitialized {
 		p.newError(p.peek().Position, "Variable "+p.peek().String()+" is not initialized.")
 	}
 
@@ -341,7 +345,7 @@ func (p *Parser) parseVariable(symbol *Symbol) *Node {
 
 	// List element
 	if p.peek().TokenType == lexer.TT_DL_BracketOpen {
-		// Consume index
+		// Consume index expression
 		for p.peek().TokenType == lexer.TT_DL_BracketOpen {
 			p.consume() // [
 			variable := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
@@ -350,30 +354,44 @@ func (p *Parser) parseVariable(symbol *Symbol) *Node {
 
 			return listValue
 		}
-		// Struct property
+		// Object field
 	} else if p.peek().TokenType == lexer.TT_OP_Dot {
-		p.consume()
-		// Can access properties of structs only
-		if symbol.value.(*VariableSymbol).VariableType.Type != data.DT_Object {
-			p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
-		} else {
-			// Find struct definition
-			structName := symbol.value.(*VariableSymbol).VariableType.SubType.(string)
-			structSymbol := p.getGlobalSymbol(structName)
-
-			// Check if field exists
-			property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
-
-			if !propertyExists {
-				p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
-			} else {
-				return &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{identifierToken.Value, property.number, property.dataType}}
-			}
-		}
+		variableNode := &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, variableSymbol.VariableType}}
+		return p.parseObjectField(variableNode, variableSymbol.VariableType, identifierToken)
 	}
 
 	// Normal variable
 	return &Node{identifierToken.Position, NT_Variable, &VariableNode{identifierToken.Value, symbol.value.(*VariableSymbol).VariableType}}
+}
+
+func (p *Parser) parseObjectField(left *Node, leftType *data.DataType, identifierToken *lexer.Token) *Node {
+	p.consume()
+	// Can access properties of structs only
+	if leftType.Type != data.DT_Object {
+		p.newError(p.peek().Position, "Can't access a property of "+identifierToken.String()+", because it's not a struct.")
+	} else {
+		// Find struct definition
+		structName := leftType.SubType.(string)
+		structSymbol := p.getGlobalSymbol(structName)
+
+		// Check if field exists
+		property, propertyExists := structSymbol.value.(map[string]PropertySymbol)[p.peek().Value]
+
+		if !propertyExists {
+			p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
+		} else {
+			node := &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{left, property.number, property.dataType}}
+
+			// Another field access
+			if p.peek().TokenType == lexer.TT_OP_Dot {
+				return p.parseObjectField(node, property.dataType, p.peekPrevious())
+			}
+
+			return node
+		}
+	}
+
+	return left
 }
 
 func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node {
@@ -449,8 +467,6 @@ func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, stru
 		// More fields
 		if p.peek().TokenType == lexer.TT_DL_Comma {
 			p.consume()
-
-			// Collect EOCs
 			p.consumeEOCs()
 		} else {
 			for p.peek().TokenType != lexer.TT_DL_BraceClose {
@@ -798,7 +814,7 @@ func GetExpressionType(expression *Node) *data.DataType {
 		return expression.Value.(*ListNode).DataType
 	}
 
-	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + ".")
+	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + fmt.Sprintf(" (%d)", expression.NodeType) + ".")
 }
 
 func GetExpressionPosition(expression *Node) *data.CodePos {

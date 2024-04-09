@@ -26,11 +26,13 @@ func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, 
 	// Assign to an object property
 	case parser.NT_ObjectField:
 		objectFieldNode := assignedTo.Value.(*parser.ObjectFieldNode)
-		objectId := cg.findVariableIdentifier(objectFieldNode.Identifier)
 
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Load, []byte{objectId}})
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetField, []byte{byte(objectFieldNode.PropertyIndex)}})
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{objectId}})
+		loadInstructionIndex := len(*cg.target)
+		cg.generateExpression(objectFieldNode.Object)
+		variableID := (*cg.target)[loadInstructionIndex].InstructionValue[0]
+
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetField, []byte{byte(objectFieldNode.FieldIndex)}})
+		*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{variableID}})
 
 		if isLast {
 			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Pop, NO_ARGS})

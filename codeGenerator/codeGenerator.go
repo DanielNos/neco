@@ -124,7 +124,7 @@ func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 		}
 
 		// Generate only declarations and assignments
-		if node.NodeType == parser.NT_VariableDeclare {
+		if node.NodeType == parser.NT_VariableDeclaration {
 			cg.generateVariableDeclaration(node)
 		} else if node.NodeType == parser.NT_Assign {
 			cg.generateAssignment(node.Value.(*parser.AssignNode))
@@ -143,7 +143,7 @@ func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
 	cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
 
 	for _, node := range statements {
-		if node.NodeType == parser.NT_FunctionDeclare {
+		if node.NodeType == parser.NT_FunctionDeclaration {
 			// Generate line offset if line changed
 			if cg.line < node.Position.StartLine {
 				*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
@@ -216,7 +216,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateFunctionCall(node)
 
 	// Variable declaration
-	case parser.NT_VariableDeclare:
+	case parser.NT_VariableDeclaration:
 		cg.generateVariableDeclaration(node)
 
 	// Assignment

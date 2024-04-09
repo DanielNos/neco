@@ -121,7 +121,7 @@ func (p *Parser) parseForEach() *Node {
 	// Generate iterator index variable declaration
 	indexIdentifier := fmt.Sprintf("@LOOP_ITERATOR_%d", p.tokenIndex)
 	indexIdentifierVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, &data.DataType{data.DT_Int, nil}}}
-	p.appendScope(&Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{&data.DataType{data.DT_Int, nil}, false, []string{indexIdentifier}}})
+	p.appendScope(&Node{iteratorPosition, NT_VariableDeclaration, &VariableDeclareNode{&data.DataType{data.DT_Int, nil}, false, []string{indexIdentifier}}})
 
 	// Generate assignment of zero to iterator index variable
 	zeroLiteral := &Node{iteratorPosition, NT_Literal, &LiteralNode{data.DT_Int, int64(0)}}
@@ -131,7 +131,7 @@ func (p *Parser) parseForEach() *Node {
 	// Generate variable declaration for list size
 	sizeIdentifier := fmt.Sprintf("@LIST_SIZE_%d", p.tokenIndex)
 	sizeIdentifierVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, &data.DataType{data.DT_Int, nil}}}
-	sizeDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{&data.DataType{data.DT_Int, nil}, false, []string{sizeIdentifier}}}
+	sizeDeclaration := &Node{iteratorPosition, NT_VariableDeclaration, &VariableDeclareNode{&data.DataType{data.DT_Int, nil}, false, []string{sizeIdentifier}}}
 	p.appendScope(sizeDeclaration)
 
 	// Set list size variable to list size
@@ -160,7 +160,7 @@ func (p *Parser) parseForEach() *Node {
 	iteratorIdentifier := p.consume().Value
 	iteratorVariable := &Node{p.peekPrevious().Position, NT_Variable, &VariableNode{iteratorIdentifier, iteratorType}}
 	// Declare it and insert to scope
-	iteratorDeclaration := &Node{iteratorPosition, NT_VariableDeclare, &VariableDeclareNode{iteratorType, false, []string{iteratorIdentifier}}}
+	iteratorDeclaration := &Node{iteratorPosition, NT_VariableDeclaration, &VariableDeclareNode{iteratorType, false, []string{iteratorIdentifier}}}
 	p.appendScope(iteratorDeclaration)
 
 	// Insert it into symbol table

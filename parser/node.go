@@ -19,7 +19,7 @@ const (
 	NT_Module NodeType = iota
 	NT_Scope
 	NT_StatementList
-	NT_VariableDeclare
+	NT_VariableDeclaration
 	NT_Assign
 	NT_Not
 	NT_Property
@@ -38,7 +38,7 @@ const (
 	NT_LowerEqual
 	NT_GreaterEqual
 	NT_In
-	NT_FunctionDeclare
+	NT_FunctionDeclaration
 	NT_FunctionCall
 	NT_Return
 	NT_If
@@ -59,46 +59,46 @@ const (
 )
 
 var NodeTypeToString = map[NodeType]string{
-	NT_Module:          "Module",
-	NT_Scope:           "Scope",
-	NT_StatementList:   "StatementList",
-	NT_VariableDeclare: "VariableDeclare",
-	NT_Assign:          "Assign",
-	NT_Not:             "!",
-	NT_Property:        ".",
-	NT_And:             "&",
-	NT_Or:              "|",
-	NT_Add:             "+",
-	NT_Subtract:        "-",
-	NT_Multiply:        "*",
-	NT_Divide:          "/",
-	NT_Power:           "^",
-	NT_Modulo:          "%",
-	NT_Equal:           "==",
-	NT_NotEqual:        "!=",
-	NT_Lower:           "<",
-	NT_Greater:         ">",
-	NT_LowerEqual:      "<=",
-	NT_GreaterEqual:    ">=",
-	NT_In:              "in",
-	NT_FunctionDeclare: "FunctionDeclare",
-	NT_FunctionCall:    "FunctionCall",
-	NT_Return:          "Return",
-	NT_If:              "If",
-	NT_Loop:            "Loop",
-	NT_ForLoop:         "For",
-	NT_ForEachLoop:     "ForEach",
-	NT_Break:           "Break",
-	NT_ListValue:       "ListValue",
-	NT_ListAssign:      "ListAssign",
-	NT_List:            "List",
-	NT_Variable:        "Variable",
-	NT_Literal:         "Literal",
-	NT_Delete:          "Delete",
-	NT_Enum:            "Enum",
-	NT_Object:          "Object",
-	NT_ObjectField:     "ObjectField",
-	NT_Set:             "Set",
+	NT_Module:              "Module",
+	NT_Scope:               "Scope",
+	NT_StatementList:       "StatementList",
+	NT_VariableDeclaration: "VariableDeclare",
+	NT_Assign:              "Assign",
+	NT_Not:                 "!",
+	NT_Property:            ".",
+	NT_And:                 "&",
+	NT_Or:                  "|",
+	NT_Add:                 "+",
+	NT_Subtract:            "-",
+	NT_Multiply:            "*",
+	NT_Divide:              "/",
+	NT_Power:               "^",
+	NT_Modulo:              "%",
+	NT_Equal:               "==",
+	NT_NotEqual:            "!=",
+	NT_Lower:               "<",
+	NT_Greater:             ">",
+	NT_LowerEqual:          "<=",
+	NT_GreaterEqual:        ">=",
+	NT_In:                  "in",
+	NT_FunctionDeclaration: "FunctionDeclare",
+	NT_FunctionCall:        "FunctionCall",
+	NT_Return:              "Return",
+	NT_If:                  "If",
+	NT_Loop:                "Loop",
+	NT_ForLoop:             "For",
+	NT_ForEachLoop:         "ForEach",
+	NT_Break:               "Break",
+	NT_ListValue:           "ListValue",
+	NT_ListAssign:          "ListAssign",
+	NT_List:                "List",
+	NT_Variable:            "Variable",
+	NT_Literal:             "Literal",
+	NT_Delete:              "Delete",
+	NT_Enum:                "Enum",
+	NT_Object:              "Object",
+	NT_ObjectField:         "ObjectField",
+	NT_Set:                 "Set",
 }
 
 func (nt NodeType) String() string {
@@ -214,9 +214,9 @@ type ObjectNode struct {
 }
 
 type ObjectFieldNode struct {
-	Identifier    string
-	PropertyIndex int
-	DataType      *data.DataType
+	Object     *Node
+	FieldIndex int
+	DataType   *data.DataType
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
