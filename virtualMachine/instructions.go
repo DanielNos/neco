@@ -34,6 +34,7 @@ const (
 
 	IT_CreateObject
 	IT_GetField
+	IT_GetFieldAndPop
 	IT_SetField
 
 	IT_JumpBack
@@ -129,9 +130,10 @@ var InstructionTypeToString = map[byte]string{
 	IT_Store:           "store",
 	IT_StoreAndPop:     "store_pop",
 
-	IT_CreateObject: "new_object",
-	IT_GetField:     "field_get",
-	IT_SetField:     "field_set",
+	IT_CreateObject:   "new_object",
+	IT_GetField:       "field_get",
+	IT_GetFieldAndPop: "field_get_pop",
+	IT_SetField:       "field_set",
 
 	IT_JumpBack:   "jump_back",
 	IT_Jump:       "jump",

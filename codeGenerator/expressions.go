@@ -81,7 +81,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(binaryNode.Right)
 
 		// Generate operator
-		leftType := getExpressionType(binaryNode.Left)
+		leftType := parser.GetExpressionType(binaryNode.Left)
 
 		// Compare ints
 		if leftType.Type == data.DT_Int {
@@ -132,7 +132,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Enum:
 		cg.addInstruction(VM.IT_LoadConst, uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value]))
 
-	// Struct objects
+	// Ojects
 	case parser.NT_Object:
 		ObjectNode := node.Value.(*parser.ObjectNode)
 
@@ -145,13 +145,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 			cg.addInstruction(VM.IT_AddField)
 		}
 
-	// Struct fields
+	// Object fields
 	case parser.NT_ObjectField:
 		objectFieldNode := node.Value.(*parser.ObjectFieldNode)
 
 		cg.generateExpression(objectFieldNode.Object)
 
-		cg.addInstruction(VM.IT_GetField, byte(objectFieldNode.FieldIndex))
+		cg.addInstruction(VM.IT_GetFieldAndPop, byte(objectFieldNode.FieldIndex))
 
 	// Set literals
 	case parser.NT_Set:
@@ -220,35 +220,4 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	case data.DT_None:
 		cg.addInstruction(VM.IT_PushNone)
 	}
-}
-
-func getExpressionType(expression *parser.Node) *data.DataType {
-	if expression.NodeType.IsOperator() {
-		// Unary operator
-		if expression.Value.(*parser.TypedBinaryNode).Left == nil {
-			unaryType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
-			return unaryType
-		}
-
-		// Binary operator
-		leftType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left)
-		rightType := getExpressionType(expression.Value.(*parser.TypedBinaryNode).Right)
-
-		return &data.DataType{max(leftType.Type, rightType.Type), nil}
-	}
-
-	switch expression.NodeType {
-	case parser.NT_Literal:
-		return &data.DataType{expression.Value.(*parser.LiteralNode).PrimitiveType, nil}
-	case parser.NT_Variable:
-		return expression.Value.(*parser.VariableNode).DataType
-	case parser.NT_FunctionCall:
-		return expression.Value.(*parser.FunctionCallNode).ReturnType
-	case parser.NT_List:
-		return expression.Value.(*parser.ListNode).DataType
-	case parser.NT_ListValue:
-		return getExpressionType(expression.Value.(*parser.TypedBinaryNode).Left).SubType.(*data.DataType)
-	}
-
-	panic("Can't determine expression data type from " + parser.NodeTypeToString[expression.NodeType] + ".")
 }

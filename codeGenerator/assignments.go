@@ -6,39 +6,65 @@ import (
 )
 
 func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
-	cg.generateExpression(assignNode.AssignedExpression)
+	// Check if all assigned to statements are variables
+	if cg.optimize {
+		noFieldAssigns := true
+		for _, assignedTo := range assignNode.AssignedTo {
+			if assignedTo.NodeType == parser.NT_ObjectField {
+				noFieldAssigns = false
+				break
+			}
+		}
 
-	for i, assignedTo := range assignNode.AssignedTo {
-		cg.generateAssignmentInstruction(assignedTo, i == len(assignNode.AssignedTo)-1 && cg.optimize)
+		// If expression isn't assigned to any fields, reuse it
+		if noFieldAssigns {
+			cg.generateExpression(assignNode.AssignedExpression)
+
+			for i, assignedTo := range assignNode.AssignedTo {
+				if i == len(assignNode.AssignedTo)-1 {
+					cg.addInstruction(VM.IT_StoreAndPop, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+				} else {
+					cg.addInstruction(VM.IT_Store, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+				}
+			}
+			return
+		}
 	}
-}
 
-func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, isLast bool) {
-	switch assignedTo.NodeType {
-	// Assign to a variable
-	case parser.NT_Variable:
-		if isLast {
+	// Non-optimized assignments (expression regenerated for each assignment)
+	for _, assignedTo := range assignNode.AssignedTo {
+
+		// Assignment to a variable
+		if assignedTo.NodeType == parser.NT_Variable {
+			cg.generateExpression(assignNode.AssignedExpression)
 			cg.addInstruction(VM.IT_StoreAndPop, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+
+			// Assignment to an object field
+		} else if assignedTo.NodeType == parser.NT_ObjectField {
+			// Generate variable load and field getters
+			startOfFields := len(*cg.target)
+			cg.generateExpression(assignedTo)
+			endOfFields := len(*cg.target)
+
+			// Change field getter types from GetFieldAndPop to GetField
+			for i := endOfFields - 1; i > startOfFields; i-- {
+				(*cg.target)[i].InstructionType = VM.IT_GetField
+			}
+
+			cg.generateExpression(assignNode.AssignedExpression)
+
+			// Copy field getters in reverse order and change them to field setters
+			for i := endOfFields - 1; i > startOfFields; i-- {
+				cg.addInstruction(VM.IT_SetField, (*cg.target)[i].InstructionValue[0])
+			}
+
+			(*cg.target)[endOfFields-1].InstructionType = IGNORE_INSTRUCTION
+
+			cg.addInstruction(VM.IT_StoreAndPop, (*cg.target)[startOfFields].InstructionValue[0])
+
 		} else {
-			cg.addInstruction(VM.IT_Store, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+			panic("Not implemented exception: CodeGenerator -> generateAssignmentInstruction for node" + assignedTo.NodeType.String())
 		}
-
-	// Assign to an object property
-	case parser.NT_ObjectField:
-		objectFieldNode := assignedTo.Value.(*parser.ObjectFieldNode)
-
-		loadInstructionIndex := len(*cg.target)
-		cg.generateExpression(objectFieldNode.Object)
-		variableID := (*cg.target)[loadInstructionIndex].InstructionValue[0]
-
-		cg.addInstruction(VM.IT_SetField, byte(objectFieldNode.FieldIndex))
-		cg.addInstruction(VM.IT_StoreAndPop, variableID)
-
-		if isLast {
-			cg.addInstruction(VM.IT_Pop)
-		}
-
-	default:
-		panic("Not implemented exception: CodeGenerator -> generateAssignmentInstruction for node" + assignedTo.NodeType.String())
 	}
+
 }

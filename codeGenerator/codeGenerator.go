@@ -110,7 +110,7 @@ func (cg *CodeGenerator) Generate() {
 }
 
 func (cg *CodeGenerator) addInstruction(instructionType byte, instructionArguments ...byte) {
-	(*cg.target) = append((*cg.target), VM.Instruction{instructionType, instructionArguments})
+	(*cg.target) = append(*cg.target, VM.Instruction{instructionType, instructionArguments})
 }
 
 func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
