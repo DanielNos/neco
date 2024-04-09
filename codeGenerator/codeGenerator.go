@@ -11,8 +11,6 @@ import (
 	VM "neco/virtualMachine"
 )
 
-var NO_ARGS = []byte{}
-
 const MAX_UINT8 = 255
 const IGNORE_INSTRUCTION byte = 255
 
@@ -111,6 +109,10 @@ func (cg *CodeGenerator) Generate() {
 	}
 }
 
+func (cg *CodeGenerator) addInstruction(instructionType byte, instructionArguments ...byte) {
+	(*cg.target) = append((*cg.target), VM.Instruction{instructionType, instructionArguments})
+}
+
 func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 	// Reset line
 	cg.line = cg.FirstLine
@@ -119,7 +121,7 @@ func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 	for _, node := range statements {
 		// Generate line offset if line changed
 		if cg.line < node.Position.StartLine {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+			cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
 			cg.line = node.Position.StartLine
 		}
 
@@ -131,32 +133,6 @@ func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 		} else {
 			// Stop if something else is found (globals are only at the start of the tree)
 			break
-		}
-	}
-}
-
-func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
-	// Reset line
-	cg.line = cg.FirstLine
-	cg.target = &cg.FunctionsInstructions
-
-	cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
-
-	for _, node := range statements {
-		if node.NodeType == parser.NT_FunctionDeclaration {
-			// Generate line offset if line changed
-			if cg.line < node.Position.StartLine {
-				*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
-				cg.line = node.Position.StartLine
-			}
-
-			// Set first function call function id
-			if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
-				cg.FunctionsInstructions[0].InstructionType = VM.IT_Call
-				cg.FunctionsInstructions[0].InstructionValue = append(cg.FunctionsInstructions[0].InstructionValue, byte(len(cg.functions)))
-			}
-
-			cg.generateFunction(node)
 		}
 	}
 }
@@ -203,10 +179,36 @@ func (cg *CodeGenerator) generateConstantIDs() {
 	}
 }
 
+func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
+	// Reset line
+	cg.line = cg.FirstLine
+	cg.target = &cg.FunctionsInstructions
+
+	cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
+
+	for _, node := range statements {
+		if node.NodeType == parser.NT_FunctionDeclaration {
+			// Generate line offset if line changed
+			if cg.line < node.Position.StartLine {
+				cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
+				cg.line = node.Position.StartLine
+			}
+
+			// Set first function call function id
+			if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
+				cg.FunctionsInstructions[0].InstructionType = VM.IT_Call
+				cg.FunctionsInstructions[0].InstructionValue = append(cg.FunctionsInstructions[0].InstructionValue, byte(len(cg.functions)))
+			}
+
+			cg.generateFunction(node)
+		}
+	}
+}
+
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// If node line has changed, insert line offset instruction
 	if node.Position.StartLine > cg.line {
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.StartLine - cg.line)}})
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
 		cg.line = node.Position.StartLine
 	}
 
@@ -233,7 +235,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		if node.Value != nil {
 			cg.generateExpression(node.Value.(*parser.Node))
 		}
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Return, NO_ARGS})
+		cg.addInstruction(VM.IT_Return)
 
 	// Scope
 	case parser.NT_Scope:
@@ -250,11 +252,11 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Break:
 		// Generate scope drops
 		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int)+1; i++ {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+			cg.addInstruction(VM.IT_PopScope)
 		}
 
 		// Generate jump
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
+		cg.addInstruction(VM.IT_Jump, 0)
 
 		// Store it so it's destination can be set at the end of the loop
 		cg.scopeBreaks.Top.Value = append(cg.scopeBreaks.Top.Value.([]Break), Break{&(*cg.target)[len(*cg.target)-1], len(*cg.target)})
@@ -267,7 +269,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression)
 
 		// Generate list assign instruction
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetListAtPrevToCurr, []byte{cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier)}})
+		cg.addInstruction(VM.IT_SetListAtPrevToCurr, cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier))
 
 	// Delete
 	case parser.NT_Delete:

@@ -24,12 +24,12 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 
 	// Generate line offset if line changed
 	if cg.line < node.Position.EndLine {
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine - cg.line))
 		cg.line = node.Position.EndLine
 	}
 
 	// Generate jump instruction back to start
-	*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(*cg.target) - startPosition)}})
+	cg.addInstruction(VM.IT_JumpBack, byte(len(*cg.target) - startPosition))
 
 	// Set destinations of break jumps
 	instructionCount := len(*cg.target)
@@ -63,7 +63,7 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 
 	// Generate line offset if line changed
 	if cg.line < node.Position.EndLine {
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LineOffset, []byte{byte(node.Position.EndLine - cg.line)}})
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.line))
 		cg.line = node.Position.EndLine
 	}
 
@@ -77,7 +77,7 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 	*cg.target = append(*cg.target, jumpInstruction)
 
 	// Generate jump instruction back to start
-	*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpBack, []byte{byte(len(*cg.target) - startPosition)}})
+	cg.addInstruction(VM.IT_JumpBack, byte(len(*cg.target)-startPosition))
 
 	// Leave loop scope
 	cg.leaveScope()

@@ -26,7 +26,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		if binaryNode.DataType.Type == data.DT_Set {
 			for _, element := range binaryNode.Right.Value.(*parser.ListNode).Nodes {
 				cg.generateExpression(element)
-				*cg.target = append(*cg.target, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
+				cg.addInstruction(VM.IT_InsertToSet)
 			}
 			break
 		}
@@ -36,16 +36,16 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		// Generate operator
 		// Concatenate strings
 		if binaryNode.DataType.Type == data.DT_String {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_StringConcat, NO_ARGS})
+			cg.addInstruction(VM.IT_StringConcat)
 			// Concatenate lists
 		} else if binaryNode.DataType.Type == data.DT_List {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_ListConcat, NO_ARGS})
+			cg.addInstruction(VM.IT_ListConcat)
 			// Operation on ints
 		} else if binaryNode.DataType.Type == data.DT_Int {
-			*cg.target = append(*cg.target, VM.Instruction{intOperatorToInstruction[node.NodeType], NO_ARGS})
+			cg.addInstruction(intOperatorToInstruction[node.NodeType])
 			// Operation on floats
 		} else {
-			*cg.target = append(*cg.target, VM.Instruction{floatOperatorToInstruction[node.NodeType], NO_ARGS})
+			cg.addInstruction(floatOperatorToInstruction[node.NodeType])
 		}
 
 	// Logical operators
@@ -53,13 +53,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		// Generate arguments
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_And, NO_ARGS})
+		cg.addInstruction(VM.IT_And)
 
 	case parser.NT_Or:
 		// Generate arguments
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Or, NO_ARGS})
+		cg.addInstruction(VM.IT_Or)
 
 	// Comparison operators
 	case parser.NT_Equal, parser.NT_NotEqual:
@@ -68,10 +68,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 
 		// Generate operator
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Equal, NO_ARGS})
+		cg.addInstruction(VM.IT_Equal)
 
 		if node.NodeType == parser.NT_NotEqual {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Not, NO_ARGS})
+			cg.addInstruction(VM.IT_Not)
 		}
 
 	case parser.NT_Lower, parser.NT_Greater, parser.NT_LowerEqual, parser.NT_GreaterEqual:
@@ -85,10 +85,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		// Compare ints
 		if leftType.Type == data.DT_Int {
-			*cg.target = append(*cg.target, VM.Instruction{comparisonOperatorToIntInstruction[node.NodeType], NO_ARGS})
+			cg.addInstruction(comparisonOperatorToIntInstruction[node.NodeType])
 			// Compare floats
 		} else if leftType.Type == data.DT_Float {
-			*cg.target = append(*cg.target, VM.Instruction{comparisonOperatorToFloatInstruction[node.NodeType], NO_ARGS})
+			cg.addInstruction(comparisonOperatorToFloatInstruction[node.NodeType])
 		} else {
 			panic("Can't generate comparision instruction on operator nodes.")
 		}
@@ -100,12 +100,12 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	// Lists
 	case parser.NT_List:
 		// Create list
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_CreateList, NO_ARGS})
+		cg.addInstruction(VM.IT_CreateList)
 
 		// Append elements
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
 			cg.generateExpression(node)
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_AppendToList, NO_ARGS})
+			cg.addInstruction(VM.IT_AppendToList)
 		}
 
 	// List values
@@ -118,31 +118,31 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		// Generate indexing instruction
 		if parser.GetExpressionType(node.Value.(*parser.TypedBinaryNode).Left).Type == data.DT_String {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_IndexString, NO_ARGS})
+			cg.addInstruction(VM.IT_IndexString)
 		} else {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_IndexList, NO_ARGS})
+			cg.addInstruction(VM.IT_IndexList)
 		}
 
 	// Logical not
 	case parser.NT_Not:
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Not, NO_ARGS})
+		cg.addInstruction(VM.IT_Not)
 
 	// Enums
 	case parser.NT_Enum:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value])}})
+		cg.addInstruction(VM.IT_LoadConst, uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value]))
 
 	// Struct objects
 	case parser.NT_Object:
 		ObjectNode := node.Value.(*parser.ObjectNode)
 
 		// Create object
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_CreateObject, []byte{byte(cg.stringConstants[ObjectNode.Identifier])}})
+		cg.addInstruction(VM.IT_CreateObject, byte(cg.stringConstants[ObjectNode.Identifier]))
 
 		// Generate properties
 		for _, property := range ObjectNode.Properties {
 			cg.generateExpression(property)
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_AddField, NO_ARGS})
+			cg.addInstruction(VM.IT_AddField)
 		}
 
 	// Struct fields
@@ -151,11 +151,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		cg.generateExpression(objectFieldNode.Object)
 
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_GetField, []byte{byte(objectFieldNode.FieldIndex)}})
+		cg.addInstruction(VM.IT_GetField, byte(objectFieldNode.FieldIndex))
 
 	// Set literals
 	case parser.NT_Set:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_CreateSet, NO_ARGS})
+		cg.addInstruction(VM.IT_CreateSet)
 
 		elements := node.Value.(*parser.ListNode).Nodes
 		usedElements := map[any]struct{}{}
@@ -172,7 +172,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 			// Genearate expression and insertion
 			cg.generateExpression(element)
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_InsertToSet, NO_ARGS})
+			cg.addInstruction(VM.IT_InsertToSet)
 		}
 
 	// Set contains
@@ -180,7 +180,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		binaryNode := node.Value.(*parser.TypedBinaryNode)
 		cg.generateExpression(binaryNode.Right)
 		cg.generateExpression(binaryNode.Left)
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetContains, NO_ARGS})
+		cg.addInstruction(VM.IT_SetContains)
 
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())
@@ -189,7 +189,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 func (cg *CodeGenerator) generateVariable(variableName string) {
 	identifier := cg.findVariableIdentifier(variableName)
-	*cg.target = append(*cg.target, VM.Instruction{VM.IT_Load, []byte{identifier}})
+	cg.addInstruction(VM.IT_Load, identifier)
 }
 
 func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
@@ -199,26 +199,26 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 	// Bool
 	case data.DT_Bool:
 		if literalNode.Value.(bool) {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushTrue, NO_ARGS})
+			cg.addInstruction(VM.IT_PushTrue)
 		} else {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushFalse, NO_ARGS})
+			cg.addInstruction(VM.IT_PushFalse)
 		}
 
 	// Int
 	case data.DT_Int:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.intConstants[literalNode.Value.(int64)])}})
+		cg.addInstruction(VM.IT_LoadConst, uint8(cg.intConstants[literalNode.Value.(int64)]))
 
 	// Float
 	case data.DT_Float:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.floatConstants[literalNode.Value.(float64)])}})
+		cg.addInstruction(VM.IT_LoadConst, uint8(cg.floatConstants[literalNode.Value.(float64)]))
 
 	// String
 	case data.DT_String:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_LoadConst, []byte{uint8(cg.stringConstants[literalNode.Value.(string)])}})
+		cg.addInstruction(VM.IT_LoadConst, uint8(cg.stringConstants[literalNode.Value.(string)]))
 
 	// None
 	case data.DT_None:
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushNone, []byte{}})
+		cg.addInstruction(VM.IT_PushNone)
 	}
 }
 

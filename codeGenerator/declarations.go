@@ -26,14 +26,15 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 }
 
 func (cg *CodeGenerator) generateVariableDeclarator(dataType *data.DataType, id *uint8) {
-	// Identifier of variable is passed only for root types, sub-types have no arguments
-	args := NO_ARGS
-	if id != nil {
-		args = []byte{*id}
-	}
 
 	// Generate declaration of root type
-	*cg.target = append(*cg.target, VM.Instruction{dataTypeToDeclareInstruction[dataType.Type], args})
+	if id != nil {
+		cg.addInstruction(dataTypeToDeclareInstruction[dataType.Type], *id)
+	} else {
+		// Identifier of variable (id) is passed only for root types, sub-types have no arguments
+		cg.addInstruction(dataTypeToDeclareInstruction[dataType.Type])
+
+	}
 
 	// Generate sub-type of composite types
 	if dataType.SubType != nil && (dataType.Type == data.DT_List || dataType.Type == data.DT_Set) {
@@ -55,7 +56,7 @@ func (cg *CodeGenerator) generateDeletion(target *parser.Node) {
 			cg.generateExpression(inNode.Left)  // Generate element
 
 			// Remove it
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_RemoveSetElement, NO_ARGS})
+			cg.addInstruction(VM.IT_RemoveSetElement)
 
 			// Generate set load
 			cg.generateExpression(inNode.Right)

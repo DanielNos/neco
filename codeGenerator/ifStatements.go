@@ -15,7 +15,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 		// Generate condition expression
 		cg.generateExpression(statement.Condition)
 		// Generate conditional jump
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_JumpIfTrue, []byte{0}})
+		cg.addInstruction(VM.IT_JumpIfTrue, 0)
 
 		// Store the jump instruction and it's position so destination position can be set later
 		jumpInstructions[i] = &(*cg.target)[len(*cg.target)-1]
@@ -28,7 +28,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 	}
 
 	// Generate jump instruction that will jump over all elifs
-	*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
+	cg.addInstruction(VM.IT_Jump, 0)
 
 	// Store the jump instruction so it's destination can  be set later
 	jumpFromElse := &(*cg.target)[len(*cg.target)-1]
@@ -45,7 +45,7 @@ func (cg *CodeGenerator) generateIfStatement(ifStatement *parser.IfNode) {
 		cg.generateScope(statement.Body.Value.(*parser.ScopeNode), nil)
 
 		// Generate jump instruction to the end of if bodies
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_Jump, []byte{0}})
+		cg.addInstruction(VM.IT_Jump, 0)
 
 		// Store it and it's position in the same slice replacing the previous values
 		jumpInstructions[i] = &(*cg.target)[len(*cg.target)-1]

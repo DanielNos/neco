@@ -7,16 +7,16 @@ import (
 
 func (cg *CodeGenerator) enterScope(name *string) {
 	if name == nil {
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushScopeUnnamed, NO_ARGS})
+		cg.addInstruction(VM.IT_PushScopeUnnamed)
 	} else {
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_PushScope, []byte{byte(cg.stringConstants[*name])}})
+		cg.addInstruction(VM.IT_PushScope, byte(cg.stringConstants[*name]))
 	}
 	cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
 	cg.variableIdentifiers.Push(map[string]uint8{})
 }
 
 func (cg *CodeGenerator) leaveScope() {
-	*cg.target = append(*cg.target, VM.Instruction{VM.IT_PopScope, NO_ARGS})
+	cg.addInstruction(VM.IT_PopScope)
 	cg.variableIdentifierCounters.Pop()
 	cg.variableIdentifiers.Pop()
 }

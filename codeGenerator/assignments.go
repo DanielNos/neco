@@ -18,9 +18,9 @@ func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, 
 	// Assign to a variable
 	case parser.NT_Variable:
 		if isLast {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
+			cg.addInstruction(VM.IT_StoreAndPop, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
 		} else {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Store, []byte{cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier)}})
+			cg.addInstruction(VM.IT_Store, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
 		}
 
 	// Assign to an object property
@@ -31,11 +31,11 @@ func (cg *CodeGenerator) generateAssignmentInstruction(assignedTo *parser.Node, 
 		cg.generateExpression(objectFieldNode.Object)
 		variableID := (*cg.target)[loadInstructionIndex].InstructionValue[0]
 
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_SetField, []byte{byte(objectFieldNode.FieldIndex)}})
-		*cg.target = append(*cg.target, VM.Instruction{VM.IT_StoreAndPop, []byte{variableID}})
+		cg.addInstruction(VM.IT_SetField, byte(objectFieldNode.FieldIndex))
+		cg.addInstruction(VM.IT_StoreAndPop, variableID)
 
 		if isLast {
-			*cg.target = append(*cg.target, VM.Instruction{VM.IT_Pop, NO_ARGS})
+			cg.addInstruction(VM.IT_Pop)
 		}
 
 	default:
