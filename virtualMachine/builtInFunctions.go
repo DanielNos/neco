@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -58,7 +59,7 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 
 	case BIF_PrintLine:
 		necoPrint(vm.stack.Pop(), true)
-		println()
+		fmt.Fprintln(os.Stdout)
 
 	// Data types to string
 	case BIF_AnyToString:
@@ -147,25 +148,25 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 
 	// Trace
 	case BIF_Trace:
-		print("[")
+		fmt.Fprint(os.Stdout, "[")
 		for _, scope := range vm.stack_scopes[:vm.reg_scopeIndex-1] {
 			fmt.Printf("\"%v\", ", scope)
 		}
 		fmt.Printf("\"%v\"", vm.stack_scopes[vm.reg_scopeIndex-1])
-		println("]")
+		fmt.Fprintln(os.Stdout, "]")
 	}
 }
 
 func necoPrint(value any, root bool) {
 	if _, ok := value.([]any); ok {
 		// Print list
-		print("{")
+		fmt.Fprint(os.Stdout,"{")
 		for _, element := range value.([]any)[:len(value.([]any))-1] {
 			necoPrint(element, false)
-			print(", ")
+			fmt.Fprint(os.Stdout,", ")
 		}
 		necoPrint(value.([]any)[len(value.([]any))-1], false)
-		print("}")
+		fmt.Fprintln(os.Stdout, "}")
 
 	} else if _, ok := value.(string); ok && !root {
 		// Print string

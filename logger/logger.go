@@ -176,7 +176,7 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 
 	// Print message
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR]   ")
+	fmt.Fprint(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
@@ -240,7 +240,7 @@ func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 
 	// Print message
 	color.Set(color.FgHiRed)
-	fmt.Fprintf(os.Stderr, "[ERROR]   ")
+	fmt.Fprint(os.Stderr, "[ERROR]   ")
 
 	color.Set(color.FgHiCyan)
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.StartLine, codePos1.StartChar)
