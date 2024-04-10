@@ -162,18 +162,24 @@ func (dt *DataType) IsCompositeType() bool {
 }
 
 func (dt *DataType) String() string {
+	// Literals
 	if dt.Type <= DT_None {
 		return dt.Type.String()
+		// User defined types
 	} else if dt.Type <= DT_Object {
 		if dt.SubType == nil {
 			return "any"
 		}
 		return dt.SubType.(string)
-	} else {
+		// Composite types
+	} else if dt.Type <= DT_Set {
 		if dt.SubType == nil {
 			return dt.Type.String() + "<?>"
 		}
 		return dt.Type.String() + "<" + dt.SubType.(*DataType).String() + ">"
+		// Option type
+	} else {
+		return dt.SubType.(*DataType).String() + "?"
 	}
 }
 

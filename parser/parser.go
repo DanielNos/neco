@@ -26,7 +26,6 @@ var TokenTypeToDataType = map[lexer.TokenType]data.PrimitiveType{
 	lexer.TT_KW_list: data.DT_List,
 	lexer.TT_KW_set:  data.DT_Set,
 
-	lexer.TT_KW_opt:  data.DT_Option,
 	lexer.TT_LT_None: data.DT_None,
 }
 
@@ -109,7 +108,7 @@ func (p *Parser) appendScope(node *Node) {
 
 func (p *Parser) newError(position *data.CodePos, message string) {
 	if p.ErrorCount+p.totalErrorCount == 0 {
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	logger.ErrorCodePos(position, message)
@@ -123,7 +122,7 @@ func (p *Parser) newError(position *data.CodePos, message string) {
 
 func (p *Parser) newErrorNoMessage() {
 	if p.ErrorCount+p.totalErrorCount == 0 {
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	p.ErrorCount++
@@ -391,9 +390,15 @@ func (p *Parser) parseType() *data.DataType {
 
 	// Insert subtype to list data type
 	if variableType.IsCompositeType() {
-		p.consume()
+		p.consume() // <
 		variableType.SubType = p.parseType()
-		p.consume()
+		p.consume() // >
+	}
+
+	// Data type is an option type
+	if p.peek().TokenType == lexer.TT_OP_QuestionMark {
+		p.consume() // ?
+		variableType = &data.DataType{data.DT_Option, variableType}
 	}
 
 	return variableType

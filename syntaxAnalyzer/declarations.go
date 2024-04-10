@@ -209,6 +209,10 @@ func (sn *SyntaxAnalyzer) analyzeType() {
 	} else {
 		sn.consume()
 	}
+
+	if sn.peek().TokenType == lexer.TT_OP_QuestionMark {
+		sn.consume()
+	}
 }
 
 func (sn *SyntaxAnalyzer) analyzeCompositeType() {

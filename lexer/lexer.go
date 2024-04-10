@@ -97,7 +97,7 @@ func (l *Lexer) Lex() []*Token {
 
 func (l *Lexer) newError(line, char uint, useTokenLength bool, message string) {
 	if l.ErrorCount == 0 {
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	l.ErrorCount++
@@ -295,6 +295,9 @@ func (l *Lexer) lexRune() {
 		case '.':
 			l.advance()
 			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Dot, "")
+		case '?':
+			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_QuestionMark, "")
 
 		// Property
 		case ':':

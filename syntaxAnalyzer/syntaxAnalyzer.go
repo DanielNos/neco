@@ -25,7 +25,7 @@ func NewSyntaxAnalyzer(tokens []*lexer.Token, previousErrors uint) SyntaxAnalyze
 
 func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
 	if sn.ErrorCount == 0 || sn.totalErrorCount == 0 {
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	sn.ErrorCount++
@@ -39,7 +39,7 @@ func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
 
 func (sn *SyntaxAnalyzer) newErrorFromTo(line, startChar, endChar uint, message string) {
 	if sn.ErrorCount == 0 || sn.totalErrorCount == 0 {
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	sn.ErrorCount++
