@@ -187,6 +187,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.Node))
 		cg.addInstruction(VM.IT_PanicIfNone)
 
+	// Check if option is none
+	case parser.NT_IsNone:
+		cg.generateExpression(node.Value.(*parser.Node))
+		cg.addInstruction(VM.IT_PushNone)
+		cg.addInstruction(VM.IT_Equal)
+		cg.addInstruction(VM.IT_Not)
+
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())
 	}
