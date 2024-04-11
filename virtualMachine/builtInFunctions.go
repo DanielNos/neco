@@ -160,10 +160,10 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 func necoPrint(value any, root bool) {
 	if _, ok := value.([]any); ok {
 		// Print list
-		fmt.Fprint(os.Stdout,"{")
+		fmt.Fprint(os.Stdout, "{")
 		for _, element := range value.([]any)[:len(value.([]any))-1] {
 			necoPrint(element, false)
-			fmt.Fprint(os.Stdout,", ")
+			fmt.Fprint(os.Stdout, ", ")
 		}
 		necoPrint(value.([]any)[len(value.([]any))-1], false)
 		fmt.Fprintln(os.Stdout, "}")
@@ -192,8 +192,8 @@ func necoPrintString(value any, root bool) string {
 
 		return str + necoPrintString(object.fields[len(object.fields)-1], false) + "}"
 
-	} else if valueList, ok := value.([]any); ok {
 		// Print list
+	} else if valueList, ok := value.([]any); ok {
 		if len(valueList) == 0 {
 			return "[]"
 		}
@@ -206,9 +206,8 @@ func necoPrintString(value any, root bool) string {
 
 		return str + necoPrintString(valueList[len(valueList)-1], false) + "]"
 
-	} else if valueSet, ok := value.(map[any]struct{}); ok {
 		// Print set
-
+	} else if valueSet, ok := value.(map[any]struct{}); ok {
 		str := "{"
 		first := true
 
@@ -223,9 +222,13 @@ func necoPrintString(value any, root bool) string {
 
 		return str + "}"
 
-	} else if valueString, ok := value.(string); ok && !root {
 		// Print string
+	} else if valueString, ok := value.(string); ok && !root {
 		return "\"" + valueString + "\""
+
+		// Print none
+	} else if value == nil {
+		return "none"
 
 	} else {
 		// Use default formatting for everything else
