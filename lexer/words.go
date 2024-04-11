@@ -47,21 +47,61 @@ func (l *Lexer) lexString() {
 
 	// Collect string
 	for l.currRune != '"' {
+		// New line in string
 		if l.currRune == '\r' {
 			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
 			l.advance()
 			l.advance()
 			l.lineIndex++
 			l.charIndex = 1
-		} else if l.currRune == '\n' {
+			continue
+		}
+		if l.currRune == '\n' {
 			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
 			l.advance()
 			l.lineIndex++
 			l.charIndex = 1
-		} else {
-			l.token.WriteRune(l.currRune)
-			l.advance()
+			continue
 		}
+
+		// Esacape sequence
+		if l.currRune == '\\' {
+			if l.nextRune != EOF && l.nextRune != '"' {
+				switch l.nextRune {
+				case 'a':
+					l.token.WriteRune('\a')
+				case 'b':
+					l.token.WriteRune('\b')
+				case '\\':
+					l.token.WriteRune('\\')
+				case 't':
+					l.token.WriteRune('\t')
+				case 'n':
+					l.token.WriteRune('\n')
+				case 'f':
+					l.token.WriteRune('\f')
+				case 'r':
+					l.token.WriteRune('\r')
+				case 'v':
+					l.token.WriteRune('\v')
+				case '"':
+					l.token.WriteRune('"')
+				default:
+					l.newError(l.lineIndex, l.charIndex, false, "Invalid escape sequence.")
+				}
+
+				l.advance()
+				l.advance()
+				continue
+			}
+
+			l.newError(l.lineIndex, l.charIndex, false, "Invalid escape sequence.")
+			break
+		}
+
+		// Valid character
+		l.token.WriteRune(l.currRune)
+		l.advance()
 	}
 	l.advance()
 
