@@ -37,7 +37,6 @@ type VirtualMachine struct {
 
 	stack *Stack
 
-	// Private stacks
 	reg_returnIndex     int
 	stack_returnIndexes []int
 
@@ -47,11 +46,12 @@ type VirtualMachine struct {
 	reg_symbolIndex    int
 	stack_symbolTables *data.Stack
 
+	filePath  string
 	reader    *bufio.Reader
 	firstLine int
 }
 
-func NewVirutalMachine() *VirtualMachine {
+func NewVirutalMachine(filePath string) *VirtualMachine {
 	virtualMachine := &VirtualMachine{
 		instructionIndex: 0,
 
@@ -66,7 +66,8 @@ func NewVirutalMachine() *VirtualMachine {
 		reg_symbolIndex:    0,
 		stack_symbolTables: data.NewStack(),
 
-		reader: bufio.NewReader(os.Stdin),
+		filePath: filePath,
+		reader:   bufio.NewReader(os.Stdin),
 	}
 
 	virtualMachine.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -81,13 +82,13 @@ type object struct {
 	fields     []any
 }
 
-func (vm *VirtualMachine) Execute(filePath string) {
+func (vm *VirtualMachine) Execute() {
 	// Read instructions
-	reader := NewInstructionReader(filePath, vm)
+	reader := NewInstructionReader(vm.filePath, vm)
 	reader.Read()
 
 	// Enter root scope
-	vm.stack_scopes[vm.reg_scopeIndex] = filePath
+	vm.stack_scopes[vm.reg_scopeIndex] = filepath.Base(vm.filePath)
 	vm.reg_scopeIndex++
 
 	vm.stack_returnIndexes[vm.reg_returnIndex] = 0
@@ -510,10 +511,18 @@ func (vm *VirtualMachine) panic(message string) {
 	// Print trace line
 	var line int
 
+	// Shift return indexes left, replace last return index with current line number
+	vm.stack_returnIndexes = vm.stack_returnIndexes[1:]
+	vm.stack_returnIndexes[vm.reg_returnIndex-1] = vm.instructionIndex
+	// Remove first return index
+	vm.stack_returnIndexes = vm.stack_returnIndexes[1:]
+
+	// Print functions and their lines
 	for i, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
-		vm.instructionIndex = vm.stack_returnIndexes[1:][i]
+		vm.instructionIndex = vm.stack_returnIndexes[i]
 		line = vm.firstLine
 
+		// Count lines return index
 		for j := 0; j < vm.instructionIndex; j++ {
 			if (*vm.instructions)[j].InstructionType == IT_LineOffset {
 				line += (*vm.instructions)[j].InstructionValue[0]

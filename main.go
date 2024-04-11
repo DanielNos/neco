@@ -401,8 +401,8 @@ func main() {
 		compile(configuration)
 		// Run target
 	} else if configuration.Action == A_Run {
-		virtualMachine := VM.NewVirutalMachine()
-		virtualMachine.Execute(configuration.TargetPath)
+		virtualMachine := VM.NewVirutalMachine(configuration.TargetPath)
+		virtualMachine.Execute()
 		// Analyze target
 	} else if configuration.Action == A_Analyze {
 		logger.Info("🐱 Analyzing " + configuration.TargetPath)
