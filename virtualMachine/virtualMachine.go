@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"math"
 	data "neco/dataStructures"
-	"neco/errors"
-	"neco/logger"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -91,6 +90,9 @@ func (vm *VirtualMachine) Execute(filePath string) {
 	vm.stack_scopes[vm.reg_scopeIndex] = filePath
 	vm.reg_scopeIndex++
 
+	vm.stack_returnIndexes[vm.reg_returnIndex] = 0
+	vm.reg_returnIndex++
+
 	vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 	// Interpret instructions
@@ -134,8 +136,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 		// Return adress stack overflow
 		if vm.reg_returnIndex == STACK_RETURN_INDEX_SIZE {
-			vm.traceLine()
-			logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Function return adress stack overflow.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Function return adress stack overflow.", vm.firstLine))
 		}
 
 		// Jump to function
@@ -149,8 +150,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.traceLine()
-			logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -351,12 +351,15 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_Not:
 		vm.stack.Push(!vm.stack.Pop().(bool))
 
-	// Push boolens
+	// Push literals
 	case IT_PushTrue:
 		vm.stack.Push(true)
 
 	case IT_PushFalse:
 		vm.stack.Push(false)
+
+	case IT_PushNone:
+		vm.stack.Push(nil)
 
 	// Scopes
 	case IT_PushScopeUnnamed:
@@ -364,8 +367,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.traceLine()
-			logger.Fatal(errors.STACK_OVERFLOW, fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -398,8 +400,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack.size--
 
 		if int64(len(vm.stack.items[vm.stack.size-1].([]any)))-1 < vm.stack.items[vm.stack.size].(int64) {
-			vm.traceLine()
-			logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]any)), vm.stack.items[vm.stack.size].(int64)))
+			vm.panic(fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]any)), vm.stack.items[vm.stack.size].(int64)))
 		}
 
 		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
@@ -409,8 +410,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack.size--
 
 		if int64(len(vm.stack.items[vm.stack.size-1].(string)))-1 < vm.stack.items[vm.stack.size].(int64) {
-			vm.traceLine()
-			logger.Fatal(errors.INDEX_OUT_OF_RANGE, fmt.Sprintf("line %d: String index out of range. String length: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].(string)), vm.stack.items[vm.stack.size].(int64)))
+			vm.panic(fmt.Sprintf("String index out of range. Length is %d, index is %d.", len(vm.stack.items[vm.stack.size-1].(string)), vm.stack.items[vm.stack.size].(int64)))
 		}
 
 		vm.stack.items[vm.stack.size-1] = string([]rune(vm.stack.items[vm.stack.size-1].(string))[vm.stack.items[vm.stack.size].(int64)])
@@ -431,6 +431,12 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack.size--
 		delete(vm.stack.items[vm.stack.size-1].(map[any]struct{}), vm.stack.items[vm.stack.size])
 
+	// Panic
+	case IT_PanicIfNone:
+		if vm.stack.Pop() == nil {
+			vm.panic("Unwrapped option doesn't have a value.")
+		}
+
 	// Pop
 	case IT_Pop:
 		vm.stack.size--
@@ -440,8 +446,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// Unknown instruction
 	default:
-		vm.traceLine()
-		logger.Fatal(errors.UNKNOWN_INSTRUCTION, fmt.Sprintf("line %d: Unknown instruction type: %d", vm.firstLine, instruction.InstructionType))
+		vm.panic(fmt.Sprintf("Unknown instruction type: %v.", (*vm.instructions)[vm.instructionIndex].InstructionValue))
 	}
 	vm.instructionIndex++
 
@@ -475,14 +480,6 @@ func (vm *VirtualMachine) interpretInstruction() {
 	}
 }
 
-func (vm *VirtualMachine) traceLine() {
-	for i := 0; i < vm.instructionIndex; i++ {
-		if (*vm.instructions)[i].InstructionType == IT_LineOffset {
-			vm.firstLine += (*vm.instructions)[i].InstructionValue[0]
-		}
-	}
-}
-
 func (vm *VirtualMachine) findSymbol() *Symbol {
 	// Find variable
 	symbolTable := vm.stack_symbolTables.Top
@@ -495,11 +492,38 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 
 	// Couldn't find variable
 	if value == nil {
-		vm.traceLine()
-		logger.Fatal(errors.UNDECLARED_VARIABLE, fmt.Sprintf("line %d: Undeclared variable %d.", vm.firstLine, (*vm.instructions)[vm.instructionIndex].InstructionValue))
+		vm.panic(fmt.Sprintf("Undeclared variable with ID: %v.", (*vm.instructions)[vm.instructionIndex].InstructionValue))
 	}
 
 	return value
+}
+
+func (vm *VirtualMachine) panic(message string) {
+	println("Panic in module " + vm.stack_scopes[0] + ": " + message + "\n")
+
+	// Get absolute path to binary
+	absolutePath, err := filepath.Abs(vm.stack_scopes[0])
+	if err != nil {
+		absolutePath = vm.stack_scopes[0]
+	}
+
+	// Print trace line
+	var line int
+
+	for i, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
+		vm.instructionIndex = vm.stack_returnIndexes[1:][i]
+		line = vm.firstLine
+
+		for j := 0; j < vm.instructionIndex; j++ {
+			if (*vm.instructions)[j].InstructionType == IT_LineOffset {
+				line += (*vm.instructions)[j].InstructionValue[0]
+			}
+		}
+
+		fmt.Println(fmt.Sprintf("%d", i) + " " + absolutePath + " in " + scope + "() on line " + fmt.Sprintf("%d", line))
+	}
+
+	os.Exit(1)
 }
 
 var declareInstructionToDataType = map[byte]data.PrimitiveType{

@@ -182,6 +182,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.generateExpression(binaryNode.Left)
 		cg.addInstruction(VM.IT_SetContains)
 
+	// Unwrap option
+	case parser.NT_Unwrap:
+		cg.generateExpression(node.Value.(*parser.Node))
+		cg.addInstruction(VM.IT_PanicIfNone)
+
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())
 	}

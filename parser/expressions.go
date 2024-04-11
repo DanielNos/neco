@@ -115,6 +115,14 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		panic("Invalid token in expression " + p.peek().String() + ".")
 	}
 
+	// Left is unwrapped
+	if p.peek().TokenType == lexer.TT_OP_Not {
+		left = &Node{p.consume().Position, NT_Unwrap, left}
+		// Left is checked for none
+	} else if p.peek().TokenType == lexer.TT_OP_QuestionMark {
+		left = &Node{p.consume().Position, NT_IsNone, left}
+	}
+
 	// Operators
 	for p.peek().TokenType.IsBinaryOperator() && operatorPrecedence(p.peek().TokenType) >= currentPrecedence {
 		operator := p.consume()
@@ -163,6 +171,19 @@ func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, lef
 }
 
 func (p *Parser) deriveType(expression *Node) *data.DataType {
+	// Unwrap option
+	if expression.NodeType == NT_Unwrap {
+		unwrappedNode := expression.Value.(*Node)
+		unwrappedNodeType := GetExpressionType(unwrappedNode)
+
+		// Expression can't be unwrapped
+		if unwrappedNodeType.Type != data.DT_Option {
+			p.newError(GetExpressionPosition(unwrappedNode), "Can't unwrap an expression with type "+unwrappedNodeType.String()+".")
+		}
+
+		return unwrappedNodeType.SubType.(*data.DataType)
+	}
+
 	// Operators
 	if expression.NodeType.IsOperator() {
 		binaryNode := expression.Value.(*TypedBinaryNode)
@@ -202,12 +223,12 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 
 		// Compatible data types, check if operator is allowed
 		if leftType.CanBeAssigned(rightType) {
-			// Can't do any operations on options without unpacking
+			// Can't do any operations on options without unwrapping
 			if leftType.Type == data.DT_Option {
-				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left), "Options need to be unpacked to access their values. Use unpack() or match.")
+				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left), "Options need to be unwrapped or matched to access their values.")
 			}
 			if rightType.Type == data.DT_Option {
-				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right), "Options need to be unpacked to access their values. Use unpack() or match.")
+				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right), "Options need to be unwrapped or matched to access their values.")
 			}
 
 			// Logic operators can be used only on booleans
@@ -812,6 +833,10 @@ func GetExpressionType(expression *Node) *data.DataType {
 		return expression.Value.(*ObjectFieldNode).DataType
 	case NT_Set:
 		return expression.Value.(*ListNode).DataType
+	case NT_Unwrap:
+		return GetExpressionType(expression.Value.(*Node)).SubType.(*data.DataType)
+	case NT_IsNone:
+		return &data.DataType{data.DT_Bool, nil}
 	}
 
 	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + fmt.Sprintf(" (%d)", expression.NodeType) + ".")
@@ -820,6 +845,10 @@ func GetExpressionType(expression *Node) *data.DataType {
 func GetExpressionPosition(expression *Node) *data.CodePos {
 	if expression.NodeType.IsOperator() {
 		return GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left).SetEndPos(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right))
+	}
+
+	if expression.NodeType == NT_Unwrap || expression.NodeType == NT_IsNone {
+		return GetExpressionPosition(expression.Value.(*Node)).SetEndPos(expression.Position)
 	}
 
 	return expression.Position

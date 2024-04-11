@@ -5,6 +5,10 @@ import (
 )
 
 func (sn *SyntaxAnalyzer) analyzeRestOfExpression() {
+	if sn.peek().TokenType == lexer.TT_OP_QuestionMark || sn.peek().TokenType == lexer.TT_OP_Not {
+		sn.consume()
+	}
+
 	if sn.peek().TokenType.IsBinaryOperator() {
 		sn.consume()
 		sn.analyzeExpression()
@@ -45,6 +49,12 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
+	// Object literal
+	if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_BraceOpen {
+		sn.analyzeObject()
+		return
+	}
+
 	// Set/List with it's type specified
 	if sn.peek().TokenType.IsCompositeType() {
 		sn.analyzeCompositeType()
@@ -63,88 +73,20 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
-	// Other types
+	// Identifier
 	if sn.peek().TokenType == lexer.TT_Identifier {
-		sn.consume()
-
-		// Variable
-		if sn.peek().TokenType.IsBinaryOperator() {
-			sn.consume()
-			sn.analyzeExpression()
-			// Function call
-		} else if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
-			sn.analyzeFunctionCall()
-			sn.analyzeRestOfExpression()
-			// List index
-		} else if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
-			for sn.peek().TokenType == lexer.TT_DL_BracketOpen {
-				sn.consume()
-
-				// Index expression
-				if sn.peek().TokenType == lexer.TT_DL_BracketClose {
-					sn.newError(sn.peek(), "Expected list index.")
-					return
-				} else {
-					sn.analyzeExpression()
-				}
-
-				// Closing bracket
-				if sn.peek().TokenType != lexer.TT_DL_BracketClose {
-					sn.newError(sn.peek(), "Expected closing bracket.")
-				} else {
-					sn.consume()
-				}
-			}
-			// Struct
-		} else if sn.peek().TokenType == lexer.TT_DL_BraceOpen {
-			sn.consume() // {
-
-			// Consume EOCs
-			for sn.peek().TokenType == lexer.TT_EndOfCommand {
-				sn.consume()
-			}
-
-			// Collect properties
-			for sn.peek().TokenType != lexer.TT_EndOfCommand {
-				// End of properties
-				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
-					sn.consume()
-					break
-				}
-
-				// Consume property label
-				if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_Colon {
-					sn.consume()
-					sn.consume()
-				}
-
-				// Collect property
-				sn.analyzeExpression()
-
-				// End of properties
-				if sn.peek().TokenType == lexer.TT_DL_BraceClose {
-					sn.consume()
-					break
-					// More properties
-				} else if sn.peek().TokenType == lexer.TT_DL_Comma {
-					sn.consume()
-				}
-
-				// Consume EOCs
-				for sn.peek().TokenType == lexer.TT_EndOfCommand {
-					sn.consume()
-				}
-			}
-		}
-
+		sn.analyzeIdentifier()
+		sn.analyzeRestOfExpression()
 		return
 	}
+
 	// Sub-Expression
 	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
 		sn.analyzeSubExpression()
 		sn.analyzeRestOfExpression()
 		return
 	}
+
 	// Function call of function with same name as keyword
 	if (sn.peek().TokenType == lexer.TT_KW_int || sn.peek().TokenType == lexer.TT_KW_flt || sn.peek().TokenType == lexer.TT_KW_str) && sn.peekNext().TokenType == lexer.TT_DL_ParenthesisOpen {
 		// Change token type to identifier
@@ -189,11 +131,11 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeSubExpression() {
-	opening := sn.consume()
+	opening := sn.consume() // (
 	sn.analyzeExpression()
 
 	if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-		sn.consume()
+		sn.consume() // )
 		return
 	}
 
@@ -201,7 +143,7 @@ func (sn *SyntaxAnalyzer) analyzeSubExpression() {
 }
 
 func (sn *SyntaxAnalyzer) analyzeList() {
-	sn.consume()
+	sn.consume() // [
 
 	// EOC after opening
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -237,7 +179,7 @@ func (sn *SyntaxAnalyzer) analyzeList() {
 		}
 	}
 
-	sn.consume()
+	sn.consume() // ]
 }
 
 func (sn *SyntaxAnalyzer) analyzeSet() {
@@ -278,4 +220,46 @@ func (sn *SyntaxAnalyzer) analyzeSet() {
 	}
 
 	sn.consume() // }
+}
+
+func (sn *SyntaxAnalyzer) analyzeObject() {
+	sn.consume() // ID
+	sn.consume() // {
+
+	// Consume EOCs
+	for sn.peek().TokenType == lexer.TT_EndOfCommand {
+		sn.consume()
+	}
+
+	// Collect properties
+	for sn.peek().TokenType != lexer.TT_EndOfCommand {
+		// End of properties
+		if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+			sn.consume()
+			break
+		}
+
+		// Consume property label
+		if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_Colon {
+			sn.consume() // ID
+			sn.consume() // ,
+		}
+
+		// Collect property
+		sn.analyzeExpression()
+
+		// End of properties
+		if sn.peek().TokenType == lexer.TT_DL_BraceClose {
+			sn.consume()
+			break
+			// More properties
+		} else if sn.peek().TokenType == lexer.TT_DL_Comma {
+			sn.consume()
+		}
+
+		// Consume EOCs
+		for sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
+		}
+	}
 }

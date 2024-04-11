@@ -56,6 +56,8 @@ const (
 	NT_Object
 	NT_ObjectField
 	NT_Set
+	NT_Unwrap
+	NT_IsNone
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -99,6 +101,8 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Object:              "Object",
 	NT_ObjectField:         "ObjectField",
 	NT_Set:                 "Set",
+	NT_Unwrap:              "Unwrap",
+	NT_IsNone:              "IsNone",
 }
 
 func (nt NodeType) String() string {

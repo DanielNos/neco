@@ -57,6 +57,7 @@ func (sn *SyntaxAnalyzer) analyzeIdentifierStatement() {
 func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 	sn.consume() // ID
 
+	// List element
 	if sn.peek().TokenType == lexer.TT_DL_BracketOpen {
 		openingBracket := sn.consume() // [
 
@@ -71,9 +72,15 @@ func (sn *SyntaxAnalyzer) analyzeIdentifier() {
 		sn.consume() // ]
 	}
 
+	// Object field
 	if sn.peek().TokenType == lexer.TT_OP_Dot {
 		sn.consume() // .
 		sn.analyzeIdentifier()
+	}
+
+	// Function call
+	if sn.peek().TokenType == lexer.TT_DL_ParenthesisOpen {
+		sn.analyzeFunctionCall()
 	}
 }
 

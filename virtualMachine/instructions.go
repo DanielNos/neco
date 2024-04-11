@@ -95,6 +95,8 @@ const (
 	IT_SetContains
 	IT_RemoveSetElement
 
+	IT_PanicIfNone
+
 	IT_Pop
 
 	IT_LineOffset
@@ -192,6 +194,8 @@ var InstructionTypeToString = map[byte]string{
 	IT_InsertToSet:      "set_insert",
 	IT_SetContains:      "set_contains",
 	IT_RemoveSetElement: "set_remove",
+
+	IT_PanicIfNone: "panic_if_none",
 
 	IT_Pop: "pop",
 
