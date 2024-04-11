@@ -90,6 +90,10 @@ const (
 	TT_KW_else
 
 	TT_KW_delete
+
+	TT_KW_match
+	TT_KW_case
+	TT_KW_default
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -174,6 +178,10 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_elif: "elif",
 
 	TT_KW_delete: "delete",
+
+	TT_KW_match:   "match",
+	TT_KW_case:    "case",
+	TT_KW_default: "default",
 }
 
 func (tt TokenType) String() string {
@@ -205,7 +213,7 @@ func (tt TokenType) IsAssignKeyword() bool {
 }
 
 func (tt TokenType) IsDelimiter() bool {
-	return tt >= TT_DL_ParenthesisOpen && tt <= TT_DL_Comma
+	return tt >= TT_DL_ParenthesisOpen && tt <= TT_DL_Colon
 }
 
 func (tt TokenType) IsCompositeType() bool {

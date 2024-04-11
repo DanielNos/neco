@@ -240,6 +240,12 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.consume()
 		sn.analyzeExpression()
 
+	case lexer.TT_KW_match: // Match
+		sn.analyzeMatchStatement()
+
+	case lexer.TT_KW_case, lexer.TT_KW_default:
+		return false
+
 	case lexer.TT_EndOfCommand: // Ignore EOCs
 		sn.consume()
 		return false
@@ -256,7 +262,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	}
 
 	// Remaining tokens after statement
-	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile {
+	if sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_KW_case {
 		if sn.peek().TokenType == lexer.TT_DL_BraceClose && isScope {
 			return true
 		}

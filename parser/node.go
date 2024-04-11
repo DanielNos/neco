@@ -58,6 +58,8 @@ const (
 	NT_Set
 	NT_Unwrap
 	NT_IsNone
+	NT_Match
+	NT_Case
 )
 
 var NodeTypeToString = map[NodeType]string{
@@ -221,6 +223,11 @@ type ObjectFieldNode struct {
 	Object     *Node
 	FieldIndex int
 	DataType   *data.DataType
+}
+
+type MatchNode struct {
+	Expression *Node
+	Cases      []*Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

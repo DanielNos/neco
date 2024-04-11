@@ -30,6 +30,10 @@ var KEYWORDS = map[string]TokenType{
 	"else": TT_KW_else,
 
 	"delete": TT_KW_delete,
+
+	"match":   TT_KW_match,
+	"case":    TT_KW_case,
+	"default": TT_KW_default,
 }
 
 var DELIMITERS = map[rune]TokenType{
@@ -40,4 +44,5 @@ var DELIMITERS = map[rune]TokenType{
 	'{': TT_DL_BraceOpen,
 	'}': TT_DL_BraceClose,
 	',': TT_DL_Comma,
+	':': TT_DL_Colon,
 }

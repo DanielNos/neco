@@ -20,6 +20,9 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 	}
+	if sn.peek().TokenType == lexer.TT_DL_BraceOpen || sn.peek().TokenType == lexer.TT_DL_Colon {
+		return
+	}
 
 	// Unary operator
 	if sn.peek().TokenType.IsUnaryOperator() {
@@ -51,6 +54,13 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 
 	// Object literal
 	if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_BraceOpen {
+		exists := sn.customTypes[sn.peek().Value]
+
+		if !exists {
+			sn.consume()
+			return
+		}
+
 		sn.analyzeObject()
 		return
 	}
@@ -97,6 +107,10 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		sn.analyzeFunctionCall()
 
 		sn.analyzeRestOfExpression()
+		return
+	}
+
+	if sn.peek().TokenType == lexer.TT_DL_BraceOpen || sn.peek().TokenType == lexer.TT_DL_Colon {
 		return
 	}
 

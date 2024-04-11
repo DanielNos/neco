@@ -346,6 +346,10 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_KW_delete:
 		return p.parseDelete()
 
+	// Match
+	case lexer.TT_KW_match:
+		return p.parseMatch()
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()
@@ -442,4 +446,79 @@ func (p *Parser) parseDelete() *Node {
 	}
 
 	return &Node{position, NT_Delete, expression}
+}
+
+func (p *Parser) parseMatch() *Node {
+	startPosition := p.consume().Position
+
+	expression := p.parseExpressionRoot()
+	cases := []*Node{}
+
+	if p.peek().TokenType == lexer.TT_EndOfCommand {
+		p.consume()
+	}
+
+	p.consume() // {
+
+	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		if p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
+			continue
+		}
+
+		if p.peek().TokenType == lexer.TT_KW_case {
+			casePosition := p.consume().Position
+
+			expression := p.parseExpressionRoot()
+			p.consume() // :
+
+			p.enterScope()
+
+			statements := []*Node{}
+
+			for p.peek().TokenType != lexer.TT_KW_case && p.peek().TokenType != lexer.TT_KW_default && p.peek().TokenType != lexer.TT_DL_BraceClose {
+				if p.peek().TokenType == lexer.TT_EndOfCommand {
+					p.consume()
+					continue
+				}
+
+				statement := p.parseStatement(true)
+
+				if statement != nil {
+					statements = append(statements, statement)
+				}
+			}
+
+			p.leaveScope()
+			cases = append(cases, &Node{casePosition, NT_Case, &MatchNode{expression, statements}})
+		} else if p.peek().TokenType == lexer.TT_KW_default {
+			casePosition := p.consume().Position
+			p.consume() // :
+
+			p.enterScope()
+
+			statements := []*Node{}
+
+			for p.peek().TokenType != lexer.TT_KW_case && p.peek().TokenType != lexer.TT_KW_default && p.peek().TokenType != lexer.TT_DL_BraceClose {
+				if p.peek().TokenType == lexer.TT_EndOfCommand {
+					p.consume()
+					continue
+				}
+
+				statement := p.parseStatement(true)
+
+				if statement != nil {
+					statements = append(statements, statement)
+				}
+			}
+
+			p.leaveScope()
+
+			cases = append(cases, &Node{casePosition, NT_Case, &MatchNode{nil, statements}})
+		}
+	}
+
+	p.consume() // }
+
+	return &Node{startPosition, NT_Match, &MatchNode{expression, cases}}
 }
