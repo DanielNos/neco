@@ -434,7 +434,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// Panic
 	case IT_PanicIfNone:
-		if vm.stack.Pop() == nil {
+		if vm.stack.items[vm.stack.size-1] == nil {
 			vm.panic("Unwrapped option doesn't have a value.")
 		}
 
