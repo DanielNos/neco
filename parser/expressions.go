@@ -79,7 +79,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Identifiers
 	} else if p.peek().TokenType == lexer.TT_Identifier {
-		left = p.parseIdentifier()
+		left = p.parseIdentifier(true)
 
 		// List
 	} else if p.peek().TokenType == lexer.TT_DL_BracketOpen {
@@ -309,7 +309,7 @@ func operatorPrecedence(operator lexer.TokenType) int {
 	}
 }
 
-func (p *Parser) parseIdentifier() *Node {
+func (p *Parser) parseIdentifier(isInExpression bool) *Node {
 	symbol := p.findSymbol(p.peek().Value)
 
 	// Undeclared symbol
@@ -339,6 +339,9 @@ func (p *Parser) parseIdentifier() *Node {
 		return p.parseFunctionCall(symbol, p.consume())
 		// Variable
 	} else if symbol.symbolType == ST_Variable {
+		if !isInExpression {
+			symbol.value.(*VariableSymbol).isInitialized = true
+		}
 		return p.parseVariable(symbol)
 		// Enum
 	} else if symbol.symbolType == ST_Enum {

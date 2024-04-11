@@ -500,7 +500,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 }
 
 func (vm *VirtualMachine) panic(message string) {
-	println("Panic in module " + vm.stack_scopes[0] + ": " + message + "\n")
+	println("\033[91mPanic in module " + vm.stack_scopes[0] + ": " + message + "\n\033[0m")
 
 	// Get absolute path to binary
 	absolutePath, err := filepath.Abs(vm.stack_scopes[0])

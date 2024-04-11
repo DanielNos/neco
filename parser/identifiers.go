@@ -14,16 +14,16 @@ func (p *Parser) parseIdentifierStatement() *Node {
 
 	// Collect statement expressions
 	startPosition := p.peek().Position
-	expressions := []*Node{p.parseIdentifier()}
+	statements := []*Node{p.parseIdentifier(false)}
 
 	for p.peek().TokenType == lexer.TT_DL_Comma {
 		p.consume()
-		expressions = append(expressions, p.parseIdentifier())
+		statements = append(statements, p.parseIdentifier(false))
 	}
 
 	// Statement is a function call
-	if len(expressions) == 1 && expressions[0].NodeType == NT_FunctionCall && (p.peek().TokenType == lexer.TT_EndOfCommand || p.peek().TokenType == lexer.TT_DL_BraceClose) {
-		return expressions[0]
+	if len(statements) == 1 && statements[0].NodeType == NT_FunctionCall && (p.peek().TokenType == lexer.TT_EndOfCommand || p.peek().TokenType == lexer.TT_DL_BraceClose) {
+		return statements[0]
 	}
 
 	// Missing assignment
@@ -44,15 +44,15 @@ func (p *Parser) parseIdentifierStatement() *Node {
 	}
 
 	// Check if all expressions are assignable
-	for _, expression := range expressions {
-		if expression.NodeType == NT_FunctionCall {
-			p.newError(expression.Position, "Can't assign to a function call.")
-		} else if expression.NodeType.IsOperator() {
-			p.newError(expression.Position, "Can't assign to an expression.")
+	for _, statement := range statements {
+		if statement.NodeType == NT_FunctionCall {
+			p.newError(statement.Position, "Can't assign to a function call.")
+		} else if statement.NodeType.IsOperator() {
+			p.newError(statement.Position, "Can't assign to an expression.")
 		}
 	}
 
-	node, _ := p.parseAssignment(expressions, startPosition)
+	node, _ := p.parseAssignment(statements, startPosition)
 	return node
 }
 
