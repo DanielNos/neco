@@ -49,10 +49,10 @@ func printHelp() {
 	println("                 -to --tokens            Prints lexed tokens.")
 	println("                 -tr --tree              Draws abstract syntax tree.")
 	println("                 -i  --instructions      Prints generated instructions.")
-	println("                 -d  --dontOptimize      Compiler won't optimize byte code.")
+	println("                 -d  --dont-optimize      Compiler won't optimize byte code.")
 	println("                 -s  --silent            Doesn't produce info messages when possible.")
-	println("                 -n  --noLog             Doesn't produce any log messages, even if there are errors.")
-	println("                 -l  --logLevel [LEVEL]  Sets logging level. Possible values are 0 to 5.")
+	println("                 -n  --no-log             Doesn't produce any log messages, even if there are errors.")
+	println("                 -l  --log-level [LEVEL]  Sets logging level. Possible values are 0 to 5.")
 	println("                 -o  --out               Sets output file path.")
 	println("\nrun [target]")
 	println("\nanalyze [target]")
@@ -210,13 +210,13 @@ func processArguments() *Configuration {
 				configuration.DrawTree = true
 			case "--instructions", "-i":
 				configuration.PrintInstructions = true
-			case "--dontOptimize", "-d":
+			case "--dont-optimize", "-d":
 				configuration.Optimize = false
 			case "--silent", "-s":
 				logger.LoggingLevel = logger.LL_Error
-			case "--noLog", "-n":
+			case "--no-log", "-n":
 				logger.LoggingLevel = logger.LL_NoLog
-			case "--logLevel", "-l":
+			case "--log-level", "-l":
 				if i+1 == len(args) {
 					logger.Fatal(errors.INVALID_FLAGS, "No logging level provided after "+args[i]+" flag.")
 				}
@@ -262,7 +262,7 @@ func processArguments() *Configuration {
 				configuration.PrintTokens = true
 			case "--tree", "-tr":
 				configuration.DrawTree = true
-			case "--dontOptimize", "-d":
+			case "--dont-optimize", "-d":
 				configuration.Optimize = false
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action analyze.")
