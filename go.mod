@@ -1,6 +1,6 @@
 module neco
 
-go 1.23
+go 1.21.5
 
 require github.com/fatih/color v1.16.0
 

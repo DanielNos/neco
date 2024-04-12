@@ -438,9 +438,12 @@ func (vm *VirtualMachine) interpretInstruction() {
 			vm.panic("Unwrapped option doesn't have a value.")
 		}
 
-	// Pop
+	// Stack
 	case IT_Pop:
 		vm.stack.size--
+
+	case IT_DuplicateTop:
+		vm.stack.Push(vm.stack.items[vm.stack.size-1])
 
 	// Ignore line offsets
 	case IT_LineOffset:

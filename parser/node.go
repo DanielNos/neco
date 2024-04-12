@@ -228,6 +228,12 @@ type ObjectFieldNode struct {
 type MatchNode struct {
 	Expression *Node
 	Cases      []*Node
+	Default    *Node
+}
+
+type CaseNode struct {
+	Expressions []*Node
+	Statements  *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

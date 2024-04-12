@@ -98,6 +98,7 @@ const (
 	IT_PanicIfNone
 
 	IT_Pop
+	IT_DuplicateTop
 
 	IT_LineOffset
 )
@@ -197,7 +198,8 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_PanicIfNone: "panic_if_none",
 
-	IT_Pop: "pop",
+	IT_Pop:          "pop",
+	IT_DuplicateTop: "duplicate",
 
 	IT_LineOffset: "line_offset",
 }

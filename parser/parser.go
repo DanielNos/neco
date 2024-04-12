@@ -139,9 +139,9 @@ func (p *Parser) enterScope() {
 	p.scopeCounter++
 }
 
-func (p *Parser) leaveScope() {
-	p.scopeNodeStack.Pop()
+func (p *Parser) leaveScope() *ScopeNode {
 	p.stack_symbolTableStack.Pop()
+	return p.scopeNodeStack.Pop().(*ScopeNode)
 }
 
 func (p *Parser) skipStatement() {
@@ -459,23 +459,26 @@ func (p *Parser) parseMatch() *Node {
 	}
 
 	p.consume() // {
+	var defaultCase *Node = nil
 
 	for p.peek().TokenType != lexer.TT_DL_BraceClose {
+		// Skip empty lines
 		if p.peek().TokenType == lexer.TT_EndOfCommand {
 			p.consume()
 			continue
 		}
 
+		// Parse case
 		if p.peek().TokenType == lexer.TT_KW_case {
 			casePosition := p.consume().Position
 
-			expression := p.parseExpressionRoot()
-			p.consume() // :
+			expressions := []*Node{}
+			expressions = append(expressions, p.parseExpressionRoot())
+			colonPosition := p.consume().Position // :
 
 			p.enterScope()
 
-			statements := []*Node{}
-
+			// Parse statements
 			for p.peek().TokenType != lexer.TT_KW_case && p.peek().TokenType != lexer.TT_KW_default && p.peek().TokenType != lexer.TT_DL_BraceClose {
 				if p.peek().TokenType == lexer.TT_EndOfCommand {
 					p.consume()
@@ -485,40 +488,44 @@ func (p *Parser) parseMatch() *Node {
 				statement := p.parseStatement(true)
 
 				if statement != nil {
-					statements = append(statements, statement)
+					p.appendScope(statement)
 				}
 			}
 
-			p.leaveScope()
-			cases = append(cases, &Node{casePosition, NT_Case, &MatchNode{expression, statements}})
+			scope := p.leaveScope()
+			scopeNode := &Node{colonPosition, NT_Scope, scope}
+
+			cases = append(cases, &Node{casePosition, NT_Case, &CaseNode{expressions, scopeNode}})
+			// Parse default
 		} else if p.peek().TokenType == lexer.TT_KW_default {
-			casePosition := p.consume().Position
-			p.consume() // :
+			p.consume()
+			colonPosition := p.consume().Position // :
 
 			p.enterScope()
 
-			statements := []*Node{}
-
+			// Parse statements
 			for p.peek().TokenType != lexer.TT_KW_case && p.peek().TokenType != lexer.TT_KW_default && p.peek().TokenType != lexer.TT_DL_BraceClose {
 				if p.peek().TokenType == lexer.TT_EndOfCommand {
 					p.consume()
 					continue
 				}
 
+				// Collect statement
 				statement := p.parseStatement(true)
 
 				if statement != nil {
-					statements = append(statements, statement)
+					p.appendScope(statement)
 				}
 			}
 
-			p.leaveScope()
+			scope := p.leaveScope()
+			defaultCase = &Node{colonPosition, NT_Scope, scope}
 
-			cases = append(cases, &Node{casePosition, NT_Case, &MatchNode{nil, statements}})
+			p.scopeCounter++
 		}
 	}
 
 	p.consume() // }
 
-	return &Node{startPosition, NT_Match, &MatchNode{expression, cases}}
+	return &Node{startPosition, NT_Match, &MatchNode{expression, cases, defaultCase}}
 }

@@ -275,6 +275,10 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	case parser.NT_Delete:
 		cg.generateDeletion(node.Value.(*parser.Node))
 
+	// Match
+	case parser.NT_Match:
+		cg.generateMatch(node.Value.(*parser.MatchNode))
+
 	default:
 		panic("Unkown node.")
 	}
