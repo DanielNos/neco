@@ -228,6 +228,7 @@ type ObjectFieldNode struct {
 type MatchNode struct {
 	Expression *Node
 	Cases      []*Node
+	CaseCount  int
 	Default    *Node
 }
 
