@@ -39,6 +39,7 @@ var builtInFunctions = map[string]byte{
 	"parseFlt": VM.BIF_ParseFloat,
 
 	"trace": VM.BIF_Trace,
+	"panic": VM.BIF_Panic,
 }
 
 var overloadedBuiltInFunctions = map[string]struct{}{

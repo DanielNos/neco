@@ -46,6 +46,7 @@ const (
 	BIF_ParseFloat
 
 	BIF_Trace
+	BIF_Panic
 )
 
 const INT_0 = int64(0)
@@ -154,7 +155,11 @@ func (vm *VirtualMachine) callBuiltInFunction(functionCode int) {
 		}
 		fmt.Printf("\"%v\"", vm.stack_scopes[vm.reg_scopeIndex-1])
 		fmt.Fprintln(os.Stdout, "]")
+
+	case BIF_Panic:
+		vm.panic(vm.stack.Pop().(string))
 	}
+
 }
 
 func necoPrint(value any, root bool) {
@@ -287,4 +292,5 @@ var BuiltInFuncToString = map[byte]string{
 	BIF_ParseFloat: "parseFloat",
 
 	BIF_Trace: "trace",
+	BIF_Panic: "panic",
 }

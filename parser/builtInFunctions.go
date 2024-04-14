@@ -8,11 +8,11 @@ func (p *Parser) insertBuiltInFunctions() {
 	// Prints
 	p.insertFunction("print", &FunctionSymbol{-1,
 		[]Parameter{{&data.DataType{data.DT_String, nil}, "text", nil}},
-		&data.DataType{data.DT_Unknown, nil}, true},
+		nil, true},
 	)
 	p.insertFunction("printLine", &FunctionSymbol{-1,
 		[]Parameter{{&data.DataType{data.DT_String, nil}, "text", nil}},
-		&data.DataType{data.DT_Unknown, nil}, true},
+		nil, true},
 	)
 
 	// To string
@@ -112,7 +112,7 @@ func (p *Parser) insertBuiltInFunctions() {
 	// Exit
 	p.insertFunction("exit", &FunctionSymbol{-1,
 		[]Parameter{{&data.DataType{data.DT_Int, nil}, "exitCode", nil}},
-		&data.DataType{data.DT_Unknown, nil}, true},
+		nil, true},
 	)
 
 	// Parsing numbers
@@ -122,11 +122,15 @@ func (p *Parser) insertBuiltInFunctions() {
 	)
 
 	p.insertFunction("parseFlt", &FunctionSymbol{-1,
-		[]Parameter{{DataType: &data.DataType{data.DT_String, nil}, Identifier: "string", DefaultValue: nil}},
+		[]Parameter{{&data.DataType{data.DT_String, nil}, "string", nil}},
 		&data.DataType{data.DT_Float, nil}, true},
 	)
 
 	// Debug fucntions
-	p.insertFunction("line", &FunctionSymbol{-1, NO_PARAMS, &data.DataType{data.DT_Unknown, nil}, true})
-	p.insertFunction("trace", &FunctionSymbol{-1, NO_PARAMS, &data.DataType{data.DT_Unknown, nil}, true})
+	p.insertFunction("trace", &FunctionSymbol{-1, NO_PARAMS, nil, true})
+
+	p.insertFunction("panic", &FunctionSymbol{-1,
+		[]Parameter{{&data.DataType{data.DT_String, nil}, "message", nil}},
+		nil, true},
+	)
 }
