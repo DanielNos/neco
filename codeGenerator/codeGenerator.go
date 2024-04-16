@@ -89,7 +89,7 @@ func (cg *CodeGenerator) Generate() {
 	if len(statements) == 0 {
 		cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{VM.IT_LineOffset, []byte{1}})
 
-		logger.Warning("Source code doesn't contain any symbols. Binary will be generated, but will contain no instructions.")
+		logger.Warning("Compiled code doesn't contain any instructions.")
 		return
 	}
 
