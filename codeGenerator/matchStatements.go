@@ -62,7 +62,7 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 		}
 
 		// Generate case body
-		cg.generateScope(matchCase.Value.(*parser.CaseNode).Statements.Value.(*parser.ScopeNode), nil)
+		cg.generateNode(matchCase.Value.(*parser.CaseNode).Statements)
 
 		// Generate jump instruction to the end of case bodies
 		cg.addInstruction(VM.IT_Jump, 0)
@@ -79,5 +79,7 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 	}
 
 	// Assign distance to the end to the jump instruction in default case block
-	updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition-1, VM.IT_JumpEx)
+	if jumpFromElsePosition != endPosition {
+		updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition-1, VM.IT_JumpEx)
+	}
 }

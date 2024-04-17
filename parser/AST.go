@@ -227,9 +227,12 @@ func visualize(node *Node, indent string, isLast bool) {
 		matchNode := node.Value.(*MatchNode)
 
 		println("Match")
-		visualize(matchNode.Expression, indent, len(matchNode.Cases) == 0)
+		visualize(matchNode.Expression, indent, len(matchNode.Cases) == 0 && matchNode.Default == nil)
 		visualizeList(matchNode.Cases, indent, matchNode.Default == nil)
 		if matchNode.Default != nil {
+			println(indent + "└─ default")
+			indent += "   "
+
 			visualize(matchNode.Default, indent, true)
 		}
 

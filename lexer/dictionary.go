@@ -32,7 +32,6 @@ var KEYWORDS = map[string]TokenType{
 	"delete": TT_KW_delete,
 
 	"match":   TT_KW_match,
-	"case":    TT_KW_case,
 	"default": TT_KW_default,
 }
 

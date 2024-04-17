@@ -92,7 +92,6 @@ const (
 	TT_KW_delete
 
 	TT_KW_match
-	TT_KW_case
 	TT_KW_default
 )
 
@@ -180,7 +179,6 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_delete: "delete",
 
 	TT_KW_match:   "match",
-	TT_KW_case:    "case",
 	TT_KW_default: "default",
 }
 
@@ -218,6 +216,10 @@ func (tt TokenType) IsDelimiter() bool {
 
 func (tt TokenType) IsCompositeType() bool {
 	return tt >= TT_KW_list && tt <= TT_KW_set
+}
+
+func (tt TokenType) CanBeExpression() bool {
+	return tt.IsLiteral() || tt == TT_Identifier || tt.IsOperator() || tt == TT_DL_ParenthesisOpen
 }
 
 type Token struct {

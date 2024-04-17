@@ -18,14 +18,16 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 	}
 
 	sn.consume() // {
-	foundFirstCase := false
 
 	for sn.peek().TokenType != lexer.TT_EndOfFile && sn.peek().TokenType != lexer.TT_DL_BraceClose {
-		// Case
-		if sn.peek().TokenType == lexer.TT_KW_case {
-			sn.consume() // case
-			foundFirstCase = true
+		// Skip empty lines
+		if sn.peek().TokenType == lexer.TT_EndOfCommand {
+			sn.consume()
+			continue
+		}
 
+		// Case
+		if sn.peek().TokenType.CanBeExpression() {
 			// Analyze expression
 			if sn.peek().TokenType == lexer.TT_EndOfCommand {
 				sn.newError(sn.peekPrevious(), "Expected expression after case keyword.")
@@ -46,6 +48,8 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 				sn.consume()
 			}
 
+			sn.analyzeStatement(false)
+
 			// Default
 		} else if sn.peek().TokenType == lexer.TT_KW_default {
 			sn.consume()
@@ -55,12 +59,11 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 				sn.consume()
 			}
 
+			sn.analyzeStatement(false)
+
 			// Statements in cases
 		} else {
-			if !foundFirstCase && sn.peek().TokenType != lexer.TT_EndOfCommand {
-				sn.newError(sn.peek(), "Statement is outside of a case block.")
-			}
-			sn.analyzeStatement(false)
+			sn.newError(sn.consume(), "Statement is outside of a case block.")
 		}
 	}
 	sn.consume() // }

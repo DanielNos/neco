@@ -89,7 +89,7 @@ func (cg *CodeGenerator) Generate() {
 	if len(statements) == 0 {
 		cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{VM.IT_LineOffset, []byte{1}})
 
-		logger.Warning("Compiled code doesn't contain any instructions.")
+		logger.Warning("Source code doesn't contain any statements. No instructions will be generated.")
 		return
 	}
 
@@ -106,6 +106,10 @@ func (cg *CodeGenerator) Generate() {
 	if cg.optimize {
 		codeOptimizer.Optimize(&cg.GlobalsInstructions)
 		codeOptimizer.Optimize(&cg.FunctionsInstructions)
+	}
+
+	if len(cg.GlobalsInstructions) == 0 && len(cg.FunctionsInstructions) == 0 {
+		logger.Warning("No instructions were generated. Binary will be empty.")
 	}
 }
 
