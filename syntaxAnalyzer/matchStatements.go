@@ -48,6 +48,8 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 				sn.consume()
 			}
 
+			sn.consumeEOCs()
+
 			sn.analyzeStatement(false)
 
 			// Default

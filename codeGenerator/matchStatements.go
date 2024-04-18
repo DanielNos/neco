@@ -35,18 +35,10 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 		}
 	}
 
-	// Generate default body
-	if matchNode.Default != nil {
-		cg.generateScope(matchNode.Default.Value.(*parser.ScopeNode), nil)
-	}
-
 	// Generate jump instruction that will jump over all case bodies
 	cg.addInstruction(VM.IT_Jump, 0)
-
-	// Store the jump instruction so it's destination can  be set later
+	// Store the jump instruction so it's destination can be set later
 	jumpFromElse := &(*cg.target)[len(*cg.target)-1]
-
-	// Store jump position
 	jumpFromElsePosition := len(*cg.target)
 
 	// Generate case bodies
@@ -62,7 +54,7 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 		}
 
 		// Generate case body
-		cg.generateNode(matchCase.Value.(*parser.CaseNode).Statements)
+		cg.generateNode(matchCase.Value.(*parser.CaseNode).Statement)
 
 		// Generate jump instruction to the end of case bodies
 		cg.addInstruction(VM.IT_Jump, 0)
@@ -72,14 +64,19 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 		jumpInstructionPositions[caseIndex] = len(*cg.target)
 	}
 
+	// Assign distance to the jump instruction for default case block
+	if jumpFromElsePosition != len(*cg.target) {
+		updateJumpDistance(jumpFromElse, len(*cg.target)-jumpFromElsePosition, VM.IT_JumpEx)
+	}
+	// Generate default body
+	if matchNode.Default != nil {
+		cg.generateNode(matchNode.Default)
+	}
+
 	// Calculate distance from end of each case body to the end. Assign it to the jump instructions.
 	endPosition := len(*cg.target)
 	for jumpIndex := 0; jumpIndex < len(matchNode.Cases); jumpIndex++ {
 		updateJumpDistance(jumpInstructions[jumpIndex], endPosition-jumpInstructionPositions[jumpIndex], VM.IT_JumpEx)
 	}
 
-	// Assign distance to the end to the jump instruction in default case block
-	if jumpFromElsePosition != endPosition {
-		updateJumpDistance(jumpFromElse, endPosition-jumpFromElsePosition-1, VM.IT_JumpEx)
-	}
 }

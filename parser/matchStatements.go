@@ -29,8 +29,8 @@ func (p *Parser) parseMatch() *Node {
 			p.consume() // :
 
 			defaultCase = p.parseStatement(false)
-
-			p.scopeCounter++
+			caseCount++
+			
 			// Parse case
 		} else {
 			// Default case has to be the last case

@@ -242,7 +242,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		println("Case")
 		visualizeList(caseNode.Expressions, indent, false)
 
-		visualize(caseNode.Statements, indent, true)
+		visualize(caseNode.Statement, indent, true)
 
 	default:
 		println(NodeTypeToString[node.NodeType])

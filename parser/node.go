@@ -234,7 +234,7 @@ type MatchNode struct {
 
 type CaseNode struct {
 	Expressions []*Node
-	Statements  *Node
+	Statement  *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
