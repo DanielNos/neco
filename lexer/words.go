@@ -1,6 +1,8 @@
 package lexer
 
-import "unicode"
+import (
+	"unicode"
+)
 
 func (l *Lexer) lexLetter() {
 	startLine := l.lineIndex
@@ -49,18 +51,23 @@ func (l *Lexer) lexString() {
 	for l.currRune != '"' {
 		// New line in string
 		if l.currRune == '\r' {
-			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
+			l.newError(l.lineIndex, startChar, true, "Multi-line strings are not allowed.")
 			l.advance()
 			l.advance()
+
 			l.lineIndex++
 			l.charIndex = 1
-			continue
-		}
-		if l.currRune == '\n' {
-			l.newError(l.lineIndex, l.charIndex, false, "Multi-line strings are not allowed.")
+
+			l.newToken(startLine, startChar, TT_LT_String)
+			return
+		} else if l.currRune == '\n' {
+			l.newError(l.lineIndex, startChar, true, "Multi-line strings are not allowed.")
 			l.advance()
+
 			l.lineIndex++
 			l.charIndex = 1
+
+			l.newToken(startLine, startChar, TT_LT_String)
 			continue
 		}
 

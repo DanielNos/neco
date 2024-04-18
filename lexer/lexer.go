@@ -195,6 +195,9 @@ func (l *Lexer) lexRune() {
 				l.advance()
 			}
 
+			l.charIndex = 1
+			l.lineIndex++
+
 		// Boolean operators
 		case '=':
 			l.advance()
