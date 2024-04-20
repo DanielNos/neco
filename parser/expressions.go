@@ -110,6 +110,10 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 			left.Value.(*ListNode).DataType = specifiedType
 		}
 
+		// Match statement
+	} else if p.peek().TokenType == lexer.TT_KW_match {
+		left = p.parseMatchExpression()
+
 		// Invalid token
 	} else {
 		panic("Invalid token in expression " + p.peek().String() + ".")
@@ -182,6 +186,11 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 		}
 
 		return unwrappedNodeType.SubType.(*data.DataType)
+	}
+
+	// Match statement
+	if expression.NodeType == NT_Match {
+		return expression.Value.(*MatchNode).DataType
 	}
 
 	// Operators
@@ -840,6 +849,8 @@ func GetExpressionType(expression *Node) *data.DataType {
 		return GetExpressionType(expression.Value.(*Node)).SubType.(*data.DataType)
 	case NT_IsNone:
 		return &data.DataType{data.DT_Bool, nil}
+	case NT_Match:
+		return expression.Value.(*MatchNode).DataType
 	}
 
 	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + fmt.Sprintf(" (%d)", expression.NodeType) + ".")

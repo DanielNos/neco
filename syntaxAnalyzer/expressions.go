@@ -24,6 +24,12 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
+	// Match statement
+	if sn.peek().TokenType == lexer.TT_KW_match {
+		sn.analyzeMatchStatement(true)
+		return
+	}
+
 	// Unary operator
 	if sn.peek().TokenType.IsUnaryOperator() {
 		sn.consume()

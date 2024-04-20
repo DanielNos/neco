@@ -241,7 +241,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 		sn.analyzeExpression()
 
 	case lexer.TT_KW_match: // Match
-		sn.analyzeMatchStatement()
+		sn.analyzeMatchStatement(false)
 
 	case lexer.TT_KW_default:
 		return false

@@ -5,7 +5,7 @@ import (
 	VM "neco/virtualMachine"
 )
 
-func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
+func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode, isExpression bool) {
 	// Create slice for jump instructions and their positions so their destination can be set later
 	jumpInstructions := make([]*VM.Instruction, matchNode.CaseCount)
 	jumpInstructionPositions := make([]int, matchNode.CaseCount)
@@ -41,7 +41,7 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 	jumpFromElse := &(*cg.target)[len(*cg.target)-1]
 	jumpFromElsePosition := len(*cg.target)
 
-	// Generate case bodies
+	// Generate case bodies/expressions
 	jumpIndex = 0
 	for caseIndex, matchCase := range matchNode.Cases {
 		caseNode := matchCase.Value.(*parser.CaseNode)
@@ -53,8 +53,12 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 			jumpIndex++
 		}
 
-		// Generate case body
-		cg.generateNode(matchCase.Value.(*parser.CaseNode).Statement)
+		// Generate case body/expression
+		if isExpression {
+			cg.generateExpression(matchCase.Value.(*parser.CaseNode).Statement)
+		} else {
+			cg.generateNode(matchCase.Value.(*parser.CaseNode).Statement)
+		}
 
 		// Generate jump instruction to the end of case bodies
 		cg.addInstruction(VM.IT_Jump, 0)
@@ -70,7 +74,11 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 	}
 	// Generate default body
 	if matchNode.Default != nil {
-		cg.generateNode(matchNode.Default)
+		if isExpression {
+			cg.generateExpression(matchNode.Default)
+		} else {
+			cg.generateNode(matchNode.Default)
+		}
 	}
 
 	// Calculate distance from end of each case body to the end. Assign it to the jump instructions.
@@ -78,5 +86,4 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode) {
 	for jumpIndex := 0; jumpIndex < len(matchNode.Cases); jumpIndex++ {
 		updateJumpDistance(jumpInstructions[jumpIndex], endPosition-jumpInstructionPositions[jumpIndex], VM.IT_JumpEx)
 	}
-
 }

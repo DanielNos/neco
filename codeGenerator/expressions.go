@@ -194,6 +194,10 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		cg.addInstruction(VM.IT_Equal)
 		cg.addInstruction(VM.IT_Not)
 
+	// Match statement
+	case parser.NT_Match:
+		cg.generateMatch(node.Value.(*parser.MatchNode), true)
+
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())
 	}

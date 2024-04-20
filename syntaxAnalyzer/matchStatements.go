@@ -4,7 +4,7 @@ import (
 	"neco/lexer"
 )
 
-func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
+func (sn *SyntaxAnalyzer) analyzeMatchStatement(isExpression bool) {
 	sn.consume() // match
 
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
@@ -30,7 +30,7 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 		if sn.peek().TokenType.CanBeExpression() {
 			// Analyze expression
 			if sn.peek().TokenType == lexer.TT_EndOfCommand {
-				sn.newError(sn.peekPrevious(), "Expected expression after case keyword.")
+				sn.newError(sn.peekPrevious(), "Expected case expression.")
 			} else {
 				sn.analyzeExpression()
 			}
@@ -50,7 +50,11 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 
 			sn.consumeEOCs()
 
-			sn.analyzeStatement(false)
+			if isExpression {
+				sn.analyzeExpression()
+			} else {
+				sn.analyzeStatement(false)
+			}
 
 			// Default
 		} else if sn.peek().TokenType == lexer.TT_KW_default {
@@ -61,11 +65,21 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement() {
 				sn.consume()
 			}
 
-			sn.analyzeStatement(false)
+			sn.consumeEOCs()
 
-			// Statements in cases
+			if isExpression {
+				sn.analyzeExpression()
+			} else {
+				sn.analyzeStatement(false)
+			}
+
+			// Statements/Expressions outside of cases
 		} else {
-			sn.newError(sn.consume(), "Statement is outside of a case block.")
+			if isExpression {
+				sn.newError(sn.consume(), "Expression is outside of a case block.")
+			} else {
+				sn.newError(sn.consume(), "Statement is outside of a case block.")
+			}
 		}
 	}
 	sn.consume() // }

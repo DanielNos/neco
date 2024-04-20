@@ -230,11 +230,12 @@ type MatchNode struct {
 	Cases      []*Node
 	CaseCount  int
 	Default    *Node
+	DataType   *data.DataType
 }
 
 type CaseNode struct {
 	Expressions []*Node
-	Statement  *Node
+	Statement   *Node
 }
 
 var TokenTypeToNodeType = map[lexer.TokenType]NodeType{

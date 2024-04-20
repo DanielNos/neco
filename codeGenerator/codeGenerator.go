@@ -281,10 +281,10 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 
 	// Match
 	case parser.NT_Match:
-		cg.generateMatch(node.Value.(*parser.MatchNode))
+		cg.generateMatch(node.Value.(*parser.MatchNode), false)
 
 	default:
-		panic("Unkown node.")
+		panic("Unkown node " + parser.NodeTypeToString[node.NodeType])
 	}
 }
 

@@ -348,7 +348,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	// Match
 	case lexer.TT_KW_match:
-		return p.parseMatch()
+		return p.parseMatch(false)
 
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
