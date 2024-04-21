@@ -88,7 +88,6 @@ func printTokens(tokens []*lexer.Token) {
 
 func printInstructions(instructions *[]VM.Instruction, constants []any, firstLine int) {
 	line := firstLine
-	linePadder := "  "
 	justChanged := true
 
 	for i, instruction := range *instructions {
@@ -99,10 +98,6 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 
 		// Display empty line instead of offset and record new line number
 		if instruction.InstructionType == VM.IT_LineOffset {
-			if line < 10 && line+int(instruction.InstructionValue[0]) >= 10 {
-				linePadder = linePadder[1:]
-			}
-
 			line += int(instruction.InstructionValue[0])
 			justChanged = true
 
@@ -112,14 +107,17 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 
 		// Print line number
 		if justChanged {
-			fmt.Printf("%s%d  ", linePadder, line)
+			fmt.Printf("%d ", line)
 			justChanged = false
 		} else {
-			print("     ")
+			print("   ")
 		}
 
 		// Print instruction number,
 		if i < 10 {
+			print(" ")
+		}
+		if i < 100 {
 			print(" ")
 		}
 		fmt.Printf("%d  ", i)

@@ -75,9 +75,9 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode, isExpression
 	// Generate default body
 	if matchNode.Default != nil {
 		if isExpression {
-			cg.generateExpression(matchNode.Default)
+			cg.generateExpression(matchNode.Default.Value.(*parser.CaseNode).Statement)
 		} else {
-			cg.generateNode(matchNode.Default)
+			cg.generateNode(matchNode.Default.Value.(*parser.CaseNode).Statement)
 		}
 	}
 

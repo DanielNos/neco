@@ -105,6 +105,8 @@ var NodeTypeToString = map[NodeType]string{
 	NT_Set:                 "Set",
 	NT_Unwrap:              "Unwrap",
 	NT_IsNone:              "IsNone",
+	NT_Match:               "Match",
+	NT_Case:                "Case",
 }
 
 func (nt NodeType) String() string {
