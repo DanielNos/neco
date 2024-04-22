@@ -279,23 +279,25 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
-	case lexer.TT_OP_And, lexer.TT_OP_Or:
+	case lexer.TT_OP_Or:
 		return 0
+	case lexer.TT_OP_And:
+		return 1
 	case lexer.TT_OP_Equal, lexer.TT_OP_NotEqual,
 		lexer.TT_OP_Lower, lexer.TT_OP_Greater,
 		lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual,
 		lexer.TT_OP_In:
-		return 1
-	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 2
-	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
+	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 3
-	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
+	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
 		return 4
-	case lexer.TT_OP_Not:
+	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
 		return 5
-	case lexer.TT_OP_Dot:
+	case lexer.TT_OP_Not:
 		return 6
+	case lexer.TT_OP_Dot:
+		return 7
 	default:
 		panic("Can't get operator precedence of token type " + operator.String() + ".")
 	}
