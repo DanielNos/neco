@@ -66,7 +66,8 @@ func (p *Parser) collectGlobals() {
 		} else if p.peek().TokenType == lexer.TT_DL_BraceClose {
 			scopeDepth--
 			// Collect globals only in root scope
-		} else if scopeDepth == 0 {
+		} else if scopeDepth == 0 && p.peek().TokenType == lexer.TT_EndOfCommand {
+			p.consume()
 			if p.peek().TokenType.IsVariableType() {
 				p.appendScope(p.parseVariableDeclaration(false))
 				continue

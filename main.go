@@ -110,7 +110,7 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 			fmt.Printf("%d ", line)
 			justChanged = false
 		} else {
-			print("   ")
+			print("  ")
 		}
 
 		// Print instruction number,

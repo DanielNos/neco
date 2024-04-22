@@ -45,9 +45,7 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 		}
 	}
 
-	// Leave scope
-	p.scopeNodeStack.Pop()
-	p.stack_symbolTableStack.Pop()
+	p.leaveScope()
 
 	// Store function name as a string constant for scope trace back
 	p.StringConstants[identifierToken.Value] = -1
@@ -64,12 +62,12 @@ func (p *Parser) parseParameters() []Parameter {
 
 	for {
 		// Collect data typa and identifier
-		dataType := TokenTypeToDataType[p.consume().TokenType]
+		dataType := p.parseType()
 		identifier := p.consume().Value
 
 		// Create parameter and symbol
-		paremeters = append(paremeters, Parameter{&data.DataType{dataType, nil}, identifier, nil})
-		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{&data.DataType{dataType, nil}, true, false}})
+		paremeters = append(paremeters, Parameter{dataType, identifier, nil})
+		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{dataType, true, false}})
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			break
@@ -79,8 +77,8 @@ func (p *Parser) parseParameters() []Parameter {
 		for p.peek().TokenType == lexer.TT_Identifier {
 			// Create parameter and symbol
 			identifier = p.consume().Value
-			paremeters = append(paremeters, Parameter{&data.DataType{dataType, nil}, identifier, nil})
-			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{&data.DataType{dataType, nil}, true, false}})
+			paremeters = append(paremeters, Parameter{dataType, identifier, nil})
+			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{dataType, true, false}})
 
 			p.consume()
 		}
