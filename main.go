@@ -107,10 +107,13 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 
 		// Print line number
 		if justChanged {
+			if line < 10 {
+				print(" ")
+			}
 			fmt.Printf("%d ", line)
 			justChanged = false
 		} else {
-			print("  ")
+			print("   ")
 		}
 
 		// Print instruction number,
