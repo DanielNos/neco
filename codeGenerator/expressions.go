@@ -104,6 +104,13 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 
 		// Append elements
 		for _, node := range node.Value.(*parser.ListNode).Nodes {
+			// Combine IT_LoadConst and IT_AppendToList to IT_LoadConstToList
+			if cg.optimize && node.NodeType == parser.NT_Literal && node.Value.(*parser.LiteralNode).PrimitiveType != data.DT_Bool && node.Value.(*parser.LiteralNode).PrimitiveType != data.DT_None {
+				cg.addInstruction(VM.IT_LoadConstToList, cg.getLiteralID(node.Value.(*parser.LiteralNode)))
+				continue
+			}
+
+			// Generate expression and append instruction
 			cg.generateExpression(node)
 			cg.addInstruction(VM.IT_AppendToList)
 		}
@@ -220,20 +227,28 @@ func (cg *CodeGenerator) generateLiteral(node *parser.Node) {
 			cg.addInstruction(VM.IT_PushFalse)
 		}
 
-	// Int
-	case data.DT_Int:
-		cg.addInstruction(VM.IT_LoadConst, uint8(cg.intConstants[literalNode.Value.(int64)]))
-
-	// Float
-	case data.DT_Float:
-		cg.addInstruction(VM.IT_LoadConst, uint8(cg.floatConstants[literalNode.Value.(float64)]))
-
-	// String
-	case data.DT_String:
-		cg.addInstruction(VM.IT_LoadConst, uint8(cg.stringConstants[literalNode.Value.(string)]))
-
 	// None
 	case data.DT_None:
 		cg.addInstruction(VM.IT_PushNone)
+
+	// Int, Float, String
+	case data.DT_Int, data.DT_Float, data.DT_String:
+		cg.addInstruction(VM.IT_LoadConst, cg.getLiteralID(literalNode))
+	}
+}
+
+func (cg *CodeGenerator) getLiteralID(literal *parser.LiteralNode) uint8 {
+	switch literal.PrimitiveType {
+	case data.DT_Int:
+		return uint8(cg.intConstants[literal.Value.(int64)])
+
+	case data.DT_Float:
+		return uint8(cg.floatConstants[literal.Value.(float64)])
+
+	case data.DT_String:
+		return uint8(cg.stringConstants[literal.Value.(string)])
+
+	default:
+		panic("Invalid literal type. Can't be looked up.")
 	}
 }

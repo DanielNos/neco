@@ -61,6 +61,7 @@ func (cw *CodeWriter) writeInstructions(instructions *[]VM.Instruction) {
 			cw.file.Write([]byte{cw.codeGenerator.lineToInstruction(instruction.InstructionValue[0])})
 			continue
 		}
+
 		cw.file.Write([]byte{instruction.InstructionType}) // Write instruction
 		cw.file.Write(instruction.InstructionValue)        // Write arguments
 	}
@@ -123,7 +124,7 @@ func (cw *CodeWriter) writeFunctionIndexes() {
 		}
 
 		// Write difference between this function and the last one
-		cw.file.Write([]byte{byte(function - lastFunction)})
+		cw.file.Write([]byte{byte(function - lastFunction - 1)})
 		lastFunction = function
 	}
 

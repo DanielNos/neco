@@ -26,13 +26,6 @@ func Optimize(instructions *[]VM.Instruction) {
 			(*instructions)[i].InstructionType = 255
 			continue
 		}
-
-		// Load const directly to list
-		if (*instructions)[i].InstructionType == VM.IT_LoadConst && (*instructions)[i+1].InstructionType == VM.IT_AppendToList {
-			(*instructions)[i].InstructionType = VM.IT_LoadConstToList
-			(*instructions)[i+1].InstructionType = 255
-			continue
-		}
 	}
 
 	// Adjust jumps for removed (*instructions)

@@ -36,7 +36,7 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 
 	// Generate line offset of closing brace
 	if cg.line < functionNode.Position.EndLine {
-		cg.addInstruction(VM.IT_LineOffset, byte(functionNode.Position.EndLine - cg.line))
+		cg.addInstruction(VM.IT_LineOffset, byte(functionNode.Position.EndLine-cg.line))
 		cg.line = functionNode.Position.EndLine
 	}
 

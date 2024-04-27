@@ -141,7 +141,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		}
 
 		// Jump to function
-		vm.instructionIndex = vm.functions[instruction.InstructionValue[0]] - 1
+		vm.instructionIndex = vm.functions[instruction.InstructionValue[0]]
 
 	case IT_CallBuiltInFunc:
 		vm.callBuiltInFunction(instruction.InstructionValue[0])
