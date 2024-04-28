@@ -180,14 +180,19 @@ func processArguments() *Configuration {
 		switch args[0] {
 		case "build":
 			configuration.Action = A_Build
+
 		case "run":
 			configuration.Action = A_Run
+
 		case "analyze":
 			configuration.Action = A_Analyze
+
 		}
+
 	case "help", "--help", "-h":
 		printHelp()
 		os.Exit(0)
+
 	default:
 		if strings.HasSuffix(args[0], ".neco") {
 			configuration.Action = A_Build
@@ -207,16 +212,22 @@ func processArguments() *Configuration {
 			switch args[i] {
 			case "--tokens", "-to":
 				configuration.PrintTokens = true
+
 			case "--tree", "-tr":
 				configuration.DrawTree = true
+
 			case "--instructions", "-i":
 				configuration.PrintInstructions = true
+
 			case "--dont-optimize", "-d":
 				configuration.Optimize = false
+
 			case "--silent", "-s":
 				logger.LoggingLevel = logger.LL_Error
+
 			case "--no-log", "-n":
 				logger.LoggingLevel = logger.LL_NoLog
+
 			case "--log-level", "-l":
 				if i+1 == len(args) {
 					logger.Fatal(errors.INVALID_FLAGS, "No logging level provided after "+args[i]+" flag.")
@@ -261,10 +272,13 @@ func processArguments() *Configuration {
 			switch flag {
 			case "--tokens", "-to":
 				configuration.PrintTokens = true
+
 			case "--tree", "-tr":
 				configuration.DrawTree = true
+
 			case "--dont-optimize", "-d":
 				configuration.Optimize = false
+
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+flag+"\" for action analyze.")
 			}
