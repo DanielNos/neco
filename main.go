@@ -33,6 +33,7 @@ type Configuration struct {
 	PrintInstructions bool
 	Optimize          bool
 	Silent            bool
+	PrintConstants    bool
 
 	Action     Action
 	TargetPath string
@@ -54,6 +55,7 @@ func printHelp() {
 	fmt.Println("                 -n  --no-log             Doesn't produce any log messages, even if there are errors.")
 	fmt.Println("                 -l  --log-level [LEVEL]  Sets logging level. Possible values are 0 to 5.")
 	fmt.Println("                 -o  --out               Sets output file path.")
+	fmt.Println("                 -c  --constants         Prints constants stored in binary.")
 	fmt.Println("\nrun [target]")
 	fmt.Println("\nanalyze [target]")
 	fmt.Println("                 -to --tokens        Prints lexed tokens.")
@@ -157,6 +159,65 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 	}
 }
 
+func printConstants(stringsCount, intsCount, floatsCount int, constants []any) {
+	// Calculate segments sizes
+	stringsSize := 0
+	for i := 0; i < stringsCount; i++ {
+		stringsSize += len(constants[i].(string)) + 1
+	}
+
+	intsSize := intsCount * 8
+	floatsSize := floatsCount * 8
+
+	color.Yellow("Constants %d B\n", stringsSize+intsSize+floatsSize)
+
+	// Print constants
+	color.Set(color.FgHiWhite)
+	index := 0
+
+	fmt.Print("├─ ")
+	color.HiYellow("Strings %d B\n", stringsSize)
+
+	for index < stringsCount {
+		if index == stringsCount-1 {
+			fmt.Print("│  └─ ")
+		} else {
+			fmt.Print("│  ├─ ")
+		}
+		fmt.Printf("[%d] \"%v\"\n", index, constants[index])
+		index++
+	}
+	fmt.Println("│")
+
+	fmt.Print("├─ ")
+	color.HiYellow("Integers %d B\n", intsSize)
+
+	endOfInts := stringsCount + intsCount
+	for index < endOfInts {
+		if index == endOfInts-1 {
+			fmt.Print("│  └─ ")
+		} else {
+			fmt.Print("│  ├─ ")
+		}
+		fmt.Printf("[%d] %v\n", index, constants[index])
+		index++
+	}
+	fmt.Println("│")
+
+	fmt.Print("└─ ")
+	color.HiYellow("Floats %d B\n", floatsSize)
+
+	for index < len(constants) {
+		if index == len(constants)-1 {
+			fmt.Print("   └─ ")
+		} else {
+			fmt.Print("   ├─ ")
+		}
+		fmt.Printf("[%d] %v\n", index, constants[index])
+		index++
+	}
+}
+
 func processArguments() *Configuration {
 	args := os.Args[1:]
 
@@ -253,6 +314,9 @@ func processArguments() *Configuration {
 				i++
 
 				configuration.OutputPath = args[i]
+
+			case "--constants", "-c":
+				configuration.PrintConstants = true
 
 			default:
 				logger.Fatal(errors.INVALID_FLAGS, "Invalid flag \""+args[i]+"\" for action build.")
@@ -386,6 +450,11 @@ func compile(configuration *Configuration) {
 	// Generate code
 	codeGenerator := codeGen.NewGenerator(tree, p.IntConstants, p.FloatConstants, p.StringConstants, configuration.Optimize)
 	codeGenerator.Generate()
+
+	// Print constants
+	if configuration.PrintConstants {
+		printConstants(len(p.StringConstants), len(p.IntConstants), len(p.FloatConstants), codeGenerator.Constants)
+	}
 
 	// Generation failed
 	if codeGenerator.ErrorCount != 0 {
