@@ -29,10 +29,10 @@ func visualize(node *Node, indent string, isLast bool) {
 	fmt.Print(indent)
 
 	if isLast {
-		print("└─ ")
+		fmt.Print("└─ ")
 		indent += "   "
 	} else {
-		print("├─ ")
+		fmt.Print("├─ ")
 		indent += "│  "
 	}
 
@@ -46,15 +46,15 @@ func visualize(node *Node, indent string, isLast bool) {
 		for _, id := range declare.Identifiers {
 			fmt.Printf(" %s", id)
 		}
-		println()
+		fmt.Println()
 
 	case NT_Assign:
 		assign := node.Value.(*AssignNode)
 
-		println("Assign")
+		fmt.Println("Assign")
 		visualize(assign.AssignedExpression, indent, false)
 		if len(assign.AssignedTo) > 1 {
-			println(indent + "└─ [multiple]")
+			fmt.Println(indent + "└─ [multiple]")
 			indent += "   "
 
 			visualizeList(assign.AssignedTo, indent, true)
@@ -84,11 +84,11 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(binary.Right, indent, true)
 
 	case NT_Not:
-		println("!")
+		fmt.Println("!")
 		visualize(node.Value.(*TypedBinaryNode).Right, indent, true)
 
 	case NT_Variable:
-		println(node.Value.(*VariableNode).Identifier)
+		fmt.Println(node.Value.(*VariableNode).Identifier)
 
 	case NT_FunctionDeclaration:
 		functionDeclareNode := node.Value.(*FunctionDeclareNode)
@@ -105,7 +105,7 @@ func visualize(node *Node, indent string, isLast bool) {
 			}
 		}
 
-		print(") ")
+		fmt.Print(") ")
 
 		if functionDeclareNode.ReturnType.Type != data.DT_Unknown {
 			fmt.Printf("-> %s", functionDeclareNode.ReturnType)
@@ -126,14 +126,14 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualizeList(functionCall.Arguments, indent, true)
 
 	case NT_Return:
-		println("return")
+		fmt.Println("return")
 
 		if node.Value != nil {
 			visualize(node.Value.(*Node), indent, true)
 		}
 
 	case NT_If:
-		println("if")
+		fmt.Println("if")
 		ifNode := node.Value.(*IfNode)
 		visualize(ifNode.IfStatements[0].Condition, indent, false)
 		visualize(ifNode.IfStatements[0].Body, indent, len(ifNode.IfStatements) == 1 && ifNode.ElseBody == nil)
@@ -153,11 +153,11 @@ func visualize(node *Node, indent string, isLast bool) {
 		}
 
 	case NT_Loop:
-		println("loop")
+		fmt.Println("loop")
 		visualize(node.Value.(*Node), indent, true)
 
 	case NT_ForLoop:
-		println("for")
+		fmt.Println("for")
 
 		forNode := node.Value.(*ForLoopNode)
 
@@ -167,7 +167,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(forNode.Body, indent, true)
 
 	case NT_ForEachLoop:
-		println("forEach")
+		fmt.Println("forEach")
 		forEach := node.Value.(*ForEachLoopNode)
 
 		visualize(forEach.Iterator, indent, false)
@@ -175,23 +175,23 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualize(forEach.Body, indent, true)
 
 	case NT_Break:
-		println("break")
+		fmt.Println("break")
 
 	case NT_List, NT_Set:
 		listNode := node.Value.(*ListNode)
 		fmt.Printf("%s", listNode.DataType)
 
 		if len(listNode.Nodes) == 0 {
-			println(" (empty)")
+			fmt.Println(" (empty)")
 			return
 		} else {
-			println()
+			fmt.Println()
 		}
 
 		visualizeList(listNode.Nodes, indent, true)
 
 	case NT_ListValue:
-		println("ListIndex")
+		fmt.Println("ListIndex")
 		listValue := node.Value.(*TypedBinaryNode)
 
 		visualize(listValue.Left, indent, false)
@@ -199,7 +199,7 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_ListAssign:
 		listAssign := node.Value.(*ListAssignNode)
-		println("Assign")
+		fmt.Println("Assign")
 
 		fmt.Printf("%s├─ %s[...]\n", indent, listAssign.Identifier)
 		visualize(listAssign.IndexExpression, indent+"│  ", true)
@@ -215,22 +215,22 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualizeList(objectNode.Properties, indent, true)
 
 	case NT_Delete:
-		println("Delete")
+		fmt.Println("Delete")
 		visualize(node.Value.(*Node), indent, true)
 
 	case NT_ObjectField:
 		objectFieldNode := node.Value.(*ObjectFieldNode)
-		println("Field " + fmt.Sprintf("%d", objectFieldNode.FieldIndex))
+		fmt.Println("Field " + fmt.Sprintf("%d", objectFieldNode.FieldIndex))
 		visualize(objectFieldNode.Object, indent, true)
 
 	case NT_Match:
 		matchNode := node.Value.(*MatchNode)
 
-		println("Match")
+		fmt.Println("Match")
 		visualize(matchNode.Expression, indent, len(matchNode.Cases) == 0 && matchNode.Default == nil)
 		visualizeList(matchNode.Cases, indent, matchNode.Default == nil)
 		if matchNode.Default != nil {
-			println(indent + "└─ default")
+			fmt.Println(indent + "└─ default")
 			indent += "   "
 
 			visualize(matchNode.Default, indent, true)
@@ -239,12 +239,12 @@ func visualize(node *Node, indent string, isLast bool) {
 	case NT_Case:
 		caseNode := node.Value.(*CaseNode)
 
-		println("Case")
+		fmt.Println("Case")
 		visualizeList(caseNode.Expressions, indent, false)
 
 		visualize(caseNode.Statement, indent, true)
 
 	default:
-		println(NodeTypeToString[node.NodeType])
+		fmt.Println(NodeTypeToString[node.NodeType])
 	}
 }

@@ -459,23 +459,23 @@ func (vm *VirtualMachine) interpretInstruction() {
 		fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
 		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
 		fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
-		print("Scope: {")
+		fmt.Print("Scope: {")
 		fmt.Printf("%s", vm.stack_scopes[0])
 
 		if vm.reg_scopeIndex > 1 {
 			for _, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
 				if len(scope) == 0 {
-					print(", U")
+					fmt.Print(", U")
 				} else {
 					fmt.Printf(", %s", scope)
 				}
 			}
 		}
 
-		println("}")
+		fmt.Println("}")
 
 		if vm.instructionIndex == len(*vm.instructions) {
-			println("Next: none\n")
+			fmt.Println("Next: none\n")
 			return
 		}
 

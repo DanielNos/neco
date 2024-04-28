@@ -42,28 +42,28 @@ type Configuration struct {
 func printHelp() {
 	color.Set(color.Bold)
 	color.Set(color.FgHiYellow)
-	println("Action           Flags")
+	fmt.Println("Action           Flags")
 
 	color.Set(color.Reset)
-	println("build [target]")
-	println("                 -to --tokens            Prints lexed tokens.")
-	println("                 -tr --tree              Draws abstract syntax tree.")
-	println("                 -i  --instructions      Prints generated instructions.")
-	println("                 -d  --dont-optimize      Compiler won't optimize byte code.")
-	println("                 -s  --silent            Doesn't produce info messages when possible.")
-	println("                 -n  --no-log             Doesn't produce any log messages, even if there are errors.")
-	println("                 -l  --log-level [LEVEL]  Sets logging level. Possible values are 0 to 5.")
-	println("                 -o  --out               Sets output file path.")
-	println("\nrun [target]")
-	println("\nanalyze [target]")
-	println("                 -to --tokens        Prints lexed tokens.")
-	println("                 -tr --tree          Draws abstract syntax tree.")
-	println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
+	fmt.Println("build [target]")
+	fmt.Println("                 -to --tokens            Prints lexed tokens.")
+	fmt.Println("                 -tr --tree              Draws abstract syntax tree.")
+	fmt.Println("                 -i  --instructions      Prints generated instructions.")
+	fmt.Println("                 -d  --dont-optimize      Compiler won't optimize byte code.")
+	fmt.Println("                 -s  --silent            Doesn't produce info messages when possible.")
+	fmt.Println("                 -n  --no-log             Doesn't produce any log messages, even if there are errors.")
+	fmt.Println("                 -l  --log-level [LEVEL]  Sets logging level. Possible values are 0 to 5.")
+	fmt.Println("                 -o  --out               Sets output file path.")
+	fmt.Println("\nrun [target]")
+	fmt.Println("\nanalyze [target]")
+	fmt.Println("                 -to --tokens        Prints lexed tokens.")
+	fmt.Println("                 -tr --tree          Draws abstract syntax tree.")
+	fmt.Println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
 
 }
 
 func printTokens(tokens []*lexer.Token) {
-	println()
+	fmt.Println()
 	for _, token := range tokens {
 		if token.TokenType >= lexer.TT_KW_const {
 			color.Set(color.FgHiCyan)
@@ -83,7 +83,7 @@ func printTokens(tokens []*lexer.Token) {
 		fmt.Printf("%v\n", token.TableString())
 	}
 	color.Set(color.FgHiWhite)
-	println()
+	fmt.Println()
 }
 
 func printInstructions(instructions *[]VM.Instruction, constants []any, firstLine int) {
@@ -101,27 +101,27 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 			line += int(instruction.InstructionValue[0])
 			justChanged = true
 
-			println()
+			fmt.Println()
 			continue
 		}
 
 		// Print line number
 		if justChanged {
 			if line < 10 {
-				print(" ")
+				fmt.Print(" ")
 			}
 			fmt.Printf("%d ", line)
 			justChanged = false
 		} else {
-			print("   ")
+			fmt.Print("   ")
 		}
 
 		// Print instruction number,
 		if i < 10 {
-			print(" ")
+			fmt.Print(" ")
 		}
 		if i < 100 {
-			print(" ")
+			fmt.Print(" ")
 		}
 		fmt.Printf("%d  ", i)
 
@@ -130,7 +130,7 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 
 		j := len(VM.InstructionTypeToString[instruction.InstructionType])
 		for j < 16 {
-			print(" ")
+			fmt.Print(" ")
 			j++
 		}
 
@@ -153,7 +153,7 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 			}
 		}
 
-		println()
+		fmt.Println()
 	}
 }
 
@@ -347,10 +347,10 @@ func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 	// Visualize tree
 	if configuration.DrawTree {
 		if !configuration.PrintTokens {
-			println()
+			fmt.Println()
 		}
 		parser.Visualize(tree)
-		println()
+		fmt.Println()
 	}
 
 	if exitCode != 0 {
@@ -389,7 +389,7 @@ func compile(configuration *Configuration) {
 		printInstructions(&codeGenerator.GlobalsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
 		printInstructions(&codeGenerator.FunctionsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
 
-		println()
+		fmt.Println()
 	}
 }
 
