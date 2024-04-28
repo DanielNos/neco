@@ -14,6 +14,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		[]Parameter{{&data.DataType{data.DT_String, nil}, "text", nil}},
 		nil, true},
 	)
+	p.insertFunction("printLine", &FunctionSymbol{number: -1, parameters: []Parameter{}, returnType: nil, everCalled: true})
 
 	// To string
 	p.insertFunction("str", &FunctionSymbol{-1,

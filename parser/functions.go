@@ -108,6 +108,13 @@ func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lex
 
 			// Set function as used
 			functionSymbol.everCalled = true
+
+			// Insert empty string argument to printLine function without arguments
+			if identifier.Value == "printLine" && len(arguments) == 0 {
+				arguments = append(arguments, &Node{Position: identifier.Position, NodeType: NT_Literal, Value: &LiteralNode{data.DT_String, ""}})
+				argumentTypes = append(argumentTypes, &data.DataType{data.DT_String, nil})
+				p.StringConstants[""] = -1
+			}
 		}
 	}
 	p.consume()
