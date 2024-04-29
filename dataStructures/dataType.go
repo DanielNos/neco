@@ -98,6 +98,10 @@ func (dt *DataType) CanBeAssigned(other *DataType) bool {
 			return true
 		}
 
+		if other.IsCompositeType() {
+			return dt.SubType.(*DataType).CanBeAssigned(other.SubType.(*DataType))
+		}
+
 		return dt.SubType.(*DataType).CanBeAssigned(other)
 	}
 
