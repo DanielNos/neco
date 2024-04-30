@@ -205,6 +205,11 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Match:
 		cg.generateMatch(node.Value.(*parser.MatchNode), true)
 
+	case parser.NT_UnpackOrDefault:
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
+		cg.addInstruction(VM.IT_UnpackOrDefault)
+
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())
 	}

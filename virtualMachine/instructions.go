@@ -100,6 +100,8 @@ const (
 	IT_Pop
 	IT_DuplicateTop
 
+	IT_UnpackOrDefault
+
 	IT_LineOffset
 )
 
@@ -200,6 +202,8 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_Pop:          "pop",
 	IT_DuplicateTop: "duplicate",
+
+	IT_UnpackOrDefault: "unpack_or_def",
 
 	IT_LineOffset: "line_offset",
 }

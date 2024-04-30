@@ -445,6 +445,13 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_DuplicateTop:
 		vm.stack.Push(vm.stack.items[vm.stack.size-1])
 
+	// Unpack or default
+	case IT_UnpackOrDefault:
+		vm.stack.size--
+		if vm.stack.items[vm.stack.size-1] == nil {
+			vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size]
+		}
+
 	// Ignore line offsets
 	case IT_LineOffset:
 

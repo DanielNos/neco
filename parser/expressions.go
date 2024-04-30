@@ -178,126 +178,154 @@ func (p *Parser) deriveType(expression *Node) *data.DataType {
 
 	// Operators
 	if expression.NodeType.IsOperator() {
-		binaryNode := expression.Value.(*TypedBinaryNode)
-
-		// Node has it's type stored already
-		if binaryNode.DataType.Type != data.DT_Unknown {
-			return binaryNode.DataType
-		}
-
-		// Unary operator
-		if binaryNode.Left == nil {
-			return GetExpressionType(binaryNode.Right)
-		}
-
-		// Collect left and right node data types
-		leftType := p.deriveType(binaryNode.Left)
-		rightType := p.deriveType(binaryNode.Right)
-
-		// Error in one of types
-		if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
-			return &data.DataType{data.DT_Unknown, nil}
-		}
-
-		// In operator has to be used on set with correct type
-		if expression.NodeType == NT_In {
-			// Right type isn't a set
-			if rightType.Type != data.DT_Set {
-				p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set.")
-				// Left type isn't set's sub-type
-			} else if !rightType.SubType.(*data.DataType).CanBeAssigned(leftType) {
-				p.newErrorNoMessage()
-				logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), "Left expression type ("+leftType.String()+") doesn't match the set element type ("+rightType.SubType.(*data.DataType).String()+").")
-			}
-			binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
-			return binaryNode.DataType
-		}
-
-		// Compatible data types, check if operator is allowed
-		if leftType.CanBeAssigned(rightType) {
-			// Can't do any operations on options without unwrapping
-			if leftType.Type == data.DT_Option {
-				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left), "Options need to be unwrapped or matched to access their values.")
-			}
-			if rightType.Type == data.DT_Option {
-				p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right), "Options need to be unwrapped or matched to access their values.")
-			}
-
-			// Logic operators can be used only on booleans
-			if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
-				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can be only used on expressions of type bool.")
-				binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
-				return binaryNode.DataType
-			}
-
-			// Comparison operators return boolean
-			if expression.NodeType.IsComparisonOperator() {
-				binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
-				return binaryNode.DataType
-			}
-
-			// Can't do non-comparison operations on enums
-			if leftType.Type == data.DT_Enum || rightType.Type == data.DT_Enum {
-				p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can't be used on enum constants.")
-				return &data.DataType{data.DT_Unknown, nil}
-			}
-
-			// Only + can be used on strings and lists
-			if (leftType.Type == data.DT_String || leftType.Type == data.DT_List) && expression.NodeType != NT_Add {
-				p.newError(expression.Position, "Can't use operator "+expression.NodeType.String()+" on data types "+leftType.String()+" and "+rightType.String()+".")
-				return &data.DataType{data.DT_Unknown, nil}
-			}
-
-			// Return left type
-			if leftType.Type != data.DT_Unknown {
-				binaryNode.DataType = leftType
-				return leftType
-			}
-
-			// Return right type
-			if rightType.Type != data.DT_Unknown {
-				binaryNode.DataType = rightType
-				return rightType
-			}
-
-			// Neither have type
-			return leftType
-		}
-
-		// Left or right doesn't have a type
-		if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
-			return leftType
-		}
-
-		// Failed to determine data type
-		p.newError(expression.Position, "Operator "+expression.NodeType.String()+" is used on incompatible data types "+leftType.String()+" and "+rightType.String()+".")
-		return &data.DataType{data.DT_Unknown, nil}
+		return p.deriveOperatorType(expression)
 	}
 
 	return GetExpressionType(expression)
 }
 
+func (p *Parser) deriveOperatorType(expression *Node) *data.DataType {
+	binaryNode := expression.Value.(*TypedBinaryNode)
+
+	// Node has it's type stored already
+	if binaryNode.DataType.Type != data.DT_Unknown {
+		return binaryNode.DataType
+	}
+
+	// Unary operator
+	if binaryNode.Left == nil {
+		return GetExpressionType(binaryNode.Right)
+	}
+
+	// Collect left and right node data types
+	leftType := p.deriveType(binaryNode.Left)
+	rightType := p.deriveType(binaryNode.Right)
+
+	// Error in one of types
+	if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
+		return &data.DataType{data.DT_Unknown, nil}
+	}
+
+	// In operator has to be used on set with correct type
+	if expression.NodeType == NT_In {
+		// Right type isn't a set
+		if rightType.Type != data.DT_Set {
+			p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set.")
+			// Left type isn't set's sub-type
+		} else if !rightType.SubType.(*data.DataType).CanBeAssigned(leftType) {
+			p.newErrorNoMessage()
+			logger.Error2CodePos(GetExpressionPosition(binaryNode.Left), GetExpressionPosition(binaryNode.Right), "Left expression type ("+leftType.String()+") doesn't match the set element type ("+rightType.SubType.(*data.DataType).String()+").")
+		}
+		binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
+		return binaryNode.DataType
+	}
+
+	if expression.NodeType == NT_UnpackOrDefault {
+		// Right side of ?! can't be none
+		if rightType.Type == data.DT_None {
+			p.newError(GetExpressionPosition(binaryNode.Right), "Expression on the right side of ?! operator can't be none.")
+		} else if rightType.Type == data.DT_Option {
+			p.newError(GetExpressionPosition(binaryNode.Right), "Expression on the right side of ?! operator can't be possibly none.")
+		}
+
+		// Check if left and right type is compatible
+		if leftType.Type == data.DT_Option {
+			if !leftType.CanBeAssigned(rightType) {
+				p.newError(GetExpressionPosition(binaryNode.Left), "Both sides of operator ?! have to have the same type. Left is "+leftType.String()+", right is "+rightType.String()+".")
+			}
+			// Left has to be option or none
+		} else if leftType.Type != data.DT_None {
+			p.newError(GetExpressionPosition(binaryNode.Left), "Left side of operator ?! has to be an option type.")
+		}
+
+		binaryNode.DataType = rightType
+		return rightType
+	}
+
+	// Compatible data types, check if operator is allowed
+	if leftType.CanBeAssigned(rightType) {
+		// Can't do any operations on options without unwrapping
+		if leftType.Type == data.DT_Option {
+			p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left), "Options need to be unwrapped or matched to access their values.")
+		}
+		if rightType.Type == data.DT_Option {
+			p.newError(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right), "Options need to be unwrapped or matched to access their values.")
+		}
+
+		// Logic operators can be used only on booleans
+		if expression.NodeType.IsLogicOperator() && (leftType.Type != data.DT_Bool || rightType.Type != data.DT_Bool) {
+			p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can be only used on expressions of type bool.")
+			binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
+			return binaryNode.DataType
+		}
+
+		// Comparison operators return boolean
+		if expression.NodeType.IsComparisonOperator() {
+			binaryNode.DataType = &data.DataType{data.DT_Bool, nil}
+			return binaryNode.DataType
+		}
+
+		// Can't do non-comparison operations on enums
+		if leftType.Type == data.DT_Enum || rightType.Type == data.DT_Enum {
+			p.newError(expression.Position, "Operator "+expression.NodeType.String()+" can't be used on enum constants.")
+			return &data.DataType{data.DT_Unknown, nil}
+		}
+
+		// Only + can be used on strings and lists
+		if (leftType.Type == data.DT_String || leftType.Type == data.DT_List) && expression.NodeType != NT_Add {
+			p.newError(expression.Position, "Can't use operator "+expression.NodeType.String()+" on data types "+leftType.String()+" and "+rightType.String()+".")
+			return &data.DataType{data.DT_Unknown, nil}
+		}
+
+		// Return left type
+		if leftType.Type != data.DT_Unknown {
+			binaryNode.DataType = leftType
+			return leftType
+		}
+
+		// Return right type
+		if rightType.Type != data.DT_Unknown {
+			binaryNode.DataType = rightType
+			return rightType
+		}
+
+		// Neither have type
+		return leftType
+	}
+
+	// Left or right doesn't have a type
+	if leftType.Type == data.DT_Unknown || rightType.Type == data.DT_Unknown {
+		return leftType
+	}
+
+	// Failed to determine data type
+	p.newError(expression.Position, "Operator "+expression.NodeType.String()+" is used on incompatible data types "+leftType.String()+" and "+rightType.String()+".")
+	return &data.DataType{data.DT_Unknown, nil}
+}
+
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
-	case lexer.TT_OP_Or:
+	case lexer.TT_OP_UnpackOrDefault:
 		return 0
-	case lexer.TT_OP_And:
+	case lexer.TT_OP_Or:
 		return 1
+	case lexer.TT_OP_And:
+		return 2
 	case lexer.TT_OP_Equal, lexer.TT_OP_NotEqual,
 		lexer.TT_OP_Lower, lexer.TT_OP_Greater,
 		lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual,
 		lexer.TT_OP_In:
-		return 2
-	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 3
-	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
+	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 4
-	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
+	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
 		return 5
-	case lexer.TT_OP_Not:
+	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
 		return 6
-	case lexer.TT_OP_Dot:
+	case lexer.TT_OP_Not:
 		return 7
+	case lexer.TT_OP_Dot:
+		return 8
 	default:
 		panic("Can't get operator precedence of token type " + operator.String() + ".")
 	}

@@ -300,7 +300,15 @@ func (l *Lexer) lexRune() {
 			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_Dot, "")
 		case '?':
 			l.advance()
-			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_QuestionMark, "")
+			if l.currRune == '!' {
+				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_UnpackOrDefault, "")
+			} else if l.currRune == '?' {
+				l.advance()
+				l.newTokenFrom(l.lineIndex, l.charIndex-2, TT_OP_Ternary, "")
+			} else {
+				l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_OP_QuestionMark, "")
+			}
 
 		// Property
 		case ':':

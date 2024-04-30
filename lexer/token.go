@@ -29,6 +29,7 @@ const (
 
 	TT_OP_Dot
 	TT_OP_QuestionMark
+	TT_OP_UnpackOrDefault
 
 	TT_OP_Add
 	TT_OP_Subtract
@@ -93,6 +94,8 @@ const (
 
 	TT_KW_match
 	TT_KW_default
+
+	TT_OP_Ternary
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -115,8 +118,9 @@ var TokenTypeToString = map[TokenType]string{
 	TT_OP_Or:  "|",
 	TT_OP_Not: "!",
 
-	TT_OP_Dot:          ".",
-	TT_OP_QuestionMark: "?",
+	TT_OP_Dot:             ".",
+	TT_OP_QuestionMark:    "?",
+	TT_OP_UnpackOrDefault: "?!",
 
 	TT_OP_Add:      "+",
 	TT_OP_Subtract: "-",
@@ -180,6 +184,8 @@ var TokenTypeToString = map[TokenType]string{
 
 	TT_KW_match:   "match",
 	TT_KW_default: "default",
+
+	TT_OP_Ternary: "??",
 }
 
 func (tt TokenType) String() string {

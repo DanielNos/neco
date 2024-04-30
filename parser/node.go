@@ -22,7 +22,7 @@ const (
 	NT_VariableDeclaration
 	NT_Assign
 	NT_Not
-	NT_Property
+	NT_GetField
 	NT_And
 	NT_Or
 	NT_Add
@@ -38,6 +38,7 @@ const (
 	NT_LowerEqual
 	NT_GreaterEqual
 	NT_In
+	NT_UnpackOrDefault
 	NT_FunctionDeclaration
 	NT_FunctionCall
 	NT_Return
@@ -69,7 +70,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_VariableDeclaration: "VariableDeclare",
 	NT_Assign:              "Assign",
 	NT_Not:                 "!",
-	NT_Property:            ".",
+	NT_GetField:            ".",
 	NT_And:                 "&",
 	NT_Or:                  "|",
 	NT_Add:                 "+",
@@ -85,6 +86,7 @@ var NodeTypeToString = map[NodeType]string{
 	NT_LowerEqual:          "<=",
 	NT_GreaterEqual:        ">=",
 	NT_In:                  "in",
+	NT_UnpackOrDefault:     "?!",
 	NT_FunctionDeclaration: "FunctionDeclare",
 	NT_FunctionCall:        "FunctionCall",
 	NT_Return:              "Return",
@@ -259,7 +261,8 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
 	lexer.TT_OP_LowerEqual:   NT_LowerEqual,
 	lexer.TT_OP_GreaterEqual: NT_GreaterEqual,
 
-	lexer.TT_OP_In: NT_In,
+	lexer.TT_OP_In:              NT_In,
+	lexer.TT_OP_UnpackOrDefault: NT_UnpackOrDefault,
 }
 
 var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
@@ -272,11 +275,11 @@ var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{
 }
 
 func (n *Node) IsBinaryNode() bool {
-	return n.NodeType >= NT_Property && n.NodeType <= NT_In && n.Value.(*TypedBinaryNode).Left != nil
+	return n.NodeType >= NT_GetField && n.NodeType <= NT_UnpackOrDefault && n.Value.(*TypedBinaryNode).Left != nil
 }
 
 func (nt NodeType) IsOperator() bool {
-	return nt >= NT_Property && nt <= NT_In
+	return nt >= NT_GetField && nt <= NT_UnpackOrDefault
 }
 
 func (nt NodeType) IsComparisonOperator() bool {
@@ -288,24 +291,25 @@ func (nt NodeType) IsLogicOperator() bool {
 }
 
 var operatorNodePrecedence = map[NodeType]int{
-	NT_And: 0,
-	NT_Or:  0,
+	NT_Or:  1,
+	NT_And: 2,
 
-	NT_Equal:        1,
-	NT_NotEqual:     1,
-	NT_Lower:        1,
-	NT_Greater:      1,
-	NT_LowerEqual:   1,
-	NT_GreaterEqual: 1,
-	NT_In:           1,
+	NT_Equal:        3,
+	NT_NotEqual:     3,
+	NT_Lower:        3,
+	NT_Greater:      3,
+	NT_LowerEqual:   3,
+	NT_GreaterEqual: 3,
+	NT_In:           3,
 
-	NT_Add:      2,
-	NT_Subtract: 2,
+	NT_Add:      4,
+	NT_Subtract: 4,
 
-	NT_Multiply: 3,
-	NT_Divide:   3,
-	NT_Power:    4,
-	NT_Modulo:   4,
+	NT_Multiply: 5,
+	NT_Divide:   5,
 
-	NT_Property: 5,
+	NT_Power:  6,
+	NT_Modulo: 6,
+
+	NT_GetField: 7,
 }
