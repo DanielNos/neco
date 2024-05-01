@@ -73,7 +73,8 @@ func visualize(node *Node, indent string, isLast bool) {
 
 	case NT_Add, NT_Subtract, NT_Multiply, NT_Divide, NT_Power, NT_Modulo,
 		NT_Equal, NT_NotEqual, NT_Lower, NT_Greater, NT_LowerEqual, NT_GreaterEqual,
-		NT_And, NT_Or, NT_In, NT_UnpackOrDefault:
+		NT_And, NT_Or, NT_In, NT_UnpackOrDefault, NT_Ternary, NT_TernaryBranches:
+
 		binary := node.Value.(*TypedBinaryNode)
 		fmt.Printf("%s (%s)\n", NodeTypeToString[node.NodeType], binary.DataType)
 
@@ -243,6 +244,10 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualizeList(caseNode.Expressions, indent, false)
 
 		visualize(caseNode.Statement, indent, true)
+
+	case NT_Unwrap:
+		fmt.Println("Unwrap")
+		visualize(node.Value.(*Node), indent, true)
 
 	default:
 		fmt.Println(NodeTypeToString[node.NodeType])
