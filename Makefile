@@ -18,6 +18,9 @@ build: *.go
 	GOOS=windows GOARCH=arm $(BUILD_COMMAND) bin/$(BIN_NAME)_windows_arm.exe .
 	GOOS=darwin GOARCH=amd64 $(BUILD_COMMAND) bin/$(BIN_NAME)_macos_amd64 .
 	GOOS=darwin GOARCH=arm64 $(BUILD_COMMAND) bin/$(BIN_NAME)_macos_arm64 .
+	GOOS=freebsd GOARCH=amd64 $(BUILD_COMMAND) bin/$(BIN_NAME)_freebsd_amd64 .
+	GOOS=freebsd GOARCH=386 $(BUILD_COMMAND) bin/$(BIN_NAME)_freebsd_386 .
+	GOOS=freebsd GOARCH=arm $(BUILD_COMMAND) bin/$(BIN_NAME)_freebsd_arm .
 
 package: clean build
 	mkdir -p $(PACKAGE_PATH)/usr/bin
