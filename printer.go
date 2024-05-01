@@ -85,16 +85,24 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 		if len(instruction.InstructionValue) != 0 {
 			fmt.Printf("%d", instruction.InstructionValue[0])
 
-			if instruction.InstructionType == VM.IT_JumpBack {
+			// Jump back instructions
+			if instruction.InstructionType == VM.IT_JumpBack || instruction.InstructionType == VM.IT_JumpBackEx {
 				fmt.Printf(" (%d)", i-int(instruction.InstructionValue[0])+1)
-			} else if instruction.InstructionType == VM.IT_Jump || instruction.InstructionType == VM.IT_JumpIfTrue {
+
+				// Jump forward instructions
+			} else if VM.IsJumpForward(instruction.InstructionType) {
 				fmt.Printf(" (%d)", i+int(instruction.InstructionValue[0])+1)
+
+				// Instructions loading constants
 			} else if instruction.InstructionType == VM.IT_PushScope || instruction.InstructionType == VM.IT_LoadConst || instruction.InstructionType == VM.IT_LoadConstToList {
+
 				if reflect.TypeOf(constants[instruction.InstructionValue[0]]).Kind() == reflect.String {
 					fmt.Printf("  (\"%v\")", constants[instruction.InstructionValue[0]])
 				} else {
 					fmt.Printf("  (%v)", constants[instruction.InstructionValue[0]])
 				}
+
+				// Instruction calling built-in functions
 			} else if instruction.InstructionType == VM.IT_CallBuiltInFunc {
 				fmt.Printf("  %v()", VM.BuiltInFuncToString[instruction.InstructionValue[0]])
 			}

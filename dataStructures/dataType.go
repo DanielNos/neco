@@ -108,6 +108,22 @@ func (dt *DataType) CanBeAssigned(other *DataType) bool {
 	return false
 }
 
+func (dt *DataType) Equals(other *DataType) bool {
+	if dt.Type != other.Type {
+		return false
+	}
+
+	if dt.Type <= DT_None {
+		return true
+		// User defined types
+	} else if dt.Type <= DT_Object {
+		return dt.SubType == other.SubType
+		// Composite types
+	} else {
+		return dt.SubType.(*DataType).Equals(other.SubType.(*DataType))
+	}
+}
+
 func (dt *DataType) IsComplete() bool {
 	if dt.SubType == nil || dt.Type == DT_Enum || dt.Type == DT_Object {
 		return dt.Type != DT_Unknown

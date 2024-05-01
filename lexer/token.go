@@ -46,6 +46,8 @@ const (
 	TT_OP_GreaterEqual
 	TT_OP_In
 
+	TT_OP_Ternary
+
 	TT_LT_Bool
 	TT_LT_Int
 	TT_LT_Float
@@ -94,8 +96,6 @@ const (
 
 	TT_KW_match
 	TT_KW_default
-
-	TT_OP_Ternary
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -160,6 +160,8 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_ModuloAssign:   "%=",
 	TT_OP_In:             "in",
 
+	TT_OP_Ternary: "??",
+
 	TT_KW_loop:     "loop",
 	TT_KW_while:    "while",
 	TT_KW_for:      "for",
@@ -184,8 +186,6 @@ var TokenTypeToString = map[TokenType]string{
 
 	TT_KW_match:   "match",
 	TT_KW_default: "default",
-
-	TT_OP_Ternary: "??",
 }
 
 func (tt TokenType) String() string {
@@ -201,11 +201,11 @@ func (tt TokenType) IsLiteral() bool {
 }
 
 func (tt TokenType) IsOperator() bool {
-	return tt >= TT_OP_And && tt <= TT_OP_In
+	return tt >= TT_OP_And && tt <= TT_OP_Ternary || tt == TT_DL_Colon
 }
 
 func (tt TokenType) IsBinaryOperator() bool {
-	return tt >= TT_OP_And && tt <= TT_OP_In
+	return tt >= TT_OP_And && tt <= TT_OP_Ternary || tt == TT_DL_Colon
 }
 
 func (tt TokenType) IsUnaryOperator() bool {

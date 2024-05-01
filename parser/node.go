@@ -38,6 +38,8 @@ const (
 	NT_LowerEqual
 	NT_GreaterEqual
 	NT_In
+	NT_Ternary
+	NT_TernaryBranches
 	NT_UnpackOrDefault
 	NT_FunctionDeclaration
 	NT_FunctionCall
@@ -109,6 +111,8 @@ var NodeTypeToString = map[NodeType]string{
 	NT_IsNone:              "IsNone",
 	NT_Match:               "Match",
 	NT_Case:                "Case",
+	NT_Ternary:             "Ternary",
+	NT_TernaryBranches:     "TernaryBranches",
 }
 
 func (nt NodeType) String() string {
@@ -263,6 +267,8 @@ var TokenTypeToNodeType = map[lexer.TokenType]NodeType{
 
 	lexer.TT_OP_In:              NT_In,
 	lexer.TT_OP_UnpackOrDefault: NT_UnpackOrDefault,
+	lexer.TT_OP_Ternary:         NT_Ternary,
+	lexer.TT_DL_Colon:           NT_TernaryBranches,
 }
 
 var OperationAssignTokenToNodeType = map[lexer.TokenType]NodeType{

@@ -5,6 +5,7 @@ import "fmt"
 const (
 	// 1 argument 2 bytes
 	IT_JumpEx byte = iota
+	IT_JumpIfFalseEx
 	IT_JumpIfTrueEx
 	IT_JumpBackEx
 
@@ -39,6 +40,7 @@ const (
 
 	IT_JumpBack
 	IT_Jump
+	IT_JumpIfFalse
 	IT_JumpIfTrue
 
 	// 0 arguments
@@ -107,9 +109,10 @@ const (
 
 var InstructionTypeToString = map[byte]string{
 	// 1 argument 2 bytes
-	IT_JumpEx:       "jump_ex",
-	IT_JumpIfTrueEx: "jump_if_true_ex",
-	IT_JumpBackEx:   "jump_back_ex",
+	IT_JumpEx:        "jmp_ex",
+	IT_JumpIfFalseEx: "jmp_if_0_ex",
+	IT_JumpIfTrueEx:  "jmp_if_1_ex",
+	IT_JumpBackEx:    "jmp_back_ex",
 
 	// 1 argument 1 byte
 	IT_Call:            "call",
@@ -140,9 +143,10 @@ var InstructionTypeToString = map[byte]string{
 	IT_GetFieldAndPop: "field_get_pop",
 	IT_SetField:       "field_set",
 
-	IT_JumpBack:   "jump_back",
-	IT_Jump:       "jump",
-	IT_JumpIfTrue: "jump_if_true",
+	IT_JumpBack:    "jmp_back",
+	IT_Jump:        "jmp",
+	IT_JumpIfFalse: "jmp_if_0",
+	IT_JumpIfTrue:  "jmp_if_1",
 
 	// 0 arguments
 	IT_IntAdd:      "int_add",
@@ -227,7 +231,7 @@ type ExpandedInstruction struct {
 }
 
 func IsJumpForward(instructionType byte) bool {
-	return instructionType == IT_Jump || instructionType == IT_JumpEx || instructionType == IT_JumpIfTrue || instructionType == IT_JumpIfTrueEx
+	return instructionType >= IT_Jump && instructionType <= IT_JumpIfTrue || instructionType >= IT_JumpEx && instructionType <= IT_JumpIfTrueEx
 }
 
 func IsCompositeDeclarator(instructionType byte) bool {

@@ -205,10 +205,38 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Match:
 		cg.generateMatch(node.Value.(*parser.MatchNode), true)
 
+	// ?! operator
 	case parser.NT_UnpackOrDefault:
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
 		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Right)
 		cg.addInstruction(VM.IT_UnpackOrDefault)
+
+	// ?? operator
+	case parser.NT_Ternary:
+		// Generate condition expression
+		cg.generateExpression(node.Value.(*parser.TypedBinaryNode).Left)
+		branches := node.Value.(*parser.TypedBinaryNode).Right.Value.(*parser.TypedBinaryNode)
+
+		// Generate jump to false
+		cg.addInstruction(VM.IT_JumpIfFalse, 0)
+		jumpIfFalseInstruction := &(*cg.target)[len(*cg.target)-1]
+		jumpIfFalsePosition := len(*cg.target)
+
+		// Generate true branch
+		cg.generateExpression(branches.Left)
+
+		// Generate jump to end instruction
+		cg.addInstruction(VM.IT_Jump, 0)
+		jumpToEndInstruction := &(*cg.target)[len(*cg.target)-1]
+		jumpToEndPosition := len(*cg.target)
+
+		// Generate false branch
+		updateJumpDistance(jumpIfFalseInstruction, len(*cg.target)-jumpIfFalsePosition, VM.IT_JumpIfFalseEx)
+
+		cg.generateExpression(branches.Right)
+
+		// Set jump to end instruction target
+		updateJumpDistance(jumpToEndInstruction, len(*cg.target)-jumpToEndPosition, VM.IT_JumpEx)
 
 	default:
 		panic("Invalid node in generator expression: " + node.NodeType.String())

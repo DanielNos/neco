@@ -121,6 +121,11 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_Jump:
 		vm.instructionIndex += instruction.InstructionValue[0]
 
+	case IT_JumpIfFalse:
+		if !vm.stack.Pop().(bool) {
+			vm.instructionIndex += instruction.InstructionValue[0]
+		}
+
 	case IT_JumpIfTrue:
 		if vm.stack.Pop().(bool) {
 			vm.instructionIndex += instruction.InstructionValue[0]

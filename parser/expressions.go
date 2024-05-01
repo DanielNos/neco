@@ -118,6 +118,19 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 		nodeType := TokenTypeToNodeType[operator.TokenType]
 
+		if nodeType == NT_Ternary {
+			// Right side has to have two expressions
+			if right.NodeType != NT_TernaryBranches {
+				p.newError(GetExpressionPosition(right), "Right side of the ternary operator ?? need to have two expressions separated by a \":\".")
+			} else {
+				p.collectConstant(right.Value.(*TypedBinaryNode).Right)
+				p.collectConstant(right.Value.(*TypedBinaryNode).Left)
+			}
+
+			left = p.createBinaryNode(operator.Position, nodeType, left, right)
+			continue
+		}
+
 		// Combine two literals into single node
 		if p.optimize && left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).PrimitiveType == right.Value.(*LiteralNode).PrimitiveType {
 			left = combineLiteralNodes(left, right, nodeType)
@@ -195,6 +208,35 @@ func (p *Parser) deriveOperatorType(expression *Node) *data.DataType {
 	// Unary operator
 	if binaryNode.Left == nil {
 		return GetExpressionType(binaryNode.Right)
+	}
+
+	// Ternary expression
+	if expression.NodeType == NT_Ternary {
+		leftType := p.deriveType(binaryNode.Left)
+
+		// Left side isn't bool
+		if leftType.Type != data.DT_Bool {
+			p.newError(GetExpressionPosition(binaryNode.Left), "Left side of ternary operator ?? has to be of type bool.")
+		}
+
+		ternaryBranches := binaryNode.Right.Value.(*TypedBinaryNode)
+		leftBranchType := p.deriveType(ternaryBranches.Left)
+		rightBranchType := p.deriveType(ternaryBranches.Right)
+
+		// Branches have different types
+		if !leftBranchType.Equals(rightBranchType) {
+			p.newError(GetExpressionPosition(binaryNode.Right), "Both branches of ternary operator ?? have to be of the same type. Left is "+leftBranchType.String()+", right is "+rightBranchType.String()+".")
+		}
+
+		ternaryBranches.DataType = leftBranchType
+		binaryNode.DataType = leftBranchType
+		return leftBranchType
+	}
+
+	// Type of tranches of ternary operator can't be derived
+	if expression.NodeType == NT_TernaryBranches {
+		p.newError(GetExpressionPosition(expression), "Unexpected expression. Are you missing an \"??\" operator?")
+		return &data.DataType{data.DT_Unknown, nil}
 	}
 
 	// Collect left and right node data types
@@ -305,27 +347,29 @@ func (p *Parser) deriveOperatorType(expression *Node) *data.DataType {
 
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
-	case lexer.TT_OP_UnpackOrDefault:
+	case lexer.TT_OP_Ternary, lexer.TT_DL_Colon:
 		return 0
-	case lexer.TT_OP_Or:
+	case lexer.TT_OP_UnpackOrDefault:
 		return 1
-	case lexer.TT_OP_And:
+	case lexer.TT_OP_Or:
 		return 2
+	case lexer.TT_OP_And:
+		return 3
 	case lexer.TT_OP_Equal, lexer.TT_OP_NotEqual,
 		lexer.TT_OP_Lower, lexer.TT_OP_Greater,
 		lexer.TT_OP_LowerEqual, lexer.TT_OP_GreaterEqual,
 		lexer.TT_OP_In:
-		return 3
-	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 4
-	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
+	case lexer.TT_OP_Add, lexer.TT_OP_Subtract:
 		return 5
-	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
+	case lexer.TT_OP_Multiply, lexer.TT_OP_Divide:
 		return 6
-	case lexer.TT_OP_Not:
+	case lexer.TT_OP_Power, lexer.TT_OP_Modulo:
 		return 7
-	case lexer.TT_OP_Dot:
+	case lexer.TT_OP_Not:
 		return 8
+	case lexer.TT_OP_Dot:
+		return 9
 	default:
 		panic("Can't get operator precedence of token type " + operator.String() + ".")
 	}
@@ -603,6 +647,10 @@ func GetExpressionType(expression *Node) *data.DataType {
 		return &data.DataType{data.DT_Bool, nil}
 	case NT_Match:
 		return expression.Value.(*MatchNode).DataType
+	case NT_Ternary:
+		return GetExpressionType(expression.Value.(*TypedBinaryNode).Right)
+	case NT_TernaryBranches:
+		return expression.Value.(*TypedBinaryNode).DataType
 	}
 
 	panic("Can't determine expression data type from " + NodeTypeToString[expression.NodeType] + fmt.Sprintf(" (%d)", expression.NodeType) + ".")
