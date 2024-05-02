@@ -38,6 +38,4 @@ fun entry()
 	forEach (str cat in cats) {
 		print(cat + " ")
 	}
-
-	printLine("")
 }
