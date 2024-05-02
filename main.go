@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -198,8 +199,14 @@ func processArguments() *Configuration {
 	if configuration.OutputPath == "" {
 		if strings.HasSuffix(configuration.TargetPath, ".neco") && len(configuration.TargetPath) > 5 {
 			configuration.OutputPath = configuration.TargetPath[:len(configuration.TargetPath)-5]
+
+			if runtime.GOOS == "windows" {
+				configuration.OutputPath += ".nc"
+			}
+		} else if runtime.GOOS == "windows" {
+			configuration.OutputPath += ".nc"
 		} else {
-			configuration.OutputPath = configuration.TargetPath + "_bin"
+			configuration.OutputPath += "_bin"
 		}
 	}
 
