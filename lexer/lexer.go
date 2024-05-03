@@ -177,16 +177,16 @@ func (l *Lexer) lexRune() {
 
 		// Line ending
 		case '\n':
-			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_EndOfCommand, "")
 
 			l.charIndex = 1
 			l.lineIndex++
 
 		// Windows line ending
 		case '\r':
-			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfCommand, "")
 			l.advance()
+			l.newTokenFrom(l.lineIndex, l.charIndex-1, TT_EndOfCommand, "")
 
 			// Invalid windows line ending
 			if l.currRune != '\n' {
