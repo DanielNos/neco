@@ -105,6 +105,11 @@ func (dt *DataType) CanBeAssigned(other *DataType) bool {
 		return dt.SubType.(*DataType).CanBeAssigned(other)
 	}
 
+	// Nones
+	if dt.Type == DT_None && other.Type == DT_None {
+		return true
+	}
+
 	return false
 }
 
@@ -141,6 +146,7 @@ func (dt *DataType) Copy() *DataType {
 }
 
 func (dt *DataType) TryCompleteFrom(from *DataType) {
+	// Data type can't be completed
 	if dt.GetDepth() > from.GetDepth() {
 		return
 	}
