@@ -210,14 +210,11 @@ func (dt *DataType) String() string {
 }
 
 func (dt *DataType) Signature() string {
-	if dt.Type <= DT_Any {
+	if dt.Type <= DT_None {
 		return dt.Type.String()
 	} else if dt.Type == DT_Enum {
 		return "enum:" + dt.SubType.(string)
 	} else if dt.Type == DT_Object {
-		if dt.SubType == nil {
-			return "any"
-		}
 		return dt.SubType.(string)
 	} else {
 		return dt.Type.String() + "<" + dt.SubType.(*DataType).String() + ">"
