@@ -14,6 +14,7 @@ type dataTypeCount struct {
 
 func (p *Parser) parseExpressionRoot() *Node {
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
+	VisualizeNode(expression)
 	p.collectConstant(expression)
 	p.deriveType(expression)
 
@@ -137,26 +138,31 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 
 		// Right node is binary node with same precedence => rotate nodes so they are left-to-right associated (except power, which is right-to-left associated)
 		if right.IsBinaryNode() && operatorNodePrecedence[nodeType] == operatorNodePrecedence[right.NodeType] && nodeType != NT_Power {
-			oldLeft := left
-			p.collectConstant(left)
-
-			// Rotate nodes
-			left = right.Value.(*TypedBinaryNode).Right
-			right.Value.(*TypedBinaryNode).Right = right.Value.(*TypedBinaryNode).Left
-			right.Value.(*TypedBinaryNode).Left = oldLeft
-
-			// Create node
-			left = p.createBinaryNode(operator.Position, nodeType, right, left)
-
-			// Swap node types and positions
-			left.NodeType, right.NodeType = right.NodeType, left.NodeType
-			left.Position, right.Position = right.Position, left.Position
-
+			left = p.rotateNodes(left, right, operator.Position, nodeType)
 			continue
 		}
 
 		left = p.createBinaryNode(operator.Position, nodeType, left, right)
 	}
+
+	return left
+}
+
+func (p *Parser) rotateNodes(left, right *Node, position *data.CodePos, nodeType NodeType) *Node {
+	oldLeft := left
+	p.collectConstant(left)
+
+	// Rotate nodes
+	left = right.Value.(*TypedBinaryNode).Right
+	right.Value.(*TypedBinaryNode).Right = right.Value.(*TypedBinaryNode).Left
+	right.Value.(*TypedBinaryNode).Left = oldLeft
+
+	// Create node
+	left = p.createBinaryNode(position, nodeType, right, left)
+
+	// Swap node types and positions
+	left.NodeType, right.NodeType = right.NodeType, left.NodeType
+	left.Position, right.Position = right.Position, left.Position
 
 	return left
 }
@@ -170,7 +176,9 @@ func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, lef
 
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
-	case lexer.TT_OP_Ternary, lexer.TT_DL_Colon:
+	case lexer.TT_OP_Ternary:
+		return -1
+	case lexer.TT_DL_Colon:
 		return 0
 	case lexer.TT_OP_UnpackOrDefault:
 		return 1
