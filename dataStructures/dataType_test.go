@@ -346,7 +346,7 @@ func TestSetLeafType(t *testing.T) {
 	}
 }
 
-func TestString(t *testing.T) {
+func TestDataTypeString(t *testing.T) {
 	dataTypes := map[*DataType]string{
 		{DT_Unknown, nil}:                     "?",
 		{DT_None, nil}:                        "none",
