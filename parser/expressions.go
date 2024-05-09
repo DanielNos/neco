@@ -96,6 +96,20 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 	} else if p.peek().TokenType == lexer.TT_KW_match {
 		left = p.parseMatchExpression()
 
+		// Ternary operator
+	} else if p.peek().TokenType == lexer.TT_OP_Ternary {
+		right := p.parseExpressionRoot()
+
+		// Right side has to have two expressions
+		if right.NodeType != NT_TernaryBranches {
+			p.newError(GetExpressionPosition(right), "Right side of the ternary operator ?? need to have two expressions separated by a \":\".")
+		} else {
+			p.collectConstant(right.Value.(*TypedBinaryNode).Right)
+			p.collectConstant(right.Value.(*TypedBinaryNode).Left)
+		}
+
+		return p.createBinaryNode(p.consume().Position, NT_Ternary, left, right)
+	
 		// Invalid token
 	} else {
 		panic("Invalid token in expression " + p.peek().String() + ".")
@@ -116,19 +130,6 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		// Parse right side of expression
 		right := p.parseExpression(operatorPrecedence(operator.TokenType))
 		nodeType := TokenTypeToNodeType[operator.TokenType]
-
-		if nodeType == NT_Ternary {
-			// Right side has to have two expressions
-			if right.NodeType != NT_TernaryBranches {
-				p.newError(GetExpressionPosition(right), "Right side of the ternary operator ?? need to have two expressions separated by a \":\".")
-			} else {
-				p.collectConstant(right.Value.(*TypedBinaryNode).Right)
-				p.collectConstant(right.Value.(*TypedBinaryNode).Left)
-			}
-
-			left = p.createBinaryNode(operator.Position, nodeType, left, right)
-			continue
-		}
 
 		// Combine two literals into single node
 		if p.optimize && left.NodeType == NT_Literal && right.NodeType == NT_Literal && left.Value.(*LiteralNode).PrimitiveType == right.Value.(*LiteralNode).PrimitiveType {
@@ -176,10 +177,6 @@ func (p *Parser) createBinaryNode(position *data.CodePos, nodeType NodeType, lef
 
 func operatorPrecedence(operator lexer.TokenType) int {
 	switch operator {
-	case lexer.TT_OP_Ternary:
-		return -1
-	case lexer.TT_DL_Colon:
-		return 0
 	case lexer.TT_OP_UnpackOrDefault:
 		return 1
 	case lexer.TT_OP_Or:
@@ -245,7 +242,7 @@ func (p *Parser) parseIdentifier(isInExpression bool) *Node {
 		identifierToken := p.consume()
 		p.consume() // .
 
-		return &Node{identifierToken.Position.SetEndPos(p.peek().Position), NT_Enum, &EnumNode{identifierToken.Value, symbol.value.(map[string]int64)[p.consume().Value]}}
+		return &Node{identifierToken.Position.Combine(p.peek().Position), NT_Enum, &EnumNode{identifierToken.Value, symbol.value.(map[string]int64)[p.consume().Value]}}
 		// Struct
 	} else if symbol.symbolType == ST_Struct {
 		return p.parseStructLiteral(symbol.value.(map[string]PropertySymbol))
@@ -302,7 +299,7 @@ func (p *Parser) parseObjectField(left *Node, leftType *data.DataType, identifie
 		if !propertyExists {
 			p.newError(p.peek().Position, "Struct "+structName+" doesn't have a property "+p.consume().Value+".")
 		} else {
-			node := &Node{identifierToken.Position.SetEndPos(p.consume().Position), NT_ObjectField, &ObjectFieldNode{left, property.number, property.dataType}}
+			node := &Node{identifierToken.Position.Combine(p.consume().Position), NT_ObjectField, &ObjectFieldNode{left, property.number, property.dataType}}
 
 			// Another field access
 			if p.peek().TokenType == lexer.TT_OP_Dot {
@@ -390,7 +387,7 @@ func (p *Parser) parseEnumeration(isSet bool) *Node {
 		elementType = p.checkElementTypes(expressionTypes, expressions, structureName)
 	}
 
-	return &Node{startPosition.SetEndPos(p.consume().Position), nodeType, &ListNode{expressions, &data.DataType{dataType, elementType}}}
+	return &Node{startPosition.Combine(p.consume().Position), nodeType, &ListNode{expressions, &data.DataType{dataType, elementType}}}
 }
 
 func (p *Parser) checkElementTypes(expressionTypes map[string]*dataTypeCount, expressions []*Node, structureName string) *data.DataType {
@@ -449,11 +446,11 @@ func (p *Parser) collectConstant(node *Node) {
 
 func GetExpressionPosition(expression *Node) *data.CodePos {
 	if expression.NodeType.IsOperator() {
-		return GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left).SetEndPos(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right))
+		return GetExpressionPosition(expression.Value.(*TypedBinaryNode).Left).Combine(GetExpressionPosition(expression.Value.(*TypedBinaryNode).Right))
 	}
 
 	if expression.NodeType == NT_Unwrap || expression.NodeType == NT_IsNone {
-		return GetExpressionPosition(expression.Value.(*Node)).SetEndPos(expression.Position)
+		return GetExpressionPosition(expression.Value.(*Node)).Combine(expression.Position)
 	}
 
 	return expression.Position

@@ -28,7 +28,7 @@ func (p *Parser) parseIdentifierStatement() *Node {
 
 	// Missing assignment
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
-		p.newError(startPosition.SetEndPos(p.peekPrevious().Position), "Expression list can't be a statement.")
+		p.newError(startPosition.Combine(p.peekPrevious().Position), "Expression list can't be a statement.")
 		return nil
 	}
 
@@ -39,7 +39,7 @@ func (p *Parser) parseIdentifierStatement() *Node {
 			p.consume()
 		}
 
-		p.newError(startPosition.SetEndPos(p.peekPrevious().Position), "Expected \"=\" after list of expressions.")
+		p.newError(startPosition.Combine(p.peekPrevious().Position), "Expected \"=\" after list of expressions.")
 		return nil
 	}
 

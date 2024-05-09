@@ -46,7 +46,7 @@ func (p *Parser) parseStructLiteral(properties map[string]PropertySymbol) *Node 
 
 	p.consume() // }
 
-	return &Node{identifier.Position.SetEndPos(p.peekPrevious().Position), NT_Object, &ObjectNode{identifier.Value, propertyValues}}
+	return &Node{identifier.Position.Combine(p.peekPrevious().Position), NT_Object, &ObjectNode{identifier.Value, propertyValues}}
 }
 
 func (p *Parser) parseKeyedProperties(properties map[string]PropertySymbol, structName string) []*Node {
@@ -183,13 +183,13 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 	case data.DT_Bool:
 		switch parentNodeType {
 		case NT_Equal:
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) == rightLiteral.Value.(bool)}}
 		case NT_NotEqual:
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) != rightLiteral.Value.(bool)}}
 		case NT_And:
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) && rightLiteral.Value.(bool)}}
 		case NT_Or:
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, leftLiteral.Value.(bool) || rightLiteral.Value.(bool)}}
 		}
 	// Integers
 	case data.DT_Int:
@@ -212,7 +212,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 		}
 
 		if value != nil {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Int, value}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Int, value}}
 		}
 
 		// Comparison operators
@@ -232,7 +232,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 		}
 
 		if value != nil {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Floats
@@ -256,7 +256,7 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 		}
 
 		if value != nil {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Float, value}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Float, value}}
 		}
 
 		// Comparison operators
@@ -276,16 +276,16 @@ func combineLiteralNodes(left, right *Node, parentNodeType NodeType) *Node {
 		}
 
 		if value != nil {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_Bool, value}}
 		}
 
 	// Strings
 	case data.DT_String:
 		if parentNodeType == NT_Add {
-			return &Node{left.Position.SetEndPos(right.Position), NT_Literal, &LiteralNode{data.DT_String, left.Value.(*LiteralNode).Value.(string) + right.Value.(*LiteralNode).Value.(string)}}
+			return &Node{left.Position.Combine(right.Position), NT_Literal, &LiteralNode{data.DT_String, left.Value.(*LiteralNode).Value.(string) + right.Value.(*LiteralNode).Value.(string)}}
 		}
 	}
 
 	// Invalid operation, can't combine
-	return &Node{left.Position.SetEndPos(right.Position), parentNodeType, &TypedBinaryNode{left, right, &data.DataType{data.DT_Unknown, nil}}}
+	return &Node{left.Position.Combine(right.Position), parentNodeType, &TypedBinaryNode{left, right, &data.DataType{data.DT_Unknown, nil}}}
 }

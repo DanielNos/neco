@@ -108,7 +108,7 @@ func (p *Parser) parseFor() *Node {
 
 	p.leaveScope()
 
-	return &Node{forPosition.SetEndPos(p.peekPrevious().Position), NT_ForLoop, &ForLoopNode{initStatement, body}}
+	return &Node{forPosition.Combine(p.peekPrevious().Position), NT_ForLoop, &ForLoopNode{initStatement, body}}
 }
 
 func (p *Parser) parseForEach() *Node {
@@ -155,7 +155,7 @@ func (p *Parser) parseForEach() *Node {
 	// Collect iterator variable
 	typePosition := p.peek().Position
 	iteratorType := p.parseType()
-	typePosition = typePosition.SetEndPos(p.peekPrevious().Position)
+	typePosition = typePosition.Combine(p.peekPrevious().Position)
 
 	iteratorIdentifier := p.consume().Value
 	iteratorVariable := &Node{p.peekPrevious().Position, NT_Variable, &VariableNode{iteratorIdentifier, iteratorType}}
@@ -219,5 +219,5 @@ func (p *Parser) parseForEach() *Node {
 	p.leaveScope()
 
 	// Consume
-	return &Node{startPosition.SetEndPos(p.peekPrevious().Position), NT_Loop, body}
+	return &Node{startPosition.Combine(p.peekPrevious().Position), NT_Loop, body}
 }

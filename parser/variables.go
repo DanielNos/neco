@@ -15,7 +15,7 @@ func (p *Parser) parseVariableDeclaration(constant bool) *Node {
 	variableNodes, variableIdentifiers := p.parseVariableIdentifiers(variableType)
 
 	// Create node
-	declareNode := &Node{startPosition.SetEndPos(variableNodes[len(variableNodes)-1].Position), NT_VariableDeclaration, &VariableDeclareNode{variableType, constant, variableIdentifiers}}
+	declareNode := &Node{startPosition.Combine(variableNodes[len(variableNodes)-1].Position), NT_VariableDeclaration, &VariableDeclareNode{variableType, constant, variableIdentifiers}}
 
 	// End
 	if p.peek().TokenType == lexer.TT_EndOfCommand {
@@ -130,12 +130,12 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 		// Transform assigned expressions in the following way: a += 1 to a = a + 1
 		for _, target := range assignedTo[:len(assignedTo)-1] {
 			generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{target, expression, expressionType}}
-			p.appendScope(&Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{target}, generatedNode}})
+			p.appendScope(&Node{startOfStatement.Combine(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{target}, generatedNode}})
 		}
 
 		generatedNode := &Node{assign.Position, nodeType, &TypedBinaryNode{assignedTo[len(assignedTo)-1], expression, expressionType}}
-		return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedTo[len(assignedTo)-1]}, generatedNode}}, expressionType
+		return &Node{startOfStatement.Combine(p.peekPrevious().Position), NT_Assign, &AssignNode{[]*Node{assignedTo[len(assignedTo)-1]}, generatedNode}}, expressionType
 	}
 
-	return &Node{startOfStatement.SetEndPos(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedTo, expression}}, expressionType
+	return &Node{startOfStatement.Combine(p.peekPrevious().Position), NT_Assign, &AssignNode{assignedTo, expression}}, expressionType
 }

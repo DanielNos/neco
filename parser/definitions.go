@@ -201,7 +201,7 @@ func (p *Parser) parseFunctionHeader() {
 
 	// Function entry() can't have parameters
 	if identifierToken.Value == "entry" && len(parameters) != 0 {
-		p.newError(startPosition.SetEndPos(p.peekPrevious().Position), "Function entry() can't have any parameters.")
+		p.newError(startPosition.Combine(p.peekPrevious().Position), "Function entry() can't have any parameters.")
 	}
 
 	// Check for redeclaration

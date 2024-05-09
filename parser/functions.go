@@ -49,7 +49,7 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 
 	// Store function name as a string constant for scope trace back
 	p.StringConstants[identifierToken.Value] = -1
-	return &Node{start.SetEndPos(p.peekPrevious().Position), NT_FunctionDeclaration, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
+	return &Node{start.Combine(p.peekPrevious().Position), NT_FunctionDeclaration, &FunctionDeclareNode{p.functionIndex - 1, identifierToken.Value, function.parameters, function.returnType, body}}
 }
 
 func (p *Parser) parseParameters() []Parameter {
