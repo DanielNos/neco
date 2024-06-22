@@ -61,7 +61,6 @@ func printHelp() {
 	fmt.Println("                 -to --tokens        Prints lexed tokens.")
 	fmt.Println("                 -tr --tree          Draws abstract syntax tree.")
 	fmt.Println("                 -d  --dontOptimize  Compiler won't optimize byte code.")
-
 }
 
 func processArguments() *Configuration {

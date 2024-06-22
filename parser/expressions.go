@@ -14,7 +14,6 @@ type dataTypeCount struct {
 
 func (p *Parser) parseExpressionRoot() *Node {
 	expression := p.parseExpression(MINIMAL_PRECEDENCE)
-	VisualizeNode(expression)
 	p.collectConstant(expression)
 	p.deriveType(expression)
 
@@ -109,7 +108,7 @@ func (p *Parser) parseExpression(currentPrecedence int) *Node {
 		}
 
 		return p.createBinaryNode(p.consume().Position, NT_Ternary, left, right)
-	
+
 		// Invalid token
 	} else {
 		panic("Invalid token in expression " + p.peek().String() + ".")
