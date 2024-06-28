@@ -15,14 +15,6 @@ import (
 	VM "neco/virtualMachine"
 )
 
-type Action byte
-
-const (
-	A_Build Action = iota
-	A_Run
-	A_Analyze
-)
-
 func printHelp() {
 	color.Set(color.Bold)
 	color.Set(color.FgHiYellow)

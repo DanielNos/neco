@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+type Action byte
+
+const (
+	A_Build Action = iota
+	A_Run
+	A_Analyze
+)
+
 type Configuration struct {
 	PrintTokens       bool
 	DrawTree          bool
