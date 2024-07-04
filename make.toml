@@ -1,0 +1,15 @@
+name = "neco"
+version = "0.1.0"
+description = "An interpreted programming language."
+
+[build]
+target = "."
+flags = "-ldflags=\"-w -s\""
+platforms = [ "linux/amd64", "linux/386", "linux/arm", "linux/arm64",
+                   "windows/amd64", "windows/arm",
+                   "darwin/amd64", "darwin/arm64",
+                   "freebsd/amd64", "freebsd/386", "freebsd/arm" ]
+
+[maintainer]
+name = "Daniel Nos"
+email = "nos.daniel@pm.me"
