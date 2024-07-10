@@ -19,13 +19,13 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	for i := parameterCount - 1; i >= 0; i-- {
 
 		// Declare variable for argument
-		id := cg.variableIdentifierCounters.Top.Value.(uint8)
-		cg.variableIdentifiers.Top.Value.(map[string]uint8)[function.Parameters[i].Identifier] = id
+		id := cg.scopes.Top.Value.(*Scope).variableIdentifierCounter
+		cg.scopes.Top.Value.(*Scope).variableIdentifiers[function.Parameters[i].Identifier] = id
 
 		// Generate declaration instruction
 		cg.generateVariableDeclarator(function.Parameters[i].DataType, &id)
 
-		cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
+		cg.scopes.Top.Value.(*Scope).variableIdentifierCounter++
 
 		// Store argument from stack in the variable
 		cg.addInstruction(VM.IT_StoreAndPop, id)

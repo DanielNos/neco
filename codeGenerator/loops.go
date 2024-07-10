@@ -14,7 +14,7 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 
 	// Create break array and record loop scope
 	cg.scopeBreaks.Push([]Break{})
-	cg.loopScopeDepths.Push(cg.variableIdentifiers.Size)
+	cg.loopScopeDepths.Push(cg.scopes.Size)
 
 	// Generate loop body
 	cg.generateStatements(node.Value.(*parser.ScopeNode))
@@ -24,12 +24,12 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 
 	// Generate line offset if line changed
 	if cg.line < node.Position.EndLine {
-		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine - cg.line))
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.line))
 		cg.line = node.Position.EndLine
 	}
 
 	// Generate jump instruction back to start
-	cg.addInstruction(VM.IT_JumpBack, byte(len(*cg.target) - startPosition))
+	cg.addInstruction(VM.IT_JumpBack, byte(len(*cg.target)-startPosition))
 
 	// Set destinations of break jumps
 	instructionCount := len(*cg.target)
@@ -48,7 +48,7 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 
 	// Create break array and record loop scope
 	cg.scopeBreaks.Push([]Break{})
-	cg.loopScopeDepths.Push(cg.variableIdentifiers.Size)
+	cg.loopScopeDepths.Push(cg.scopes.Size)
 
 	// Generate init statement
 	for _, node := range forLoop.InitStatement {

@@ -10,15 +10,15 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 	variable := node.Value.(*parser.VariableDeclareNode)
 
 	for i := 0; i < len(variable.Identifiers); i++ {
-		id, isRedeclared := cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]]
+		id, isRedeclared := cg.scopes.Top.Value.(*Scope).variableIdentifiers[variable.Identifiers[i]]
 
 		// Variable with this identifier is declared for the first time
 		if !isRedeclared {
-			cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]] = cg.variableIdentifierCounters.Top.Value.(uint8)
+			cg.scopes.Top.Value.(*Scope).variableIdentifiers[variable.Identifiers[i]] = cg.scopes.Top.Value.(*Scope).variableIdentifierCounter
 
-			id = cg.variableIdentifiers.Top.Value.(map[string]uint8)[variable.Identifiers[i]]
+			id = cg.scopes.Top.Value.(*Scope).variableIdentifiers[variable.Identifiers[i]]
 
-			cg.variableIdentifierCounters.Top.Value = cg.variableIdentifierCounters.Top.Value.(uint8) + 1
+			cg.scopes.Top.Value.(*Scope).variableIdentifierCounter++
 		}
 
 		cg.generateVariableDeclarator(variable.DataType, &id)

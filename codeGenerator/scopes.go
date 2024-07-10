@@ -5,20 +5,23 @@ import (
 	VM "neco/virtualMachine"
 )
 
+func (cg *CodeGenerator) pushScope(scopeType ScopeType) {
+	cg.scopes.Push(&Scope{scopeType, uint8(0), map[string]uint8{}})
+}
+
 func (cg *CodeGenerator) enterScope(name *string) {
 	if name == nil {
 		cg.addInstruction(VM.IT_PushScopeUnnamed)
+		cg.pushScope(ST_Unnamed)
 	} else {
 		cg.addInstruction(VM.IT_PushScope, byte(cg.stringConstants[*name]))
+		cg.pushScope(ST_Function)
 	}
-	cg.variableIdentifierCounters.Push(cg.variableIdentifierCounters.Top.Value)
-	cg.variableIdentifiers.Push(map[string]uint8{})
 }
 
 func (cg *CodeGenerator) leaveScope() {
 	cg.addInstruction(VM.IT_PopScope)
-	cg.variableIdentifierCounters.Pop()
-	cg.variableIdentifiers.Pop()
+	cg.scopes.Pop()
 }
 
 func (cg *CodeGenerator) generateStatements(scopeNode *parser.ScopeNode) {

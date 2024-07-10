@@ -19,6 +19,20 @@ type Break struct {
 	instructionPosition int
 }
 
+type ScopeType uint8
+
+const (
+	ST_Root ScopeType = iota
+	ST_Unnamed
+	ST_Function
+)
+
+type Scope struct {
+	scopeType                 ScopeType
+	variableIdentifierCounter uint8
+	variableIdentifiers       map[string]uint8
+}
+
 type CodeGenerator struct {
 	tree     *parser.Node
 	optimize bool
@@ -33,13 +47,12 @@ type CodeGenerator struct {
 	FunctionsInstructions []VM.Instruction
 	target                *[]VM.Instruction
 
-	variableIdentifierCounters *data.Stack // of uint8
-	variableIdentifiers        *data.Stack // of map[string]uint8
-
 	functions []int // Function number : function start
 
 	scopeBreaks     *data.Stack // break
 	loopScopeDepths *data.Stack // int
+
+	scopes *data.Stack // Scope
 
 	line uint
 
@@ -59,21 +72,19 @@ func NewGenerator(tree *parser.Node, intConstants map[int64]int, floatConstants 
 		GlobalsInstructions:   []VM.Instruction{},
 		FunctionsInstructions: []VM.Instruction{},
 
-		variableIdentifierCounters: data.NewStack(),
-		variableIdentifiers:        data.NewStack(),
-
 		functions: []int{},
 
 		scopeBreaks:     data.NewStack(),
 		loopScopeDepths: data.NewStack(),
+
+		scopes: data.NewStack(),
 
 		line:       0,
 		ErrorCount: 0,
 	}
 
 	// Enter root scope
-	codeGenerator.variableIdentifierCounters.Push(uint8(0))
-	codeGenerator.variableIdentifiers.Push(map[string]uint8{})
+	codeGenerator.pushScope(ST_Root)
 
 	return codeGenerator
 }
@@ -239,6 +250,14 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		if node.Value != nil {
 			cg.generateExpression(node.Value.(*parser.Node))
 		}
+
+		// Drop unnamed scopes
+		currentScope := cg.scopes.Top
+		for currentScope.Value.(*Scope).scopeType != ST_Function {
+			cg.addInstruction(VM.IT_PopScope)
+			currentScope = currentScope.Previous
+		}
+
 		cg.addInstruction(VM.IT_Return)
 
 	// Scope
@@ -255,7 +274,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 	// Break
 	case parser.NT_Break:
 		// Generate scope drops
-		for i := 0; i < cg.variableIdentifiers.Size-cg.loopScopeDepths.Top.Value.(int)+1; i++ {
+		for i := 0; i < cg.scopes.Size-cg.loopScopeDepths.Top.Value.(int)+1; i++ {
 			cg.addInstruction(VM.IT_PopScope)
 		}
 
@@ -300,14 +319,14 @@ func updateJumpDistance(instruction *VM.Instruction, distance int, extendedInstr
 
 func (cg *CodeGenerator) findVariableIdentifier(identifier string) uint8 {
 	// Look for vairable in current scope
-	currentNode := cg.variableIdentifiers.Top
-	id, found := currentNode.Value.(map[string]uint8)[identifier]
+	currentNode := cg.scopes.Top
+	id, found := currentNode.Value.(*Scope).variableIdentifiers[identifier]
 
 	// Find variable in lower scopes
 	for !found && currentNode != nil {
 		// Move to previous node and try to find variable
 		currentNode = currentNode.Previous
-		id, found = currentNode.Value.(map[string]uint8)[identifier]
+		id, found = currentNode.Value.(*Scope).variableIdentifiers[identifier]
 	}
 
 	// Couldn't find variable
