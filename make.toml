@@ -1,15 +1,31 @@
+[application]
 name = "neco"
 version = "0.1.0"
 description = "An interpreted programming language."
+long_description = "An interpreted programming language."
+url = "https://github.com/DanielNos/NeCo"
+license = "OSL-3.0"
+
+[maintainer]
+name = "Daniel Nos"
+email = "nos.daniel@pm.me"
 
 [build]
 target = "."
 flags = "-ldflags=\"-w -s\""
 platforms = [ "linux/amd64", "linux/386", "linux/arm", "linux/arm64",
-                   "windows/amd64", "windows/arm",
-                   "darwin/amd64", "darwin/arm64",
-                   "freebsd/amd64", "freebsd/386", "freebsd/arm" ]
+              "windows/amd64", "windows/386", "windows/arm", "windows/arm64",
+              "darwin/arm64", "darwin/amd64" ]
 
-[maintainer]
-name = "Daniel Nos"
-email = "nos.daniel@pm.me"
+[deb]
+package = true
+architectures = [ "amd64", "386", "arm", "arm64" ]
+
+[rpm]
+package = true
+build_src = true
+architectures = [ "amd64", "386", "arm", "arm64" ]
+
+[pkg]
+package = true
+architectures = [ "amd64" ]
