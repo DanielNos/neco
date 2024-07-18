@@ -15,5 +15,5 @@ main
 neco
 
 # Tests
-tests/*
-!tests/*.neco
+tests/src/*
+!tests/src/*.neco
