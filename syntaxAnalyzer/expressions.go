@@ -58,7 +58,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 		return
 	}
 
-	// Object literal
+	// Struct literal
 	if sn.peek().TokenType == lexer.TT_Identifier && sn.peekNext().TokenType == lexer.TT_DL_BraceOpen {
 		exists := sn.customTypes[sn.peek().Value]
 

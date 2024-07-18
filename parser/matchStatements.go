@@ -30,7 +30,7 @@ func (p *Parser) parseMatch(isExpression bool) *Node {
 
 		if p.peek().TokenType == lexer.TT_KW_default {
 			casePosition := p.consume().Position // default
-			p.consume()                          // :
+			p.consume()                          // =>
 
 			if isExpression {
 				defaultCase = p.parseExpressionRoot()
@@ -61,7 +61,7 @@ func (p *Parser) parseMatch(isExpression bool) *Node {
 				caseCount++
 			}
 
-			p.consume()
+			p.consume() // =>
 
 			var caseContent *Node
 

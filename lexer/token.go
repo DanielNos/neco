@@ -30,6 +30,7 @@ const (
 	TT_OP_Dot
 	TT_OP_QuestionMark
 	TT_OP_UnpackOrDefault
+	TT_OP_CaseIs
 
 	TT_OP_Add
 	TT_OP_Subtract
@@ -96,6 +97,7 @@ const (
 
 	TT_KW_match
 	TT_KW_default
+	TT_KW_CaseIs
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -186,6 +188,7 @@ var TokenTypeToString = map[TokenType]string{
 
 	TT_KW_match:   "match",
 	TT_KW_default: "default",
+	TT_KW_CaseIs:  "=>",
 }
 
 func (tt TokenType) String() string {

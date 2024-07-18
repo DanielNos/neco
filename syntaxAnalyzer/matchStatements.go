@@ -42,8 +42,8 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement(isExpression bool) {
 			}
 
 			// Check for colon
-			if sn.peek().TokenType != lexer.TT_DL_Colon {
-				sn.newError(sn.peek(), "Expected colon after case expression.")
+			if sn.peek().TokenType != lexer.TT_KW_CaseIs {
+				sn.newError(sn.peek(), "Expected \"=>\" after case expression.")
 			} else {
 				sn.consume()
 			}
@@ -59,8 +59,8 @@ func (sn *SyntaxAnalyzer) analyzeMatchStatement(isExpression bool) {
 			// Default
 		} else if sn.peek().TokenType == lexer.TT_KW_default {
 			sn.consume()
-			if sn.peek().TokenType != lexer.TT_DL_Colon {
-				sn.newError(sn.peek(), "Expected colon after keyword default.")
+			if sn.peek().TokenType != lexer.TT_KW_CaseIs {
+				sn.newError(sn.peek(), "Expected \"=>\" after keyword default.")
 			} else {
 				sn.consume()
 			}
