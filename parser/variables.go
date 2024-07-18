@@ -58,7 +58,7 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 	expression := p.parseExpressionRoot()
 	expressionType := GetExpressionType(expression)
 
-	// Uncompatible data types
+	// Incompatible data types
 	expressionPosition := data.CodePos{expressionStart.File, expressionStart.StartLine, expressionStart.EndLine, expressionStart.StartChar, p.peekPrevious().Position.EndChar}
 
 	// Check if variables are constants
@@ -102,7 +102,7 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 				continue
 			}
 
-			// Can't be assgined
+			// Can't be assigned
 			if !targetType.CanBeAssigned(expressionType) {
 				// Type is complete
 				if expressionType.IsComplete() {

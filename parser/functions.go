@@ -53,11 +53,11 @@ func (p *Parser) parseFunctionDeclaration() *Node {
 }
 
 func (p *Parser) parseParameters() []Parameter {
-	var paremeters = []Parameter{}
+	var parameters = []Parameter{}
 
 	// No parameters
 	if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
-		return paremeters
+		return parameters
 	}
 
 	for {
@@ -66,7 +66,7 @@ func (p *Parser) parseParameters() []Parameter {
 		identifier := p.consume().Value
 
 		// Create parameter and symbol
-		paremeters = append(paremeters, Parameter{dataType, identifier, nil})
+		parameters = append(parameters, Parameter{dataType, identifier, nil})
 		p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{dataType, true, false}})
 
 		if p.peek().TokenType == lexer.TT_DL_ParenthesisClose {
@@ -77,14 +77,14 @@ func (p *Parser) parseParameters() []Parameter {
 		for p.peek().TokenType == lexer.TT_Identifier {
 			// Create parameter and symbol
 			identifier = p.consume().Value
-			paremeters = append(paremeters, Parameter{dataType, identifier, nil})
+			parameters = append(parameters, Parameter{dataType, identifier, nil})
 			p.insertSymbol(identifier, &Symbol{ST_Variable, &VariableSymbol{dataType, true, false}})
 
 			p.consume()
 		}
 	}
 
-	return paremeters
+	return parameters
 }
 
 func (p *Parser) parseFunctionCall(functionBucketSymbol *Symbol, identifier *lexer.Token) *Node {

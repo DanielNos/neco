@@ -144,8 +144,8 @@ func (p *Parser) parseForEach() *Node {
 
 	// Generate: if (index == size) { break }
 	indexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, &data.DataType{data.DT_Int, nil}}}
-	sizeVaraible := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, &data.DataType{data.DT_Int, nil}}}
-	condition := &Node{iteratorPosition, NT_Equal, &TypedBinaryNode{indexVariable, sizeVaraible, &data.DataType{data.DT_Bool, nil}}}
+	sizeVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{sizeIdentifier, &data.DataType{data.DT_Int, nil}}}
+	condition := &Node{iteratorPosition, NT_Equal, &TypedBinaryNode{indexVariable, sizeVariable, &data.DataType{data.DT_Bool, nil}}}
 	breakNode := &Node{iteratorPosition, NT_Break, nil}
 	ifBody := &Node{iteratorPosition, NT_Scope, &ScopeNode{-1, []*Node{breakNode}}}
 	ifStatement := &IfStatement{condition, ifBody}
@@ -191,7 +191,7 @@ func (p *Parser) parseForEach() *Node {
 		logger.Error2CodePos(typePosition, expression.Position, "Can't assign expression of type "+elementType.String()+" to variable of type "+iteratorType.String()+".")
 	}
 
-	// Assign to iterated_expression[interator_index] to iterator
+	// Assign to iterated_expression[iterator_index] to iterator
 	iteratorIndexVariable := &Node{iteratorPosition, NT_Variable, &VariableNode{indexIdentifier, &data.DataType{data.DT_Int, nil}}}
 	indexExpression := &Node{iteratorPosition, NT_ListValue, &TypedBinaryNode{expression, iteratorIndexVariable, elementType}}
 	p.appendScope(&Node{iteratorPosition, NT_Assign, &AssignNode{[]*Node{iteratorVariable}, indexExpression}})

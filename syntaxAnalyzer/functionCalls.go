@@ -6,7 +6,7 @@ import (
 
 func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 	sn.consume() // (
-	sn.analyzeAruments()
+	sn.analyzeArguments()
 
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
@@ -26,7 +26,7 @@ func (sn *SyntaxAnalyzer) analyzeFunctionCall() {
 	sn.consume() // )
 }
 
-func (sn *SyntaxAnalyzer) analyzeAruments() {
+func (sn *SyntaxAnalyzer) analyzeArguments() {
 	for sn.peek().TokenType != lexer.TT_EndOfFile {
 		if sn.peek().TokenType == lexer.TT_DL_ParenthesisClose {
 			return

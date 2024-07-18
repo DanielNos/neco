@@ -237,6 +237,6 @@ func (sn *SyntaxAnalyzer) analyzeCompositeType() {
 	if sn.peek().TokenType == lexer.TT_OP_Greater {
 		sn.consume()
 	} else {
-		sn.newError(sn.peek(), "Expected \">\" aftrer composite data type sub-type.")
+		sn.newError(sn.peek(), "Expected \">\" after composite data type sub-type.")
 	}
 }

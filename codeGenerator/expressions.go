@@ -90,7 +90,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		} else if leftType.Type == data.DT_Float {
 			cg.addInstruction(comparisonOperatorToFloatInstruction[node.NodeType])
 		} else {
-			panic("Can't generate comparision instruction on operator nodes.")
+			panic("Can't generate comparison instruction on operator nodes.")
 		}
 
 	// Variables
@@ -139,7 +139,7 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 	case parser.NT_Enum:
 		cg.addInstruction(VM.IT_LoadConst, uint8(cg.intConstants[node.Value.(*parser.EnumNode).Value]))
 
-	// Ojects
+	// Objects
 	case parser.NT_Object:
 		ObjectNode := node.Value.(*parser.ObjectNode)
 

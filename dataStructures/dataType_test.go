@@ -194,7 +194,7 @@ func TryCompleteFrom(t *testing.T) {
 	unknownType := &DataType{DT_Unknown, nil}
 	listUnknownType := &DataType{DT_List, &DataType{DT_Unknown, nil}}
 	optionUnknownType := &DataType{DT_Option, &DataType{DT_Unknown, nil}}
-	setUnkownType := &DataType{DT_Set, &DataType{DT_Unknown, nil}}
+	setUnknownType := &DataType{DT_Set, &DataType{DT_Unknown, nil}}
 
 	typesToComplete := []*DataType{
 		intType,
@@ -212,8 +212,8 @@ func TryCompleteFrom(t *testing.T) {
 		optionUnknownType,
 		optionUnknownType,
 		setObjectType,
-		setUnkownType,
-		setUnkownType,
+		setUnknownType,
+		setUnknownType,
 	}
 
 	typesToCompleteFrom := []*DataType{
@@ -252,7 +252,7 @@ func TryCompleteFrom(t *testing.T) {
 		optionUnknownType,
 		optionBoolType,
 		setObjectType,
-		setUnkownType,
+		setUnknownType,
 		setObjectType,
 	}
 

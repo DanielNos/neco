@@ -51,7 +51,7 @@ type VirtualMachine struct {
 	firstLine int
 }
 
-func NewVirutalMachine(filePath string) *VirtualMachine {
+func NewVirtualMachine(filePath string) *VirtualMachine {
 	virtualMachine := &VirtualMachine{
 		instructionIndex: 0,
 
@@ -136,13 +136,13 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// Call functions
 	case IT_Call:
-		// Push return adress to stack
+		// Push return address to stack
 		vm.stack_returnIndexes[vm.reg_returnIndex] = vm.instructionIndex + 1
 		vm.reg_returnIndex++
 
-		// Return adress stack overflow
+		// Return address stack overflow
 		if vm.reg_returnIndex == STACK_RETURN_INDEX_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Function return adress stack overflow.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Function return address stack overflow.", vm.firstLine))
 		}
 
 		// Jump to function
@@ -156,7 +156,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is probably caused by infinite recursion.", vm.firstLine))
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -373,7 +373,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is propably caused by infinite recursion.", vm.firstLine))
+			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is probably caused by infinite recursion.", vm.firstLine))
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -468,7 +468,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// Debug stepper; REMOVE for public build
 	if false {
-		fmt.Printf("Instrcution: %d %s %v\n", prevII+1, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
+		fmt.Printf("Instruction: %d %s %v\n", prevII+1, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
 		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
 		fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
 		fmt.Print("Scope: {")

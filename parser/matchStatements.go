@@ -143,7 +143,7 @@ func (p *Parser) checkCaseValueCoverage(matchNode *Node) {
 		} else if isCovered && match.Default != nil {
 			logger.WarningCodePos(match.Default.Position, "Unnecessary default case. All possible expression types are covered.")
 
-			// Remove reduntant default case
+			// Remove redundant default case
 			if p.optimize {
 				match.Default = nil
 			}

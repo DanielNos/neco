@@ -127,7 +127,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		&data.DataType{data.DT_Float, nil}, true},
 	)
 
-	// Debug fucntions
+	// Debug functions
 	p.insertFunction("trace", &FunctionSymbol{-1, NO_PARAMS, nil, true})
 
 	p.insertFunction("panic", &FunctionSymbol{-1,

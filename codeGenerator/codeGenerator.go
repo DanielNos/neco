@@ -303,7 +303,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateMatch(node.Value.(*parser.MatchNode), false)
 
 	default:
-		panic("Unkown node " + parser.NodeTypeToString[node.NodeType])
+		panic("Unknown node " + parser.NodeTypeToString[node.NodeType])
 	}
 }
 
@@ -318,7 +318,7 @@ func updateJumpDistance(instruction *VM.Instruction, distance int, extendedInstr
 }
 
 func (cg *CodeGenerator) findVariableIdentifier(identifier string) uint8 {
-	// Look for vairable in current scope
+	// Look for variable in current scope
 	currentNode := cg.scopes.Top
 	id, found := currentNode.Value.(*Scope).variableIdentifiers[identifier]
 

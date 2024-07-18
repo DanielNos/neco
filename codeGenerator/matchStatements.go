@@ -47,9 +47,9 @@ func (cg *CodeGenerator) generateMatch(matchNode *parser.MatchNode, isExpression
 		caseNode := matchCase.Value.(*parser.CaseNode)
 
 		// Set if's conditional jumps destination to next instruction
-		intstructionIndex := len(*cg.target)
+		instructionIndex := len(*cg.target)
 		for i := 0; i < len(caseNode.Expressions); i++ {
-			updateJumpDistance(jumpInstructions[jumpIndex], intstructionIndex-jumpInstructionPositions[jumpIndex], VM.IT_JumpIfTrueEx)
+			updateJumpDistance(jumpInstructions[jumpIndex], instructionIndex-jumpInstructionPositions[jumpIndex], VM.IT_JumpIfTrueEx)
 			jumpIndex++
 		}
 

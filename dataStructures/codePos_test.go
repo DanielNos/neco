@@ -28,7 +28,7 @@ func TestCombine(t *testing.T) {
 		{&fileName, 1, 1, 1, 10},
 	}
 
-	editedCodePostions := []CodePos{
+	editedCodePositions := []CodePos{
 		{&fileName, 1, 1, 1, 25},
 		{&fileName, 1, 1, 1, 10},
 		{&fileName, 1, 1, 1, 10},
@@ -41,8 +41,8 @@ func TestCombine(t *testing.T) {
 	for i := 0; i < len(codePositions); i += 2 {
 		codePos := codePositions[i].Combine(&codePositions[i+1])
 
-		if *codePos != editedCodePostions[i/2] {
-			t.Errorf("(%s).Combine(%s): %s, want %s", codePositions[i], codePositions[i+1], codePos, editedCodePostions[i/2])
+		if *codePos != editedCodePositions[i/2] {
+			t.Errorf("(%s).Combine(%s): %s, want %s", codePositions[i], codePositions[i+1], codePos, editedCodePositions[i/2])
 		}
 	}
 }

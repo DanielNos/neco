@@ -79,7 +79,7 @@ func (cg *CodeGenerator) generateFunctionCall(node *parser.Node) {
 		cg.addInstruction(VM.IT_Halt, byte(functionCall.Arguments[0].Value.(*parser.LiteralNode).Value.(int64)))
 		// Unknown function
 	} else {
-		panic("Unkown function.")
+		panic("Unknown function.")
 	}
 }
 

@@ -162,7 +162,7 @@ func main() {
 		compile(configuration)
 		// Run target
 	} else if configuration.Action == A_Run {
-		virtualMachine := VM.NewVirutalMachine(configuration.TargetPath)
+		virtualMachine := VM.NewVirtualMachine(configuration.TargetPath)
 		virtualMachine.Execute()
 		// Analyze target
 	} else if configuration.Action == A_Analyze {
