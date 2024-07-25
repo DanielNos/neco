@@ -6,7 +6,17 @@ import (
 )
 
 func (cg *CodeGenerator) pushScope(scopeType ScopeType) {
-	cg.scopes.Push(&Scope{scopeType, uint8(0), map[string]uint8{}})
+	varIdCount := uint8(0)
+
+	if cg.scopes.Top != nil {
+		varIdCount = cg.scopes.Top.Value.(*Scope).variableIdentifierCounter
+	}
+
+	cg.scopes.Push(&Scope{
+		scopeType,
+		varIdCount,
+		map[string]uint8{},
+	})
 }
 
 func (cg *CodeGenerator) enterScope(name *string) {

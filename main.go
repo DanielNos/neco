@@ -56,8 +56,6 @@ func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 		logger.Success("Passed lexical analysis.")
 	}
 
-	logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
-
 	// Analyze syntax
 	syntaxAnalyzer := syntaxAnalyzer.NewSyntaxAnalyzer(tokens, lexer.ErrorCount)
 	syntaxAnalyzer.Analyze()
@@ -67,6 +65,7 @@ func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 
 		// Print tokens
 		if configuration.PrintTokens {
+			logger.Info(fmt.Sprintf("Lexed %d tokens.", len(tokens)))
 			printTokens(tokens)
 		}
 

@@ -26,14 +26,12 @@ func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {
 }
 
 func (cg *CodeGenerator) generateVariableDeclarator(dataType *data.DataType, id *uint8) {
-
 	// Generate declaration of root type
 	if id != nil {
 		cg.addInstruction(dataTypeToDeclareInstruction[dataType.Type], *id)
 	} else {
 		// Identifier of variable (id) is passed only for root types, sub-types have no arguments
 		cg.addInstruction(dataTypeToDeclareInstruction[dataType.Type])
-
 	}
 
 	// Generate sub-type of composite types

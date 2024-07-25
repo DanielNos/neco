@@ -7,10 +7,10 @@
 # Debugging scripts
 build
 run
-*.py
 
 # Build files
 bin
+build
 main
 neco
 
