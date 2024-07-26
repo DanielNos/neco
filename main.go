@@ -170,7 +170,6 @@ func buildAndRun(configuration *Configuration) {
 func main() {
 	configuration := processArguments()
 
-	// Build target
 	switch configuration.Action {
 	case A_Build:
 		logger.Info("🐱 Compiling " + configuration.TargetPath)

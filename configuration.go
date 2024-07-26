@@ -70,6 +70,8 @@ func processArguments() *Configuration {
 	default:
 		if strings.HasSuffix(args[0], ".neco") {
 			configuration.Action = A_BuildAndRun
+			logger.LoggingLevel = logger.LL_Warning
+
 		} else {
 			configuration.Action = A_Run
 		}
@@ -81,7 +83,7 @@ func processArguments() *Configuration {
 	// Collect flags
 	switch configuration.Action {
 	// Build flags
-	case A_Build:
+	case A_Build, A_BuildAndRun:
 		for i := argumentsStart; i < len(args); i++ {
 			switch args[i] {
 			case "--tokens", "-to":
