@@ -2,7 +2,8 @@ package lexer
 
 import (
 	"fmt"
-	"neco/dataStructures"
+
+	"github.com/DanielNos/NeCo/dataStructures"
 )
 
 type TokenType int8

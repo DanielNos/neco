@@ -1,7 +1,7 @@
 package syntaxAnalyzer
 
 import (
-	"neco/lexer"
+	"github.com/DanielNos/NeCo/lexer"
 )
 
 func (sn *SyntaxAnalyzer) analyzeFunctionCall() {

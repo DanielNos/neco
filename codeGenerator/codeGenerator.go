@@ -3,12 +3,13 @@ package codeGenerator
 import (
 	"fmt"
 	"math"
-	"neco/codeOptimizer"
-	data "neco/dataStructures"
-	"neco/errors"
-	"neco/logger"
-	"neco/parser"
-	VM "neco/virtualMachine"
+
+	"github.com/DanielNos/NeCo/codeOptimizer"
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/logger"
+	"github.com/DanielNos/NeCo/parser"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 const MAX_UINT8 = 255

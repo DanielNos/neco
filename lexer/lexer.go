@@ -8,9 +8,9 @@ import (
 	"strings"
 	"unicode"
 
-	data "neco/dataStructures"
-	"neco/errors"
-	"neco/logger"
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 const EOF rune = 0x04

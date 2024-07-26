@@ -1,8 +1,8 @@
 package parser
 
 import (
-	data "neco/dataStructures"
-	"neco/lexer"
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/lexer"
 )
 
 const MINIMAL_PRECEDENCE = -100

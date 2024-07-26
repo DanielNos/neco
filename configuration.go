@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"neco/errors"
-	"neco/logger"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 type Action byte

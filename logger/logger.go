@@ -3,9 +3,10 @@ package logger
 import (
 	"bufio"
 	"fmt"
-	data "neco/dataStructures"
 	"os"
 	"strings"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
 
 	color "github.com/fatih/color"
 )

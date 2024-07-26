@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"neco/lexer"
-	VM "neco/virtualMachine"
 	"reflect"
+
+	"github.com/DanielNos/NeCo/lexer"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 
 	"github.com/fatih/color"
 )

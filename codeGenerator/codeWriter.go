@@ -3,10 +3,11 @@ package codeGenerator
 import (
 	"encoding/binary"
 	"math"
-	"neco/errors"
-	"neco/logger"
-	VM "neco/virtualMachine"
 	"os"
+
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/logger"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 var STRING_TERMINATOR = []byte{0}

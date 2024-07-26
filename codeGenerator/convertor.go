@@ -2,9 +2,10 @@ package codeGenerator
 
 import (
 	"encoding/binary"
-	data "neco/dataStructures"
-	"neco/parser"
-	VM "neco/virtualMachine"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/parser"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 var intOperatorToInstruction = map[parser.NodeType]byte{

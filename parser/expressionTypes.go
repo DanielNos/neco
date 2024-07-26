@@ -2,8 +2,9 @@ package parser
 
 import (
 	"fmt"
-	data "neco/dataStructures"
-	"neco/logger"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 func (p *Parser) deriveType(expression *Node) *data.DataType {

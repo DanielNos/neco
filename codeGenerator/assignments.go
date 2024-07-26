@@ -1,8 +1,8 @@
 package codeGenerator
 
 import (
-	"neco/parser"
-	VM "neco/virtualMachine"
+	"github.com/DanielNos/NeCo/parser"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {

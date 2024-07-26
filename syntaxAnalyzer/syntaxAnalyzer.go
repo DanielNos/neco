@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"neco/errors"
-	"neco/lexer"
-	"neco/logger"
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/lexer"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 type SyntaxAnalyzer struct {

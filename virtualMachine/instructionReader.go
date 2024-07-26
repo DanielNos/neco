@@ -5,9 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"neco/errors"
-	"neco/logger"
 	"os"
+
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 type InstructionReader struct {

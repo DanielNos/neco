@@ -2,7 +2,8 @@ package parser
 
 import (
 	"fmt"
-	data "neco/dataStructures"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
 )
 
 func Visualize(tree *Node) {

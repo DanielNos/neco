@@ -3,10 +3,11 @@ package parser
 import (
 	"fmt"
 	"math"
-	data "neco/dataStructures"
-	"neco/lexer"
-	VM "neco/virtualMachine"
 	"strconv"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/lexer"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 func (p *Parser) parseLiteral() *Node {

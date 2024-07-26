@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"math"
-	data "neco/dataStructures"
 	"os"
 	"path/filepath"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
 )
 
 const (

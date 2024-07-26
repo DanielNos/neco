@@ -1,6 +1,6 @@
 package virtualMachine
 
-import data "neco/dataStructures"
+import data "github.com/DanielNos/NeCo/dataStructures"
 
 type SymbolType uint8
 

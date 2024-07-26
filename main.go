@@ -7,13 +7,13 @@ import (
 
 	"github.com/fatih/color"
 
-	codeGen "neco/codeGenerator"
-	"neco/errors"
-	"neco/lexer"
-	"neco/logger"
-	"neco/parser"
-	"neco/syntaxAnalyzer"
-	VM "neco/virtualMachine"
+	codeGen "github.com/DanielNos/NeCo/codeGenerator"
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/lexer"
+	"github.com/DanielNos/NeCo/logger"
+	"github.com/DanielNos/NeCo/parser"
+	"github.com/DanielNos/NeCo/syntaxAnalyzer"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 func printHelp() {
@@ -26,10 +26,10 @@ func printHelp() {
 	fmt.Println("                 -to --tokens            Prints lexed tokens.")
 	fmt.Println("                 -tr --tree              Draws abstract syntax tree.")
 	fmt.Println("                 -i  --instructions      Prints generated instructions.")
-	fmt.Println("                 -d  --dont-optimize      Compiler won't optimize byte code.")
+	fmt.Println("                 -d  --dont-optimize     Compiler won't optimize byte code.")
 	fmt.Println("                 -s  --silent            Doesn't produce info messages when possible.")
-	fmt.Println("                 -n  --no-log             Doesn't produce any log messages, even if there are errors.")
-	fmt.Println("                 -l  --log-level [LEVEL]  Sets logging level. Possible values are 0 to 5.")
+	fmt.Println("                 -n  --no-log            Doesn't produce any log messages, even if there are errors.")
+	fmt.Println("                 -l  --log-level [LEVEL] Sets logging level. Possible values are 0 to 5.")
 	fmt.Println("                 -o  --out               Sets output file path.")
 	fmt.Println("                 -c  --constants         Prints constants stored in binary.")
 	fmt.Println("\nrun [target]")

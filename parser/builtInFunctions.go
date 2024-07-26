@@ -1,6 +1,6 @@
 package parser
 
-import data "neco/dataStructures"
+import data "github.com/DanielNos/NeCo/dataStructures"
 
 var NO_PARAMS = []Parameter{}
 

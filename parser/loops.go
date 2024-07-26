@@ -2,9 +2,10 @@ package parser
 
 import (
 	"fmt"
-	data "neco/dataStructures"
-	"neco/lexer"
-	"neco/logger"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/lexer"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 func (p *Parser) parseLoop() *Node {

@@ -1,9 +1,9 @@
 package codeGenerator
 
 import (
-	data "neco/dataStructures"
-	"neco/parser"
-	VM "neco/virtualMachine"
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/parser"
+	VM "github.com/DanielNos/NeCo/virtualMachine"
 )
 
 func (cg *CodeGenerator) generateExpression(node *parser.Node) {

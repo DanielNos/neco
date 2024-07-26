@@ -2,12 +2,13 @@ package parser
 
 import (
 	"fmt"
-	data "neco/dataStructures"
-	"neco/errors"
-	"neco/lexer"
-	"neco/logger"
 	"os"
 	"strings"
+
+	data "github.com/DanielNos/NeCo/dataStructures"
+	"github.com/DanielNos/NeCo/errors"
+	"github.com/DanielNos/NeCo/lexer"
+	"github.com/DanielNos/NeCo/logger"
 )
 
 var TokenTypeToDataType = map[lexer.TokenType]data.PrimitiveType{
