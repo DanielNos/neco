@@ -16,6 +16,7 @@ const (
 	A_Build Action = iota
 	A_Run
 	A_Analyze
+	A_BuildAndRun
 )
 
 type Configuration struct {
@@ -68,7 +69,7 @@ func processArguments() *Configuration {
 
 	default:
 		if strings.HasSuffix(args[0], ".neco") {
-			configuration.Action = A_Build
+			configuration.Action = A_BuildAndRun
 		} else {
 			configuration.Action = A_Run
 		}

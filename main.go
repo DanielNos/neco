@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/fatih/color"
@@ -152,24 +153,42 @@ func compile(configuration *Configuration) {
 	}
 }
 
+func buildAndRun(configuration *Configuration) {
+	// Compare last modification time of source and binary
+	sourceInfo, sourceInfoError := os.Stat(configuration.TargetPath)
+	binaryInfo, binaryInfoError := os.Stat(configuration.OutputPath)
+
+	if sourceInfoError != nil || binaryInfoError != nil || sourceInfo.ModTime().After(binaryInfo.ModTime()) {
+		logger.Info("🐱 Compiling " + configuration.TargetPath)
+		compile(configuration)
+	}
+
+	virtualMachine := VM.NewVirtualMachine(configuration.OutputPath)
+	virtualMachine.Execute()
+}
+
 func main() {
 	configuration := processArguments()
 
 	// Build target
-	if configuration.Action == A_Build {
+	switch configuration.Action {
+	case A_Build:
 		logger.Info("🐱 Compiling " + configuration.TargetPath)
 		compile(configuration)
-		// Run target
-	} else if configuration.Action == A_Run {
+
+	case A_Run:
 		virtualMachine := VM.NewVirtualMachine(configuration.TargetPath)
 		virtualMachine.Execute()
-		// Analyze target
-	} else if configuration.Action == A_Analyze {
+
+	case A_Analyze:
 		logger.Info("🐱 Analyzing " + configuration.TargetPath)
 		startTime := time.Now()
 
 		analyze(configuration)
 
 		logger.Success(fmt.Sprintf("😺 Analyze completed in %s.", time.Since(startTime)))
+
+	case A_BuildAndRun:
+		buildAndRun(configuration)
 	}
 }
