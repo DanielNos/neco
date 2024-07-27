@@ -16,22 +16,22 @@ fun matchStatements() {
 
 fun matchNumber(int num) {
 	match num {
-		1: printLine("1")
-		2: printLine("2")
-		4+1,6,7,8,9,10: printLine("<5, 10>")
-		11: {
+		1 => printLine("1")
+		2 => printLine("2")
+		4+1, 6, 7, 8, 9, 10 => printLine("<5, 10>")
+		11 => {
 			printLine("11")
 		}
-		default: printLine("Not known number: " + str(num))
+		default => printLine("Not known number => " + str(num))
 	}
 }
 
 fun matchString(str string) {
 	str upper = match string {
-		"a": "A"
-		"b", "c": "B or C"
-		"d": "D"
-		default: "?"
+		"a" => "A"
+		"b", "c" => "B or C"
+		"d" => "D"
+		default => "?"
 	}
 
 	printLine(upper)
