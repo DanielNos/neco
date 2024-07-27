@@ -1,38 +1,38 @@
 fun entry() {
-	matchStatements()
+    matchStatements()
 }
 
 fun matchStatements() {
-	list<int> numbers = [1, 2, 5, 8, 10, 11, 0]
+    list<int> numbers = [1, 2, 5, 8, 10, 11, 0]
 
-	forEach (int number in numbers) {
-		matchNumber(number)
-	}
+    forEach (int number in numbers) {
+        matchNumber(number)
+    }
 
-	forEach (str char in "abeceda") {
-		matchString(char)
-	}
+    forEach (str char in "abeceda") {
+        matchString(char)
+    }
 }
 
 fun matchNumber(int num) {
-	match num {
-		1 => printLine("1")
-		2 => printLine("2")
-		4+1, 6, 7, 8, 9, 10 => printLine("<5, 10>")
-		11 => {
-			printLine("11")
-		}
-		default => printLine("Not known number => " + str(num))
-	}
+    match num {
+        1 => printLine("1")
+        2 => printLine("2")
+        4+1, 6, 7, 8, 9, 10 => printLine("<5, 10>")
+        11 => {
+            printLine("11")
+        }
+        default => printLine("Not known number: " + str(num))
+    }
 }
 
 fun matchString(str string) {
-	str upper = match string {
-		"a" => "A"
-		"b", "c" => "B or C"
-		"d" => "D"
-		default => "?"
-	}
+    str upper = match string {
+        "a" => "A"
+        "b", "c" => "B or C"
+        "d" => "D"
+        default => "?"
+    }
 
-	printLine(upper)
+    printLine(upper)
 }
