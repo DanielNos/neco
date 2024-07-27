@@ -5,9 +5,9 @@ import (
 	"math"
 	"strconv"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/lexer"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/lexer"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 func (p *Parser) parseLiteral() *Node {

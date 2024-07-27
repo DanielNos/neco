@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/errors"
-	"github.com/DanielNos/NeCo/lexer"
-	"github.com/DanielNos/NeCo/logger"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/errors"
+	"github.com/DanielNos/neco/lexer"
+	"github.com/DanielNos/neco/logger"
 )
 
 var TokenTypeToDataType = map[lexer.TokenType]data.PrimitiveType{

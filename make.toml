@@ -3,7 +3,7 @@ name = "neco"
 version = "0.1.0"
 description = "An interpreted programming language."
 long_description = "An interpreted programming language."
-url = "https://github.com/DanielNos/NeCo"
+url = "https://github.com/DanielNos/neco"
 license = "OSL-3.0"
 
 [maintainer]

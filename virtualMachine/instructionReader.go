@@ -7,8 +7,8 @@ import (
 	"math"
 	"os"
 
-	"github.com/DanielNos/NeCo/errors"
-	"github.com/DanielNos/NeCo/logger"
+	"github.com/DanielNos/neco/errors"
+	"github.com/DanielNos/neco/logger"
 )
 
 type InstructionReader struct {

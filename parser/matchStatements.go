@@ -1,9 +1,9 @@
 package parser
 
 import (
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/lexer"
-	"github.com/DanielNos/NeCo/logger"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/lexer"
+	"github.com/DanielNos/neco/logger"
 )
 
 func (p *Parser) parseMatch(isExpression bool) *Node {

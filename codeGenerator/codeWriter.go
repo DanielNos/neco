@@ -5,9 +5,9 @@ import (
 	"math"
 	"os"
 
-	"github.com/DanielNos/NeCo/errors"
-	"github.com/DanielNos/NeCo/logger"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	"github.com/DanielNos/neco/errors"
+	"github.com/DanielNos/neco/logger"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 var STRING_TERMINATOR = []byte{0}

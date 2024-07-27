@@ -7,13 +7,13 @@ import (
 
 	"github.com/fatih/color"
 
-	codeGen "github.com/DanielNos/NeCo/codeGenerator"
-	"github.com/DanielNos/NeCo/errors"
-	"github.com/DanielNos/NeCo/lexer"
-	"github.com/DanielNos/NeCo/logger"
-	"github.com/DanielNos/NeCo/parser"
-	"github.com/DanielNos/NeCo/syntaxAnalyzer"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	codeGen "github.com/DanielNos/neco/codeGenerator"
+	"github.com/DanielNos/neco/errors"
+	"github.com/DanielNos/neco/lexer"
+	"github.com/DanielNos/neco/logger"
+	"github.com/DanielNos/neco/parser"
+	"github.com/DanielNos/neco/syntaxAnalyzer"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 func printHelp() {

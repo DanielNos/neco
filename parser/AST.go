@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
+	data "github.com/DanielNos/neco/dataStructures"
 )
 
 func Visualize(tree *Node) {

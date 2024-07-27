@@ -1,7 +1,7 @@
 package parser
 
 import (
-	data "github.com/DanielNos/NeCo/dataStructures"
+	data "github.com/DanielNos/neco/dataStructures"
 )
 
 type Symbol struct {

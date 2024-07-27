@@ -1,4 +1,4 @@
-module github.com/DanielNos/NeCo
+module github.com/DanielNos/neco
 
 go 1.21.5
 

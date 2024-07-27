@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
+	data "github.com/DanielNos/neco/dataStructures"
 
 	color "github.com/fatih/color"
 )

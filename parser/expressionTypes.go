@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/logger"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/logger"
 )
 
 func (p *Parser) deriveType(expression *Node) *data.DataType {

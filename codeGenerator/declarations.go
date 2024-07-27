@@ -1,9 +1,9 @@
 package codeGenerator
 
 import (
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/parser"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/parser"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 func (cg *CodeGenerator) generateVariableDeclaration(node *parser.Node) {

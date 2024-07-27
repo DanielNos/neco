@@ -1,6 +1,6 @@
 package syntaxAnalyzer
 
-import "github.com/DanielNos/NeCo/lexer"
+import "github.com/DanielNos/neco/lexer"
 
 func (sn *SyntaxAnalyzer) analyzeScope() {
 	sn.consume()

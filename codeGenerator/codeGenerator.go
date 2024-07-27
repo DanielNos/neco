@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/DanielNos/NeCo/codeOptimizer"
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/errors"
-	"github.com/DanielNos/NeCo/logger"
-	"github.com/DanielNos/NeCo/parser"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	"github.com/DanielNos/neco/codeOptimizer"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/errors"
+	"github.com/DanielNos/neco/logger"
+	"github.com/DanielNos/neco/parser"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 const MAX_UINT8 = 255

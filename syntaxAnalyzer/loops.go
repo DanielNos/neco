@@ -1,7 +1,7 @@
 package syntaxAnalyzer
 
 import (
-	"github.com/DanielNos/NeCo/lexer"
+	"github.com/DanielNos/neco/lexer"
 )
 
 func (sn *SyntaxAnalyzer) analyzeForEachLoop() {

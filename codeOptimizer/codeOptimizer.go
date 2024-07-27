@@ -1,7 +1,7 @@
 package codeOptimizer
 
 import (
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
 const IGNORE_INSTRUCTION byte = 255

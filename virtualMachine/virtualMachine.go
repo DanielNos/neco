@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	data "github.com/DanielNos/NeCo/dataStructures"
+	data "github.com/DanielNos/neco/dataStructures"
 )
 
 const (

@@ -1,8 +1,8 @@
 package parser
 
 import (
-	data "github.com/DanielNos/NeCo/dataStructures"
-	"github.com/DanielNos/NeCo/lexer"
+	data "github.com/DanielNos/neco/dataStructures"
+	"github.com/DanielNos/neco/lexer"
 )
 
 func (p *Parser) parseFunctionDeclaration() *Node {

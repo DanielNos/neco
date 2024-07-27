@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/DanielNos/NeCo/lexer"
-	VM "github.com/DanielNos/NeCo/virtualMachine"
+	"github.com/DanielNos/neco/lexer"
+	VM "github.com/DanielNos/neco/virtualMachine"
 
 	"github.com/fatih/color"
 )
