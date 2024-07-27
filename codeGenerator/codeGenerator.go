@@ -200,7 +200,7 @@ func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
 	cg.line = cg.FirstLine
 	cg.target = &cg.FunctionsInstructions
 
-	cg.FunctionsInstructions = append(cg.FunctionsInstructions, VM.Instruction{IGNORE_INSTRUCTION, []byte{}})
+	cg.addInstruction(IGNORE_INSTRUCTION)
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclaration {

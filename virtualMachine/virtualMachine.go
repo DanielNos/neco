@@ -92,9 +92,6 @@ func (vm *VirtualMachine) Execute() {
 	vm.stack_scopes[vm.reg_scopeIndex] = filepath.Base(vm.filePath)
 	vm.reg_scopeIndex++
 
-	vm.stack_returnIndexes[vm.reg_returnIndex] = 0
-	vm.reg_returnIndex++
-
 	vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
 
 	// Interpret instructions
@@ -316,7 +313,6 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 		vm.reg_returnIndex--
 		vm.instructionIndex = vm.stack_returnIndexes[vm.reg_returnIndex]
-		vm.instructionIndex--
 
 	// Comparison instructions
 	case IT_Equal:
@@ -469,7 +465,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 
 	// Debug stepper; REMOVE for public build
 	if false {
-		fmt.Printf("Instruction: %d %s %v\n", prevII+1, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
+		fmt.Printf("Instruction: %d %s %v\n", prevII, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
 		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
 		fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
 		fmt.Print("Scope: {")
@@ -492,7 +488,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 			return
 		}
 
-		fmt.Printf("Next: %d %s %v\n", vm.instructionIndex+1, InstructionTypeToString[(*vm.instructions)[vm.instructionIndex].InstructionType], (*vm.instructions)[vm.instructionIndex].InstructionValue)
+		fmt.Printf("Next: %d %s %v\n", vm.instructionIndex, InstructionTypeToString[(*vm.instructions)[vm.instructionIndex].InstructionType], (*vm.instructions)[vm.instructionIndex].InstructionValue)
 		fmt.Scanln()
 	}
 }

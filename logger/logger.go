@@ -20,6 +20,15 @@ const (
 	LL_NoLog
 )
 
+var StringToLogLevel = map[string]byte{
+	"info":    LL_Info,
+	"success": LL_Success,
+	"warning": LL_Warning,
+	"error":   LL_Warning,
+	"fatal":   LL_Fatal,
+	"nolog":   LL_NoLog,
+}
+
 var LoggingLevel byte = LL_Info
 
 func readLine(filePath string, lineIndex uint) (string, error) {

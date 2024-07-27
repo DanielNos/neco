@@ -29,7 +29,7 @@ func printHelp() {
 	fmt.Println("                 -d  --dont-optimize     Compiler won't optimize byte code.")
 	fmt.Println("                 -s  --silent            Doesn't produce info messages when possible.")
 	fmt.Println("                 -n  --no-log            Doesn't produce any log messages, even if there are errors.")
-	fmt.Println("                 -l  --log-level [LEVEL] Sets logging level. Possible values are 0 to 5.")
+	fmt.Println("                 -l  --log-level [LEVEL] Sets logging level. Possible values are 0 to 5 or level names.")
 	fmt.Println("                 -o  --out               Sets output file path.")
 	fmt.Println("                 -c  --constants         Prints constants stored in binary.")
 	fmt.Println("\nrun [target]")

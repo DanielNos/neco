@@ -109,8 +109,17 @@ func processArguments() *Configuration {
 				if i+1 == len(args) {
 					logger.Fatal(errors.INVALID_FLAGS, "No logging level provided after "+args[i]+" flag.")
 				}
-
 				i++
+
+				// Try to get logging level from name
+				level, isName := logger.StringToLogLevel[args[i]]
+
+				if isName {
+					logger.LoggingLevel = level
+					continue
+				}
+
+				// Get logging level from number
 				loggingLevel, err := strconv.Atoi(args[i])
 
 				if err != nil {
