@@ -74,7 +74,17 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 			}
 
 			symbol = p.findSymbol(objectNode.Value.(*VariableNode).Identifier)
+		} else if target.NodeType == NT_ListValue {
+			// Find list variable
+			left := target.Value.(*TypedBinaryNode).Left
+
+			for left.NodeType == NT_ListValue {
+				left = left.Value.(*TypedBinaryNode).Left
+			}
+
+			symbol = p.findSymbol(left.Value.(*VariableNode).Identifier)
 		} else {
+			VisualizeNode(target)
 			panic("Can't check if node is constant.")
 		}
 

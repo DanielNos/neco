@@ -25,7 +25,7 @@ const (
 	IT_DeclareObject
 	IT_DeclareOption
 
-	IT_SetListAtPrevToCurr
+	IT_SetListAtAToB // A, B <- TOP
 
 	IT_LoadConst
 	IT_LoadConstToList
@@ -130,7 +130,7 @@ var InstructionTypeToString = map[byte]string{
 	IT_DeclareObject: "decl_object",
 	IT_DeclareOption: "decl_option",
 
-	IT_SetListAtPrevToCurr: "set_list",
+	IT_SetListAtAToB: "set_list",
 
 	IT_LoadConst:       "load_const",
 	IT_LoadConstToList: "append_const",

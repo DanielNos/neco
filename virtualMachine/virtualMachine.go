@@ -198,7 +198,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack_symbolTables.Top.Value.(*SymbolMap).Insert(instruction.InstructionValue[0], &Symbol{ST_Variable, &VariableSymbol{data.DataType{data.DT_Option, nil}, nil}})
 
 	// Set and load list at index
-	case IT_SetListAtPrevToCurr:
+	case IT_SetListAtAToB:
 		vm.findSymbol().symbolValue.(*VariableSymbol).value.([]any)[vm.stack.Pop().(int64)] = vm.stack.Pop()
 
 	// Load and store

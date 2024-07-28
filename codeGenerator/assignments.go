@@ -66,5 +66,4 @@ func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
 			panic("Not implemented exception: CodeGenerator -> generateAssignmentInstruction for node" + assignedTo.NodeType.String())
 		}
 	}
-
 }

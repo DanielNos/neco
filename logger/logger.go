@@ -132,7 +132,7 @@ func WarningPos(file *string, line, startChar, endChar uint, message string) {
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
 
 	color.Set(color.FgHiWhite)
-	fmt.Fprintf(os.Stderr, "%s\n\n", message)
+	fmt.Fprint(os.Stderr, message+"\n\n")
 }
 
 func WarningCodePos(codePos *data.CodePos, message string) {
@@ -192,7 +192,7 @@ func ErrorPos(file *string, line, startChar, endChar uint, message string) {
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *file, line, startChar)
 
 	color.Set(color.FgHiWhite)
-	fmt.Fprintf(os.Stderr, "%s\n\n", message)
+	fmt.Fprint(os.Stderr, message+"\n\n")
 }
 
 func ErrorCodePos(codePos *data.CodePos, message string) {
@@ -256,7 +256,7 @@ func Error2CodePos(codePos1, codePos2 *data.CodePos, message string) {
 	fmt.Fprintf(os.Stderr, "%s %d:%d ", *codePos1.File, codePos1.StartLine, codePos1.StartChar)
 
 	color.Set(color.FgHiWhite)
-	fmt.Fprintf(os.Stderr, "%s\n\n", message)
+	fmt.Fprint(os.Stderr, message+"\n\n")
 }
 
 func Fatal(error_code int, message string) {
@@ -266,7 +266,7 @@ func Fatal(error_code int, message string) {
 
 	color.Set(color.FgHiRed)
 	color.Set(color.Bold)
-	fmt.Fprintf(os.Stderr, "[FATAL]   %s\n", message)
+	fmt.Fprint(os.Stderr, "[FATAL]   "+message+"\n")
 	color.Set(color.Reset)
 
 	os.Exit(error_code)

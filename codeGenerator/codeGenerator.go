@@ -293,7 +293,7 @@ func (cg *CodeGenerator) generateNode(node *parser.Node) {
 		cg.generateExpression(node.Value.(*parser.ListAssignNode).AssignedExpression)
 
 		// Generate list assign instruction
-		cg.addInstruction(VM.IT_SetListAtPrevToCurr, cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier))
+		cg.addInstruction(VM.IT_SetListAtAToB, cg.findVariableIdentifier(node.Value.(*parser.ListAssignNode).Identifier))
 
 	// Delete
 	case parser.NT_Delete:
