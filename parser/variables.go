@@ -84,7 +84,6 @@ func (p *Parser) parseAssignment(assignedTo []*Node, startOfStatement *data.Code
 
 			symbol = p.findSymbol(left.Value.(*VariableNode).Identifier)
 		} else {
-			VisualizeNode(target)
 			panic("Can't check if node is constant.")
 		}
 

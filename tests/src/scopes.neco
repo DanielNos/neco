@@ -1,0 +1,25 @@
+fun entry() {
+    str a = "A"
+
+    {
+        printLine(a)
+    }
+
+    {
+        a = "B"
+        printLine(a)
+    }
+
+    printLine(a)
+
+    {
+        str a = "C"
+        printLine(a)
+
+        {
+            printLine(a)
+        }
+    }
+
+    printLine(a)
+}
