@@ -78,6 +78,35 @@ A
 	}
 }
 
+func TestRecursion(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+
+	cmd = exec.Command("./neco", "src/recursion.neco")
+	output, err := cmd.Output()
+
+	if err != nil {
+		t.Fatalf("Failed to build recursion.neco: " + string(output) + "\n" + err.Error())
+	}
+
+	correctOutput := `1
+120
+3628800
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH!
+`
+	if string(output) != correctOutput {
+		t.Fatalf("Output of recursion:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
+	}
+
+	t.Cleanup(func() {
+		os.Remove("neco")
+	})
+}
+
 func TestScopes(t *testing.T) {
 	cmd := exec.Command("go", "build", "-o", "neco", "..")
 	err := cmd.Run()

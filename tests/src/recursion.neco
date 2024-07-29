@@ -1,0 +1,23 @@
+fun entry() {
+	printLine(str(factorial(1)))
+	printLine(str(factorial(5)))
+	printLine(str(factorial(10)))
+	scream(100)
+}
+
+fun scream(int n) {
+	if (n > 0) {
+		print("A")
+		scream(n - 1)
+	} else {
+		printLine("H!")
+	}
+}
+
+fun factorial(int num) -> int {
+	if (num > 1) {
+		return num * factorial(num - 1)
+	}
+
+    return 1
+}
