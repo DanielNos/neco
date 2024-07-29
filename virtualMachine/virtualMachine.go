@@ -312,7 +312,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		}
 
 		vm.reg_returnIndex--
-		vm.instructionIndex = vm.stack_returnIndexes[vm.reg_returnIndex]
+		vm.instructionIndex = vm.stack_returnIndexes[vm.reg_returnIndex] - 1
 
 	// Comparison instructions
 	case IT_Equal:
