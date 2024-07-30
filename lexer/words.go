@@ -73,7 +73,7 @@ func (l *Lexer) lexString() {
 
 		// Esacape sequence
 		if l.currRune == '\\' {
-			if l.nextRune != EOF && l.nextRune != '"' {
+			if l.nextRune != EOF {
 				switch l.nextRune {
 				case 'a':
 					l.token.WriteRune('\a')
