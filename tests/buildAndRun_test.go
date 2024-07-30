@@ -6,6 +6,30 @@ import (
 	"testing"
 )
 
+func TestEscapeSequences(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+
+	cmd = exec.Command("./neco", "src/escapeSequences.neco")
+	output, err := cmd.Output()
+
+	if err != nil {
+		t.Fatalf("Failed to build escapeSequences.neco: " + string(output) + "\n" + err.Error())
+	}
+
+	correctOutput := []byte("\b\aTest\n\tEscape\n\rSequences\n\"\\\v\f\"")
+
+	for i := 0; i < len(output) && i < len(correctOutput); i++ {
+		if output[i] != correctOutput[i] {
+			t.Fatalf("Output of escapeSequences:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
+		}
+	}
+}
+
 func TestLoops(t *testing.T) {
 	cmd := exec.Command("go", "build", "-o", "neco", "..")
 	err := cmd.Run()
