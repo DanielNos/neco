@@ -59,7 +59,7 @@ func analyze(configuration *Configuration) (*parser.Node, *parser.Parser) {
 
 	// Analyze syntax
 	syntaxAnalyzer := syntaxAnalyzer.NewSyntaxAnalyzer(tokens, lexer.ErrorCount)
-	syntaxAnalyzer.Analyze()
+	tokens = syntaxAnalyzer.Analyze()
 
 	if syntaxAnalyzer.ErrorCount != 0 {
 		logger.Error(fmt.Sprintf("Syntax analysis failed with %d error/s.", syntaxAnalyzer.ErrorCount))

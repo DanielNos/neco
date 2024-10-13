@@ -5,12 +5,10 @@ import (
 	"github.com/DanielNos/neco/lexer"
 )
 
-type NodeValue any
-
 type Node struct {
 	Position *data.CodePos
 	NodeType NodeType
-	Value    NodeValue
+	Value    any
 }
 
 type NodeType uint8

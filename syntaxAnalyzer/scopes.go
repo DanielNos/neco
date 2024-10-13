@@ -1,7 +1,5 @@
 package syntaxAnalyzer
 
-import "github.com/DanielNos/neco/lexer"
-
 func (sn *SyntaxAnalyzer) analyzeScope() {
 	sn.consume()
 	sn.analyzeStatementList(true)
@@ -11,7 +9,7 @@ func (sn *SyntaxAnalyzer) analyzeScope() {
 func (sn *SyntaxAnalyzer) analyzeStatementList(isScope bool) {
 	start := sn.peekPrevious()
 
-	for sn.peek().TokenType != lexer.TT_EndOfFile {
+	for !sn.peek().IsEndOfFileOf(sn.tokens[0]) {
 		if sn.analyzeStatement(isScope) {
 			return
 		}

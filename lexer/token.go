@@ -99,6 +99,8 @@ const (
 	TT_KW_match
 	TT_KW_default
 	TT_KW_CaseIs
+
+	TT_KW_import
 )
 
 var TokenTypeToString = map[TokenType]string{
@@ -190,6 +192,8 @@ var TokenTypeToString = map[TokenType]string{
 	TT_KW_match:   "match",
 	TT_KW_default: "default",
 	TT_KW_CaseIs:  "=>",
+
+	TT_KW_import: "import",
 }
 
 func (tt TokenType) String() string {
@@ -236,6 +240,10 @@ type Token struct {
 	Position  *dataStructures.CodePos
 	TokenType TokenType
 	Value     string
+}
+
+func (t *Token) IsEndOfFileOf(startOfFile *Token) bool {
+	return t.TokenType == TT_EndOfFile && t.Value == startOfFile.Value
 }
 
 func (t *Token) String() string {

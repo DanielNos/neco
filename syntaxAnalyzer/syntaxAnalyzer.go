@@ -113,7 +113,7 @@ func (sn *SyntaxAnalyzer) collectExpression() string {
 	}
 }
 
-func (sn *SyntaxAnalyzer) Analyze() {
+func (sn *SyntaxAnalyzer) Analyze() []*lexer.Token {
 	// Check StartOfFile
 	if sn.peek().TokenType != lexer.TT_StartOfFile {
 		sn.newError(sn.peek(), "Missing StarOfFile token. This is probably a lexer error.")
@@ -124,6 +124,8 @@ func (sn *SyntaxAnalyzer) Analyze() {
 	sn.registerEnumsAndStructs()
 	sn.resetTokenPointer()
 	sn.analyzeStatementList(false)
+
+	return sn.tokens
 }
 
 func (sn *SyntaxAnalyzer) lookFor(tokenType lexer.TokenType, afterWhat, name string, optional bool) bool {
@@ -246,6 +248,14 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	case lexer.TT_KW_default:
 		return false
 
+	case lexer.TT_KW_import: // Import
+		sn.analyzeImport()
+		return false
+
+	case lexer.TT_StartOfFile, lexer.TT_EndOfFile: // Ignore file markers
+		sn.consume()
+		return false
+
 	case lexer.TT_EndOfCommand: // Ignore EOCs
 		sn.consume()
 		return false
@@ -272,7 +282,7 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 			return true
 		}
 
-		// Collect toklens after statement
+		// Collect tokens after statement
 		startPosition := sn.peek().Position
 
 		for sn.peek().TokenType != lexer.TT_EndOfCommand && sn.peek().TokenType != lexer.TT_DL_BraceOpen && sn.peek().TokenType != lexer.TT_DL_ParenthesisClose {
@@ -281,7 +291,28 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 
 		sn.newErrorFromTo(startPosition.StartLine, startPosition.StartChar, sn.peekPrevious().Position.EndChar, "Unexpected token/s after statement.")
 	}
-	sn.consume()
 
 	return false
+}
+
+func InsertAt[T any](sliceA []T, sliceB []T, index int) []T {
+	if index < 0 || index > len(sliceA) {
+		panic("index out of range")
+	}
+	return append(sliceA[:index], append(sliceB, sliceA[index:]...)...)
+}
+
+func (sn *SyntaxAnalyzer) analyzeImport() {
+	sn.consume() // import
+
+	if sn.peek().TokenType != lexer.TT_Identifier {
+		sn.newError(sn.peek(), "Expected file identifier after import.")
+		return
+	}
+
+	// Tokenize imported file
+	lexer := lexer.NewLexer(sn.consume().Value)
+	importedTokens := lexer.Lex()
+
+	sn.tokens = InsertAt(sn.tokens, importedTokens, sn.tokenIndex)
 }

@@ -180,7 +180,7 @@ func (p *Parser) parseModule() *Node {
 	scopeNode := p.parseScope(false, false)
 
 	// Create node
-	var moduleNode NodeValue = &ModuleNode{modulePath, moduleName, scopeNode.(*ScopeNode)}
+	var moduleNode any = &ModuleNode{modulePath, moduleName, scopeNode.(*ScopeNode)}
 	module := &Node{p.peek().Position, NT_Module, moduleNode}
 
 	// No entry function
@@ -351,6 +351,17 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 	case lexer.TT_KW_match:
 		return p.parseMatch(false)
 
+	// Ignore imports
+	case lexer.TT_KW_import:
+		p.consume()
+		p.consume()
+		return p.parseStatement(enteredScope)
+
+	// Ignore StartOfFiles
+	case lexer.TT_StartOfFile:
+		p.consume()
+		return p.parseStatement(enteredScope)
+
 	// Skip EOCs
 	case lexer.TT_EndOfCommand:
 		p.consume()
@@ -358,7 +369,12 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	// Return no node for EndOfFile token
 	case lexer.TT_EndOfFile:
-		return nil
+		if p.peek().IsEndOfFileOf(p.tokens[0]) {
+			return nil
+		}
+
+		p.consume()
+		return p.parseStatement(enteredScope)
 	}
 
 	panic(p.peek().Position.String() + " Unexpected token " + p.peek().TokenType.String() + " \"" + p.consume().String() + "\".")

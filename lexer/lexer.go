@@ -60,25 +60,51 @@ type Lexer struct {
 }
 
 func NewLexer(filePath string) Lexer {
-	return Lexer{filePath, nil, nil, false, ' ', ' ', 0, 0, bytes.Buffer{}, make([]*Token, 0, 100), 0}
+	return Lexer{
+		filePath,
+		nil,
+		nil,
+		false,
+		' ',
+		' ',
+		0,
+		0,
+		bytes.Buffer{},
+		make([]*Token, 0, 100),
+		0,
+	}
+}
+
+func (l *Lexer) openFile() {
+	file, err := os.Open(l.filePath)
+
+	// Failed to open
+	if err != nil {
+		// Try again with .neco file extension
+		if !strings.HasSuffix(l.filePath, ".neco") {
+			file, err = os.Open(l.filePath + ".neco")
+		}
+
+		// Failed to open
+		if err != nil {
+			reason := strings.Split(err.Error(), ": ")[1]
+			logger.Fatal(errors.LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
+		}
+	}
+
+	l.file = file
+	l.fileOpen = true
 }
 
 func (l *Lexer) Lex() []*Token {
 	// Create reader
-	file, err := os.Open(l.filePath)
-	l.file = file
-	l.fileOpen = true
-
-	if err != nil {
-		reason := strings.Split(err.Error(), ": ")[1]
-		logger.Fatal(errors.LEXICAL, fmt.Sprintf("Failed to open file %s. %c%s.", l.filePath, unicode.ToUpper(rune(reason[0])), reason[1:]))
-	}
+	l.openFile()
 
 	// Insert StartOfFile token
 	l.tokens = append(l.tokens, &Token{&data.CodePos{&l.filePath, 0, 0, 0, 0}, TT_StartOfFile, l.filePath})
 
 	// Read first 2 chars
-	l.reader = bufio.NewReader(file)
+	l.reader = bufio.NewReader(l.file)
 	l.advance()
 	l.advance()
 
@@ -89,7 +115,7 @@ func (l *Lexer) Lex() []*Token {
 		l.lexRune()
 
 		if l.currRune == EOF {
-			l.newToken(l.lineIndex, l.charIndex, TT_EndOfFile)
+			l.newTokenFrom(l.lineIndex, l.charIndex, TT_EndOfFile, l.filePath)
 			return l.tokens
 		}
 	}

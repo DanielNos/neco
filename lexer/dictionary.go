@@ -33,6 +33,8 @@ var KEYWORDS = map[string]TokenType{
 
 	"match":   TT_KW_match,
 	"default": TT_KW_default,
+
+	"import": TT_KW_import,
 }
 
 var DELIMITERS = map[rune]TokenType{
