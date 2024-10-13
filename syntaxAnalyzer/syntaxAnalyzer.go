@@ -7,12 +7,13 @@ import (
 	"github.com/DanielNos/neco/errors"
 	"github.com/DanielNos/neco/lexer"
 	"github.com/DanielNos/neco/logger"
+	"github.com/DanielNos/neco/utils"
 )
 
 type SyntaxAnalyzer struct {
-	tokens []*lexer.Token
+	tokens     []*lexer.Token
+	tokenIndex int
 
-	tokenIndex  int
 	customTypes map[string]bool
 
 	ErrorCount      uint
@@ -20,7 +21,12 @@ type SyntaxAnalyzer struct {
 }
 
 func NewSyntaxAnalyzer(tokens []*lexer.Token, previousErrors uint) SyntaxAnalyzer {
-	return SyntaxAnalyzer{tokens, 0, map[string]bool{}, 0, previousErrors}
+	return SyntaxAnalyzer{tokens,
+		0,
+		map[string]bool{},
+		0,
+		previousErrors,
+	}
 }
 
 func (sn *SyntaxAnalyzer) newError(token *lexer.Token, message string) {
@@ -295,13 +301,6 @@ func (sn *SyntaxAnalyzer) analyzeStatement(isScope bool) bool {
 	return false
 }
 
-func InsertAt[T any](sliceA []T, sliceB []T, index int) []T {
-	if index < 0 || index > len(sliceA) {
-		panic("index out of range")
-	}
-	return append(sliceA[:index], append(sliceB, sliceA[index:]...)...)
-}
-
 func (sn *SyntaxAnalyzer) analyzeImport() {
 	sn.consume() // import
 
@@ -314,5 +313,5 @@ func (sn *SyntaxAnalyzer) analyzeImport() {
 	lexer := lexer.NewLexer(sn.consume().Value)
 	importedTokens := lexer.Lex()
 
-	sn.tokens = InsertAt(sn.tokens, importedTokens, sn.tokenIndex)
+	sn.tokens = utils.InsertAt(sn.tokens, importedTokens, sn.tokenIndex)
 }

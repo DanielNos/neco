@@ -1,8 +1,13 @@
 # Editor configuration
 .vscode
 
-# Source files
-*.neco
+# Ignore everything except these
+*
+!*.go
+!*.mod
+!*.sum
+!*.toml
+!*/
 
 # Debugging scripts
 build
@@ -11,8 +16,6 @@ run
 # Build files
 bin
 build
-main
-neco
 
 # Tests
 tests/src/*
