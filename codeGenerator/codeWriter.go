@@ -125,7 +125,7 @@ func (cw *CodeWriter) writeFunctionIndexes() {
 		}
 
 		// Write difference between this function and the last one
-		cw.file.Write([]byte{byte(function - lastFunction - 1)})
+		cw.file.Write([]byte{byte((function - 1) - lastFunction)})
 		lastFunction = function
 	}
 

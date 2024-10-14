@@ -307,7 +307,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.stack_symbolTables.Pop()
 		vm.reg_scopeIndex--
 
-		if vm.reg_scopeIndex == 1 {
+		if vm.reg_scopeIndex <= 1 {
 			os.Exit(0)
 		}
 
@@ -378,10 +378,6 @@ func (vm *VirtualMachine) interpretInstruction() {
 	case IT_PopScope:
 		vm.stack_symbolTables.Pop()
 		vm.reg_scopeIndex--
-
-		if vm.reg_scopeIndex == 1 {
-			return
-		}
 
 	// Adding fields to an object
 	case IT_AddField:
@@ -468,7 +464,7 @@ func (vm *VirtualMachine) interpretInstruction() {
 		fmt.Printf("Instruction: %d %s %v\n", prevII, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
 		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
 		fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
-		fmt.Print("Scope: {")
+		fmt.Print("ScopeI: " + fmt.Sprintf("%d", vm.reg_scopeIndex) + "; Scope: {")
 		fmt.Printf("%s", vm.stack_scopes[0])
 
 		if vm.reg_scopeIndex > 1 {
@@ -512,7 +508,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 }
 
 func (vm *VirtualMachine) panic(message string) {
-	println("\033[91mPanic in module " + vm.stack_scopes[0] + ": " + message + "\n\033[0m")
+	fmt.Println("\033[91mPanic in module " + vm.stack_scopes[0] + ": " + message + "\n\033[0m")
 
 	// Get absolute path to binary
 	absolutePath, err := filepath.Abs(vm.stack_scopes[0])

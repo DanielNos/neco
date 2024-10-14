@@ -11,14 +11,14 @@ func TestEscapeSequences(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/escapeSequences.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build escapeSequences.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run escapeSequences.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := []byte("\b\aTest\n\tEscape\n\rSequences\n\"\\\v\f\"")
@@ -35,14 +35,14 @@ func TestLoops(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/loops.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build loops.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run loops.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := `00 01 02 03 04 05 06 07 08 09 
@@ -72,14 +72,14 @@ func TestMatchStatements(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/matchStatements.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build matchStatements.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run matchStatements.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := `1
@@ -107,14 +107,14 @@ func TestRecursion(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/recursion.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build recursion.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run recursion.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := `1
@@ -136,14 +136,14 @@ func TestScopes(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/scopes.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build scopes.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run scopes.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := `A
@@ -163,14 +163,14 @@ func TestStructs(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
+		t.Fatalf("Failed to build and run neco: " + err.Error())
 	}
 
 	cmd = exec.Command("./neco", "src/structs.neco")
 	output, err := cmd.Output()
 
 	if err != nil {
-		t.Fatalf("Failed to build structs.neco: " + string(output) + "\n" + err.Error())
+		t.Fatalf("Failed to build and run structs.neco: " + string(output) + "\n" + err.Error())
 	}
 
 	correctOutput := `Person{"Daniel", 173}
