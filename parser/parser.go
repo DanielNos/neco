@@ -219,7 +219,7 @@ func (p *Parser) parseScope(enterScope, packInNode bool) any {
 	scope := p.scopeNodeStack.Top.Value.(*ScopeNode)
 
 	// Collect statements
-	for p.peek().TokenType != lexer.TT_EndOfFile {
+	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
 		statement := p.parseStatement(enterScope)
 
 		if statement == nil {
