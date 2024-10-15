@@ -175,6 +175,7 @@ func (vm *VirtualMachine) executeInstruction() {
 
 		// Jump to function
 		vm.instructionIndex = vm.functions[instruction.InstructionValue[0]]
+		return
 
 	case IT_CallBuiltInFunc:
 		vm.callBuiltInFunction(instruction.InstructionValue[0])

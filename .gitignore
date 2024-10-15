@@ -15,6 +15,6 @@
 build
 run
 
-# Tests
+# Test binaries
 tests/src/*
 !tests/src/*.neco
