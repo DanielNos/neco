@@ -9,7 +9,7 @@ import (
 func Visualize(tree *Node) {
 	moduleNode := tree.Value.(*ModuleNode)
 
-	println(moduleNode.Name)
+	fmt.Println(moduleNode.Name)
 
 	for i, node := range moduleNode.Statements.Statements {
 		visualize(node, "", i == len(moduleNode.Statements.Statements)-1)
