@@ -97,22 +97,52 @@ func (vm *VirtualMachine) Execute() {
 	// Interpret instructions
 	vm.instructions = &vm.GlobalsInstructions
 	for vm.instructionIndex < len(vm.GlobalsInstructions) {
-		vm.interpretInstruction()
+		vm.executeInstruction()
 	}
 
 	vm.instructions = &vm.FunctionsInstructions
 	vm.instructionIndex = 0
 	for vm.instructionIndex < len(vm.FunctionsInstructions) {
-		vm.interpretInstruction()
+		vm.executeInstruction()
 	}
 }
 
-func (vm *VirtualMachine) interpretInstruction() {
+func (vm *VirtualMachine) executeInstructionDebug() {
+	prevII := vm.instructionIndex
+
+	vm.executeInstruction()
+
+	fmt.Printf("Instruction: %d %s %v\n", prevII, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
+	fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
+	fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
+	fmt.Print("ScopeI: " + fmt.Sprintf("%d", vm.reg_scopeIndex) + "; Scope: {")
+	fmt.Printf("%s", vm.stack_scopes[0])
+
+	if vm.reg_scopeIndex > 1 {
+		for _, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
+			if len(scope) == 0 {
+				fmt.Print(", U")
+			} else {
+				fmt.Printf(", %s", scope)
+			}
+		}
+	}
+
+	fmt.Println("}")
+
+	if vm.instructionIndex == len(*vm.instructions) {
+		fmt.Println("Next: none\n")
+		return
+	}
+
+	fmt.Printf("Next: %d %s %v\n", vm.instructionIndex, InstructionTypeToString[(*vm.instructions)[vm.instructionIndex].InstructionType], (*vm.instructions)[vm.instructionIndex].InstructionValue)
+	fmt.Scanln()
+}
+
+func (vm *VirtualMachine) executeInstruction() {
 	instruction := (*vm.instructions)[vm.instructionIndex]
-	prevII := vm.instructionIndex // REMOVE for public build
 
 	switch instruction.InstructionType {
-
 	// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
 
 	// Jumps
@@ -458,35 +488,6 @@ func (vm *VirtualMachine) interpretInstruction() {
 		vm.panic(fmt.Sprintf("Unknown instruction type: %v.", (*vm.instructions)[vm.instructionIndex].InstructionValue))
 	}
 	vm.instructionIndex++
-
-	// Debug stepper; REMOVE for public build
-	if false {
-		fmt.Printf("Instruction: %d %s %v\n", prevII, InstructionTypeToString[(*vm.instructions)[prevII].InstructionType], (*vm.instructions)[prevII].InstructionValue)
-		fmt.Printf("Stack: %v\n", vm.stack.items[:vm.stack.size])
-		fmt.Printf("Return Stack: %v\n", vm.stack_returnIndexes[:vm.reg_returnIndex])
-		fmt.Print("ScopeI: " + fmt.Sprintf("%d", vm.reg_scopeIndex) + "; Scope: {")
-		fmt.Printf("%s", vm.stack_scopes[0])
-
-		if vm.reg_scopeIndex > 1 {
-			for _, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
-				if len(scope) == 0 {
-					fmt.Print(", U")
-				} else {
-					fmt.Printf(", %s", scope)
-				}
-			}
-		}
-
-		fmt.Println("}")
-
-		if vm.instructionIndex == len(*vm.instructions) {
-			fmt.Println("Next: none\n")
-			return
-		}
-
-		fmt.Printf("Next: %d %s %v\n", vm.instructionIndex, InstructionTypeToString[(*vm.instructions)[vm.instructionIndex].InstructionType], (*vm.instructions)[vm.instructionIndex].InstructionValue)
-		fmt.Scanln()
-	}
 }
 
 func (vm *VirtualMachine) findSymbol() *Symbol {
