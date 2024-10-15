@@ -5,6 +5,12 @@ description = "An interpreted programming language."
 long_description = "An interpreted programming language."
 url = "https://github.com/DanielNos/neco"
 license = "OSL-3.0"
+gui = false
+
+[desktop_entry]
+name = "NeCo"
+icon = ""
+categories = [ "Utility" ]
 
 [maintainer]
 name = "Daniel Nos"
@@ -29,3 +35,8 @@ architectures = [ "amd64", "386", "arm", "arm64" ]
 [pkg]
 package = true
 architectures = [ "amd64" ]
+
+[appimage]
+package = true
+architectures = [ "amd64" ]
+custom_apprun = ""
