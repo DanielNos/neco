@@ -24,7 +24,7 @@ var StringToLogLevel = map[string]byte{
 	"info":    LL_Info,
 	"success": LL_Success,
 	"warning": LL_Warning,
-	"error":   LL_Warning,
+	"error":   LL_Error,
 	"fatal":   LL_Fatal,
 	"nolog":   LL_NoLog,
 }
