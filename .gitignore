@@ -3,19 +3,17 @@
 
 # Ignore everything except these
 *
+*.*
 !*.go
 !*.mod
 !*.sum
 !*.toml
 !*/
+!Makefile
 
 # Debugging scripts
 build
 run
-
-# Build files
-bin
-build
 
 # Tests
 tests/src/*
