@@ -169,6 +169,7 @@ func (p *Parser) parseModule() *Node {
 
 	// Enter global scope
 	p.enterScope()
+	p.StringConstants[moduleName] = -1
 
 	// Insert built-in functions
 	p.insertBuiltInFunctions()
@@ -359,7 +360,7 @@ func (p *Parser) parseStatement(enteredScope bool) *Node {
 
 	// Ignore StartOfFiles
 	case lexer.TT_StartOfFile:
-		p.consume()
+		p.StringConstants[p.consume().Value] = -1
 		return p.parseStatement(enteredScope)
 
 	// Skip EOCs

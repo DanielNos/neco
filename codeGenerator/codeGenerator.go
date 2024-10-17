@@ -43,7 +43,10 @@ type CodeGenerator struct {
 	stringConstants map[string]int
 	Constants       []any // int64/float64/string
 
-	FirstLine             uint
+	firstLines   map[string]int
+	currentLines map[string]int
+	currentFile  string
+
 	GlobalsInstructions   []VM.Instruction
 	FunctionsInstructions []VM.Instruction
 	target                *[]VM.Instruction
@@ -54,8 +57,6 @@ type CodeGenerator struct {
 	loopScopeDepths *data.Stack // int
 
 	scopes *data.Stack // Scope
-
-	line uint
 
 	ErrorCount int
 }
@@ -70,6 +71,10 @@ func NewGenerator(tree *parser.Node, intConstants map[int64]int, floatConstants 
 		stringConstants: stringConstants,
 		Constants:       make([]any, len(intConstants)+len(floatConstants)+len(stringConstants)),
 
+		firstLines:   map[string]int{},
+		currentLines: map[string]int{},
+		currentFile:  "",
+
 		GlobalsInstructions:   []VM.Instruction{},
 		FunctionsInstructions: []VM.Instruction{},
 
@@ -78,9 +83,7 @@ func NewGenerator(tree *parser.Node, intConstants map[int64]int, floatConstants 
 		scopeBreaks:     data.NewStack(),
 		loopScopeDepths: data.NewStack(),
 
-		scopes: data.NewStack(),
-
-		line:       0,
+		scopes:     data.NewStack(),
 		ErrorCount: 0,
 	}
 
@@ -105,9 +108,6 @@ func (cg *CodeGenerator) Generate() {
 		return
 	}
 
-	// Store first line
-	cg.FirstLine = statements[0].Position.StartLine
-
 	// Generate code
 	cg.generateGlobals(statements)
 
@@ -125,26 +125,41 @@ func (cg *CodeGenerator) Generate() {
 	}
 }
 
+func (cg *CodeGenerator) currentLine(node *parser.Node) uint {
+	return uint(cg.currentLines[*node.Position.File])
+}
+
+func (cg *CodeGenerator) updateFileAndLine(node *parser.Node) {
+	if cg.currentFile != *node.Position.File {
+		cg.currentFile = *node.Position.File
+		cg.currentLines[*node.Position.File] = int(node.Position.StartLine)
+
+		cg.addInstruction(VM.IT_FileMarker, uint8(cg.stringConstants[*node.Position.File]))
+		cg.addInstruction(VM.IT_LineOffset, uint8(node.Position.StartLine))
+		return
+	}
+
+	if cg.currentLines[*node.Position.File] < int(node.Position.StartLine) {
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.currentLine(node)))
+		cg.currentLines[*node.Position.File] = int(node.Position.StartLine)
+	}
+}
+
 func (cg *CodeGenerator) addInstruction(instructionType byte, instructionArguments ...byte) {
 	(*cg.target) = append(*cg.target, VM.Instruction{instructionType, instructionArguments})
 }
 
 func (cg *CodeGenerator) generateGlobals(statements []*parser.Node) {
 	// Reset line
-	cg.line = cg.FirstLine
 	cg.target = &cg.GlobalsInstructions
 
 	for _, node := range statements {
-		// Generate line offset if line changed
-		if cg.line < node.Position.StartLine {
-			cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
-			cg.line = node.Position.StartLine
-		}
-
 		// Generate only declarations and assignments
 		if node.NodeType == parser.NT_VariableDeclaration {
+			cg.updateFileAndLine(node)
 			cg.generateVariableDeclaration(node)
 		} else if node.NodeType == parser.NT_Assign {
+			cg.updateFileAndLine(node)
 			cg.generateAssignment(node.Value.(*parser.AssignNode))
 		} else {
 			// Stop if something else is found (globals are only at the start of the tree)
@@ -165,7 +180,6 @@ func (cg *CodeGenerator) newError(message string) {
 func (cg *CodeGenerator) generateConstantIDs() {
 	// Map constant values to their index in global constant table.
 	// This table is sorted by type, in order: strings, ints, floats.
-
 	id := 0
 
 	// Strings
@@ -197,18 +211,12 @@ func (cg *CodeGenerator) generateConstantIDs() {
 
 func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
 	// Reset line
-	cg.line = cg.FirstLine
 	cg.target = &cg.FunctionsInstructions
-
 	cg.addInstruction(IGNORE_INSTRUCTION)
 
 	for _, node := range statements {
 		if node.NodeType == parser.NT_FunctionDeclaration {
-			// Generate line offset if line changed
-			if cg.line < node.Position.StartLine {
-				cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
-				cg.line = node.Position.StartLine
-			}
+			cg.updateFileAndLine(node)
 
 			// Set first function call function id
 			if node.Value.(*parser.FunctionDeclareNode).Identifier == "entry" {
@@ -222,11 +230,7 @@ func (cg *CodeGenerator) generateFunctions(statements []*parser.Node) {
 }
 
 func (cg *CodeGenerator) generateNode(node *parser.Node) {
-	// If node line has changed, insert line offset instruction
-	if node.Position.StartLine > cg.line {
-		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.StartLine-cg.line))
-		cg.line = node.Position.StartLine
-	}
+	cg.updateFileAndLine(node)
 
 	switch node.NodeType {
 	// Function call

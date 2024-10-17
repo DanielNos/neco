@@ -23,9 +23,9 @@ func (cg *CodeGenerator) generateLoop(node *parser.Node) {
 	cg.leaveScope()
 
 	// Generate line offset if line changed
-	if cg.line < node.Position.EndLine {
-		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.line))
-		cg.line = node.Position.EndLine
+	if cg.currentLine(node) < node.Position.EndLine {
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.currentLine(node)))
+		cg.currentLines[*node.Position.File] = int(node.Position.EndLine)
 	}
 
 	// Generate jump instruction back to start
@@ -62,9 +62,9 @@ func (cg *CodeGenerator) generateForLoop(node *parser.Node) {
 	cg.generateStatements(forLoop.Body.Value.(*parser.ScopeNode))
 
 	// Generate line offset if line changed
-	if cg.line < node.Position.EndLine {
-		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.line))
-		cg.line = node.Position.EndLine
+	if cg.currentLine(node) < node.Position.EndLine {
+		cg.addInstruction(VM.IT_LineOffset, byte(node.Position.EndLine-cg.currentLine(node)))
+		cg.currentLines[*node.Position.File] = int(node.Position.EndLine)
 	}
 
 	// Remove jump to start

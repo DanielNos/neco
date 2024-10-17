@@ -145,8 +145,8 @@ func compile(configuration *Configuration) {
 
 	// Print generated instructions
 	if configuration.PrintInstructions {
-		printInstructions(&codeGenerator.GlobalsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
-		printInstructions(&codeGenerator.FunctionsInstructions, codeGenerator.Constants, int(codeGenerator.FirstLine))
+		printInstructions(&codeGenerator.GlobalsInstructions, codeGenerator.Constants)
+		printInstructions(&codeGenerator.FunctionsInstructions, codeGenerator.Constants)
 
 		fmt.Println()
 	}

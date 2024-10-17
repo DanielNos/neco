@@ -34,19 +34,34 @@ func printTokens(tokens []*lexer.Token) {
 	fmt.Println()
 }
 
-func printInstructions(instructions *[]VM.Instruction, constants []any, firstLine int) {
-	line := firstLine
+func printInstructions(instructions *[]VM.Instruction, constants []any) {
+	lines := map[byte]int{}
+	currentFile := byte(0)
 	justChanged := true
 
-	for i, instruction := range *instructions {
+	for i := 0; i < len(*instructions); i++ {
+		instruction := (*instructions)[i]
+
 		// Skip removed instruction
 		if instruction.InstructionType == 255 {
 			continue
 		}
 
+		// Change file
+		if instruction.InstructionType == VM.IT_FileMarker {
+			fmt.Println("\nFile " + constants[instruction.InstructionValue[0]].(string))
+
+			currentFile = instruction.InstructionValue[0]
+			lines[instruction.InstructionValue[0]] = int((*instructions)[i+1].InstructionValue[0])
+
+			i++
+			justChanged = true
+			continue
+		}
+
 		// Display empty line instead of offset and record new line number
 		if instruction.InstructionType == VM.IT_LineOffset {
-			line += int(instruction.InstructionValue[0])
+			lines[currentFile] += int(instruction.InstructionValue[0])
 			justChanged = true
 
 			fmt.Println()
@@ -55,16 +70,16 @@ func printInstructions(instructions *[]VM.Instruction, constants []any, firstLin
 
 		// Print line number
 		if justChanged {
-			if line < 10 {
+			if lines[currentFile] < 10 {
 				fmt.Print(" ")
 			}
-			fmt.Printf("%d ", line)
+			fmt.Printf("%d ", lines[currentFile])
 			justChanged = false
 		} else {
 			fmt.Print("   ")
 		}
 
-		// Print instruction number,
+		// Print instruction number
 		if i < 10 {
 			fmt.Print(" ")
 		}

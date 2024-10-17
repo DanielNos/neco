@@ -11,8 +11,6 @@ NeCo Binary File
 │  └─ [SEGMENT] Floats
 │     └─ 8 B Floats - 8 B * N
 └─ [SEGMENT] Code
-   ├─ [SEGMENT] Meta Data
-   │  └─ First line - 1 B
    ├─ [SEGMENT] Globals Instructions - N B
    ├─ [SEGMENT] Functions Indexes - N B
    │  └─ Delta positions of functions in instructions - N * 1 B

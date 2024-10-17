@@ -21,10 +21,9 @@ const (
 
 const SEGMENT_CODE = 1
 const (
-	SEGMENT_CODE_METADATA         = 0
-	SEGMENT_CODE_GLOBALS          = 1
-	SEGMENT_CODE_FUNCTION_INDEXES = 2
-	SEGMENT_CODE_FUNCTIONS        = 3
+	SEGMENT_CODE_GLOBALS          = 0
+	SEGMENT_CODE_FUNCTION_INDEXES = 1
+	SEGMENT_CODE_FUNCTIONS        = 2
 )
 
 type CodeWriter struct {
@@ -83,22 +82,11 @@ func (cw *CodeWriter) writeCodeSegment() {
 	startPos := cw.getFilePosition()
 	cw.file.WriteString("CODE")
 
-	cw.writeMetaData()
 	cw.writeGlobals()
 	cw.writeFunctionIndexes()
 	cw.writeFunctions()
 
 	cw.file.WriteAt([]byte{SEGMENT_CODE}, startPos)
-	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
-}
-
-func (cw *CodeWriter) writeMetaData() {
-	startPos := cw.getFilePosition()
-	cw.file.WriteString("META")
-
-	cw.file.Write([]byte{byte(cw.codeGenerator.FirstLine)}) // Write first line
-
-	cw.file.WriteAt([]byte{SEGMENT_CODE_METADATA}, startPos)
 	cw.file.WriteAt(int64ToByte3(cw.getFilePosition()-startPos-4), startPos+1)
 }
 

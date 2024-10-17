@@ -134,21 +134,9 @@ func (ir *InstructionReader) readFloatConstants() {
 func (ir *InstructionReader) readCode() {
 	ir.byteIndex += 4
 
-	ir.readMetaData()
 	ir.readGlobals()
 	ir.readFunctionIndexes()
 	ir.readFunctions()
-}
-
-func (ir *InstructionReader) readMetaData() {
-	ir.byteIndex++
-
-	// Move past header
-	ir.byteIndex += 3
-
-	// Collect first line number
-	ir.virtualMachine.firstLine = int(ir.bytes[ir.byteIndex])
-	ir.byteIndex++
 }
 
 func (ir *InstructionReader) readGlobals() {

@@ -47,9 +47,8 @@ type VirtualMachine struct {
 	reg_symbolIndex    int
 	stack_symbolTables *data.Stack
 
-	filePath  string
-	reader    *bufio.Reader
-	firstLine int
+	filePath string
+	reader   *bufio.Reader
 }
 
 func NewVirtualMachine(filePath string) *VirtualMachine {
@@ -145,6 +144,14 @@ func (vm *VirtualMachine) executeInstruction() {
 	switch instruction.InstructionType {
 	// 1 ARGUMENT INSTRUCTIONS --------------------------------------------------------------------------
 
+	// Halt
+	case IT_Halt:
+		os.Exit(int(instruction.InstructionValue[0]))
+
+	// Change file
+	case IT_FileMarker:
+		vm.instructionIndex++
+
 	// Jumps
 	case IT_Jump:
 		vm.instructionIndex += instruction.InstructionValue[0]
@@ -170,7 +177,7 @@ func (vm *VirtualMachine) executeInstruction() {
 
 		// Return address stack overflow
 		if vm.reg_returnIndex == STACK_RETURN_INDEX_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Function return address stack overflow.", vm.firstLine))
+			vm.panic("Function return address stack overflow.")
 		}
 
 		// Jump to function
@@ -185,14 +192,10 @@ func (vm *VirtualMachine) executeInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is probably caused by infinite recursion.", vm.firstLine))
+			vm.panic("Scope stack overflow. This is probably caused by infinite recursion.")
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
-
-	// Halt
-	case IT_Halt:
-		os.Exit(int(instruction.InstructionValue[0]))
 
 	// Declare variables
 	case IT_DeclareBool:
@@ -401,7 +404,7 @@ func (vm *VirtualMachine) executeInstruction() {
 		vm.reg_scopeIndex++
 
 		if vm.reg_scopeIndex == STACK_SCOPES_SIZE {
-			vm.panic(fmt.Sprintf("line %d: Scope stack overflow. This is probably caused by infinite recursion.", vm.firstLine))
+			vm.panic("Scope stack overflow. This is probably caused by infinite recursion.")
 		}
 
 		vm.stack_symbolTables.Push(NewSymbolMap(SYMBOL_MAP_SIZE))
@@ -430,7 +433,7 @@ func (vm *VirtualMachine) executeInstruction() {
 		vm.stack.size--
 
 		if int64(len(vm.stack.items[vm.stack.size-1].([]any)))-1 < vm.stack.items[vm.stack.size].(int64) {
-			vm.panic(fmt.Sprintf("line %d: List index out of range. List size: %d, index: %d.", vm.firstLine, len(vm.stack.items[vm.stack.size-1].([]any)), vm.stack.items[vm.stack.size].(int64)))
+			vm.panic(fmt.Sprintf("List index out of range. List size: %d, index: %d.", len(vm.stack.items[vm.stack.size-1].([]any)), vm.stack.items[vm.stack.size].(int64)))
 		}
 
 		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
@@ -510,7 +513,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 }
 
 func (vm *VirtualMachine) panic(message string) {
-	fmt.Println("\033[91mPanic in module " + vm.stack_scopes[0] + ": " + message + "\n\033[0m")
+	fmt.Println("\033[91mPanic in function " + vm.stack_scopes[vm.reg_scopeIndex-1] + ": " + message + "\033[0m")
 
 	// Get absolute path to binary
 	absolutePath, err := filepath.Abs(vm.stack_scopes[0])
@@ -518,29 +521,25 @@ func (vm *VirtualMachine) panic(message string) {
 		absolutePath = vm.stack_scopes[0]
 	}
 
-	// Print trace line
-	var line int
-
 	// Shift return indexes left, replace last return index with current line number
 	vm.stack_returnIndexes = vm.stack_returnIndexes[1:]
 	vm.stack_returnIndexes[vm.reg_returnIndex-1] = vm.instructionIndex
-	// Remove first return index
-	vm.stack_returnIndexes = vm.stack_returnIndexes[1:]
 
-	// Print functions and their lines
-	for i, scope := range vm.stack_scopes[1:vm.reg_scopeIndex] {
-		vm.instructionIndex = vm.stack_returnIndexes[i]
-		line = vm.firstLine
+	lines := map[int]int{}
+	file := 0
 
-		// Count lines return index
-		for j := 0; j < vm.instructionIndex; j++ {
-			if (*vm.instructions)[j].InstructionType == IT_LineOffset {
-				line += (*vm.instructions)[j].InstructionValue[0]
-			}
+	// Count lines return index
+	for j := 0; j < vm.instructionIndex; j++ {
+		if (*vm.instructions)[j].InstructionType == IT_FileMarker {
+			file = (*vm.instructions)[j].InstructionValue[0]
+			lines[file] = (*vm.instructions)[j+1].InstructionValue[0]
+			j++
+		} else if (*vm.instructions)[j].InstructionType == IT_LineOffset {
+			lines[file] += (*vm.instructions)[j].InstructionValue[0]
 		}
-
-		fmt.Println(fmt.Sprintf("%d", i) + " " + absolutePath + " in " + scope + "() on line " + fmt.Sprintf("%d", line))
 	}
+
+	fmt.Println(absolutePath + " in " + vm.Constants[file].(string) + " on line " + fmt.Sprintf("%d", lines[file]))
 
 	os.Exit(1)
 }

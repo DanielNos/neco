@@ -17,7 +17,6 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	// Pop arguments and store them as variables
 	parameterCount := len(function.Parameters)
 	for i := parameterCount - 1; i >= 0; i-- {
-
 		// Declare variable for argument
 		id := cg.scopes.Top.Value.(*Scope).variableIdentifierCounter
 		cg.scopes.Top.Value.(*Scope).variableIdentifiers[function.Parameters[i].Identifier] = id
@@ -35,9 +34,9 @@ func (cg *CodeGenerator) generateFunction(functionNode *parser.Node) {
 	cg.generateStatements(function.Body.Value.(*parser.ScopeNode))
 
 	// Generate line offset of closing brace
-	if cg.line < functionNode.Position.EndLine {
-		cg.addInstruction(VM.IT_LineOffset, byte(functionNode.Position.EndLine-cg.line))
-		cg.line = functionNode.Position.EndLine
+	if cg.currentLine(functionNode) < functionNode.Position.EndLine {
+		cg.addInstruction(VM.IT_LineOffset, byte(functionNode.Position.EndLine-cg.currentLine(functionNode)))
+		cg.currentLines[*functionNode.Position.File] = int(functionNode.Position.EndLine)
 	}
 
 	// Return

@@ -10,11 +10,12 @@ const (
 	IT_JumpBackEx
 
 	// 1 argument 1 byte
+	IT_Halt
+	IT_FileMarker
+
 	IT_Call
 	IT_CallBuiltInFunc
 	IT_PushScope
-
-	IT_Halt
 
 	IT_DeclareBool
 	IT_DeclareInt
@@ -115,11 +116,12 @@ var InstructionTypeToString = map[byte]string{
 	IT_JumpBackEx:    "jmp_back_ex",
 
 	// 1 argument 1 byte
+	IT_Halt:       "halt",
+	IT_FileMarker: "file",
+
 	IT_Call:            "call",
 	IT_CallBuiltInFunc: "call_builtin",
 	IT_PushScope:       "push_scope",
-
-	IT_Halt: "halt",
 
 	IT_DeclareBool:   "decl_bool",
 	IT_DeclareInt:    "decl_int",
