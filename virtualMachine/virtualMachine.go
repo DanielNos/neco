@@ -521,21 +521,17 @@ func (vm *VirtualMachine) panic(message string) {
 		absolutePath = vm.stack_scopes[0]
 	}
 
-	// Shift return indexes left, replace last return index with current line number
-	vm.stack_returnIndexes = vm.stack_returnIndexes[1:]
-	vm.stack_returnIndexes[vm.reg_returnIndex-1] = vm.instructionIndex
-
+	// Get file and line
 	lines := map[int]int{}
 	file := 0
 
-	// Count lines return index
-	for j := 0; j < vm.instructionIndex; j++ {
-		if (*vm.instructions)[j].InstructionType == IT_FileMarker {
-			file = (*vm.instructions)[j].InstructionValue[0]
-			lines[file] = (*vm.instructions)[j+1].InstructionValue[0]
-			j++
-		} else if (*vm.instructions)[j].InstructionType == IT_LineOffset {
-			lines[file] += (*vm.instructions)[j].InstructionValue[0]
+	for i := 0; i < vm.instructionIndex; i++ {
+		if (*vm.instructions)[i].InstructionType == IT_FileMarker {
+			file = (*vm.instructions)[i].InstructionValue[0]
+			lines[file] = (*vm.instructions)[i+1].InstructionValue[0]
+			i++
+		} else if (*vm.instructions)[i].InstructionType == IT_LineOffset {
+			lines[file] += (*vm.instructions)[i].InstructionValue[0]
 		}
 	}
 
