@@ -96,9 +96,16 @@ func (l *Lexer) openFile() {
 	l.fileOpen = true
 }
 
+func (l *Lexer) setModuleName() {
+	splitParts := strings.Split(l.filePath, "/")
+	splitParts = strings.Split(splitParts[len(splitParts)-1], ".")
+	l.filePath = splitParts[0]
+}
+
 func (l *Lexer) Lex() []*Token {
 	// Create reader
 	l.openFile()
+	l.setModuleName()
 
 	// Insert StartOfFile token
 	l.tokens = append(l.tokens, &Token{&data.CodePos{&l.filePath, 0, 0, 0, 0}, TT_StartOfFile, l.filePath})

@@ -515,12 +515,6 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 func (vm *VirtualMachine) panic(message string) {
 	fmt.Println("\033[91mPanic in function " + vm.stack_scopes[vm.reg_scopeIndex-1] + ": " + message + "\033[0m")
 
-	// Get absolute path to binary
-	absolutePath, err := filepath.Abs(vm.stack_scopes[0])
-	if err != nil {
-		absolutePath = vm.stack_scopes[0]
-	}
-
 	// Get file and line
 	lines := map[int]int{}
 	file := 0
@@ -535,9 +529,38 @@ func (vm *VirtualMachine) panic(message string) {
 		}
 	}
 
-	fmt.Println(absolutePath + " in " + vm.Constants[file].(string) + " on line " + fmt.Sprintf("%d", lines[file]))
+	// Put current position on return stack
+	vm.stack_returnIndexes[vm.reg_returnIndex] = vm.instructionIndex
+	vm.reg_returnIndex++
 
+	vm.traceback()
 	os.Exit(1)
+}
+
+func (vm *VirtualMachine) traceback() {
+	fmt.Println("Traceback:")
+	for i := vm.reg_returnIndex - 1; i > 0; i-- {
+		line, file := vm.traceLine(vm.stack_returnIndexes[i])
+		fmt.Printf("   %d file %s.neco, line %d, function %s()\n", i, file, line, vm.stack_scopes[i])
+	}
+}
+
+func (vm *VirtualMachine) traceLine(instructionIndex int) (int, string) {
+	lines := map[int]int{}
+	file := 0
+
+	for i := 0; i < instructionIndex; i++ {
+		if (*vm.instructions)[i].InstructionType == IT_FileMarker {
+			file = (*vm.instructions)[i].InstructionValue[0]
+			i++
+
+			lines[file] = (*vm.instructions)[i].InstructionValue[0]
+		} else if (*vm.instructions)[i].InstructionType == IT_LineOffset {
+			lines[file] += (*vm.instructions)[i].InstructionValue[0]
+		}
+	}
+
+	return lines[file], vm.Constants[file].(string)
 }
 
 var declareInstructionToDataType = map[byte]data.PrimitiveType{
