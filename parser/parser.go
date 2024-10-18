@@ -149,7 +149,6 @@ func (p *Parser) skipStatement() {
 	for p.peek().TokenType != lexer.TT_EndOfCommand {
 		p.consume()
 	}
-
 	p.consume()
 }
 
