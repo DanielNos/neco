@@ -7,7 +7,8 @@ import (
 )
 
 func buildAndRun(t *testing.T, fileName string) []byte {
-	cmd := exec.Command("./neco", "build", "src/"+fileName+".neco")
+	cmd := exec.Command("../neco", "build", fileName+".neco")
+	cmd.Dir = "./src"
 	output, err := cmd.Output()
 
 	if err != nil {
@@ -155,7 +156,7 @@ func TestStructs(t *testing.T) {
 	err := cmd.Run()
 
 	if err != nil {
-		t.Fatalf("Failed to build and run neco: " + err.Error())
+		t.Fatalf("Failed to build neco: " + err.Error())
 	}
 
 	output := buildAndRun(t, "structs")
@@ -169,6 +170,26 @@ Pet{"Fluffy", Person{"Dan", 181}}
 `
 	if string(output) != correctOutput {
 		t.Fatalf("Output of structs:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
+	}
+
+	t.Cleanup(func() {
+		os.Remove("neco")
+	})
+}
+
+func TestImports(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+
+	output := buildAndRun(t, "imports")
+
+	correctOutput := "Hello World!\n"
+	if string(output) != correctOutput {
+		t.Fatalf("Output of imports:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
 	}
 
 	t.Cleanup(func() {
