@@ -27,6 +27,7 @@ func NewInstructionReader(filePath string, virtualMachine *VirtualMachine) *Inst
 	return &InstructionReader{filePath, nil, 0, virtualMachine}
 }
 
+// Converts an big endian encoded uint on 3 bytes to an int.
 func byte3ToInt(byte1, byte2, byte3 byte) int {
 	paddedBytes := make([]byte, 8)
 

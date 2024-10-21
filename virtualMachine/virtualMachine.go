@@ -36,7 +36,7 @@ type VirtualMachine struct {
 
 	functions []int
 
-	stack *Stack
+	stack *Stack[any]
 
 	reg_returnIndex     int
 	stack_returnIndexes []int
@@ -55,7 +55,7 @@ func NewVirtualMachine(filePath string) *VirtualMachine {
 	virtualMachine := &VirtualMachine{
 		instructionIndex: 0,
 
-		stack: NewStack(STACK_SIZE),
+		stack: NewStack[any](STACK_SIZE),
 
 		reg_returnIndex:     0,
 		stack_returnIndexes: make([]int, STACK_RETURN_INDEX_SIZE),
