@@ -82,6 +82,7 @@ type object struct {
 	fields     []any
 }
 
+// Reads bytecode from file and runs it.
 func (vm *VirtualMachine) Execute() {
 	// Read instructions
 	reader := NewInstructionReader(vm.filePath, vm)
@@ -106,6 +107,7 @@ func (vm *VirtualMachine) Execute() {
 	}
 }
 
+// Executes current instruction and prints debugging information
 func (vm *VirtualMachine) executeInstructionDebug() {
 	prevII := vm.instructionIndex
 
@@ -138,6 +140,7 @@ func (vm *VirtualMachine) executeInstructionDebug() {
 	fmt.Scanln()
 }
 
+// Executes current instruction and advances instructionIndex.
 func (vm *VirtualMachine) executeInstruction() {
 	instruction := (*vm.instructions)[vm.instructionIndex]
 
@@ -494,6 +497,8 @@ func (vm *VirtualMachine) executeInstruction() {
 	vm.instructionIndex++
 }
 
+// Finds symbol with identifier from first argument of current instruction. Looks from deepest to shallowest scope symbol table.
+// Panics if symbol can't be found.
 func (vm *VirtualMachine) findSymbol() *Symbol {
 	// Find variable
 	symbolTable := vm.stack_symbolTables.Top
@@ -512,6 +517,7 @@ func (vm *VirtualMachine) findSymbol() *Symbol {
 	return value
 }
 
+// Prints panic message, traceback and exits program with exit code 1.
 func (vm *VirtualMachine) panic(message string) {
 	fmt.Println("\033[91mPanic in function " + vm.stack_scopes[vm.reg_scopeIndex-1] + ": " + message + "\033[0m")
 
@@ -537,6 +543,7 @@ func (vm *VirtualMachine) panic(message string) {
 	os.Exit(1)
 }
 
+// Prints all functions on scope stack.
 func (vm *VirtualMachine) traceback() {
 	fmt.Println("Traceback:")
 	for i := vm.reg_returnIndex - 1; i > 0; i-- {
@@ -545,6 +552,7 @@ func (vm *VirtualMachine) traceback() {
 	}
 }
 
+// Calculates file and line of instruction at instructionIndex.
 func (vm *VirtualMachine) traceLine(instructionIndex int) (int, string) {
 	lines := map[int]int{}
 	file := 0
