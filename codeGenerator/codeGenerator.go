@@ -116,8 +116,8 @@ func (cg *CodeGenerator) Generate() {
 
 	// Optimize instructions
 	if cg.optimize {
-		codeOptimizer.Optimize(&cg.GlobalsInstructions)
-		codeOptimizer.Optimize(&cg.FunctionsInstructions)
+		codeOptimizer.Optimize(&cg.GlobalsInstructions, []int{})
+		codeOptimizer.Optimize(&cg.FunctionsInstructions, cg.functions)
 	}
 
 	if len(cg.GlobalsInstructions) == 0 && len(cg.FunctionsInstructions) == 0 {
