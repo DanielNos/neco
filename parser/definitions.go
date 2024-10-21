@@ -8,7 +8,7 @@ import (
 
 func (p *Parser) collectGlobals() {
 	// Collect enums
-	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
+	for p.tokenIndex < len(p.tokens)-1 {
 		if p.peek().TokenType == lexer.TT_KW_enum {
 			p.parseEnum()
 		} else {
@@ -18,7 +18,7 @@ func (p *Parser) collectGlobals() {
 	p.tokenIndex = 1
 
 	// Collect struct names
-	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
+	for p.tokenIndex < len(p.tokens)-1 {
 		if p.peek().TokenType == lexer.TT_KW_struct {
 			p.consume()
 
@@ -36,7 +36,7 @@ func (p *Parser) collectGlobals() {
 	p.tokenIndex = 1
 
 	// Collect structs
-	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
+	for p.tokenIndex < len(p.tokens)-1 {
 		if p.peek().TokenType == lexer.TT_KW_struct {
 			p.parseStruct()
 		} else {
@@ -46,7 +46,7 @@ func (p *Parser) collectGlobals() {
 	p.tokenIndex = 1
 
 	// Collect function headers
-	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
+	for p.tokenIndex < len(p.tokens)-1 {
 		if p.peek().TokenType == lexer.TT_KW_fun {
 			p.consume()
 			p.parseFunctionHeader()
@@ -58,16 +58,15 @@ func (p *Parser) collectGlobals() {
 
 	// Collect global variables
 	scopeDepth := 0
-	for !p.peek().IsEndOfFileOf(p.tokens[0]) {
+	for p.tokenIndex < len(p.tokens)-1 {
 		// Enter scope
-		if p.peek().TokenType == lexer.TT_DL_BraceOpen {
+		if p.peek().TokenType.IsOpeningDelimiter() {
 			scopeDepth++
 			// Leave scope
-		} else if p.peek().TokenType == lexer.TT_DL_BraceClose {
+		} else if p.peek().TokenType.IsClosingDelimiter() {
 			scopeDepth--
 			// Collect globals only in root scope
-		} else if scopeDepth == 0 && p.peek().TokenType == lexer.TT_EndOfCommand {
-			p.consume()
+		} else if scopeDepth == 0 && p.peekPrevious().TokenType == lexer.TT_EndOfCommand {
 			if p.peek().TokenType.IsVariableType() {
 				p.appendScope(p.parseVariableDeclaration(false))
 				continue

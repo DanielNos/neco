@@ -236,6 +236,14 @@ func (tt TokenType) CanBeExpression() bool {
 	return tt.IsLiteral() || tt == TT_Identifier || tt.IsOperator() || tt == TT_DL_ParenthesisOpen
 }
 
+func (tt TokenType) IsOpeningDelimiter() bool {
+	return tt == TT_DL_ParenthesisOpen || tt == TT_DL_BracketOpen || tt == TT_DL_BraceOpen
+}
+
+func (tt TokenType) IsClosingDelimiter() bool {
+	return tt == TT_DL_ParenthesisClose || tt == TT_DL_BracketClose || tt == TT_DL_BraceClose
+}
+
 type Token struct {
 	Position  *dataStructures.CodePos
 	TokenType TokenType
