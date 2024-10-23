@@ -12,6 +12,11 @@ fun matchStatements() {
     forEach (str char in "abeceda") {
         matchString(char)
     }
+
+    match true {
+        false => printLine("false")
+        true => printLine("true")
+    }
 }
 
 fun matchNumber(int num) {

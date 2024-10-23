@@ -99,6 +99,7 @@ B or C
 ?
 D
 A
+true
 `
 	if string(output) != correctOutput {
 		t.Fatalf("Output of matchStatements:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
