@@ -1,0 +1,35 @@
+enum Day {
+    Monday = 1
+	Tuesday
+	Wednesday
+	Thursday
+	Friday
+	Saturday
+	Sunday
+}
+
+enum Color {
+	Red = 60
+	Green
+	Blue = 100
+}
+
+enum Animal {
+	Dog
+	Cat
+}
+
+fun entry() {
+    var a = Day.Monday
+	printLine(str(a))
+	printLine(str(Day.Sunday))
+
+	Color b = Color.Red
+	printLine(str(b))
+	printLine(str(Color.Green))
+	printLine(str(Color.Blue))
+
+	if (Animal.Dog != Animal.Cat) {
+		printLine(str(Animal.Dog))
+	}
+}

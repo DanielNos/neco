@@ -196,3 +196,29 @@ func TestImports(t *testing.T) {
 		os.Remove("neco")
 	})
 }
+
+func TestEnums(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+
+	output := buildAndRun(t, "enums")
+
+	correctOutput := `1
+7
+60
+61
+100
+0
+`
+	if string(output) != correctOutput {
+		t.Fatalf("Output of enums:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
+	}
+
+	t.Cleanup(func() {
+		os.Remove("neco")
+	})
+}
