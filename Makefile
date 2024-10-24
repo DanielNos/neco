@@ -4,7 +4,8 @@ run:
 	go run . main.neco
 
 build:
-	go build .
+	mkdir -p build/debug
+	go build -o build/debug/neco .
 
 package:
 	makego
