@@ -74,7 +74,7 @@ Each action has its own valid flags.
   - `-l (level)`, `--log-level (level)` Sets logging level. Possible values are 0 to 5 or level names.
   - `-o`, `--out` Sets output file path.
   - `-c`, `--constants` Prints constants stored in binary.
-- `analyze` Does syntax and sematic analysis on a NeCo Language source file.
+- `analyze` Does syntax and semantic analysis on a NeCo Language source file.
   - `-to`, `--tokens` Prints lexed tokens.
   - `-tr`, `--tree` Draws abstract syntax tree.
   - `-d`, `--dontOptimize` Compiler won't optimize byte code.
