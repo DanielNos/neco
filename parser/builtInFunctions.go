@@ -61,7 +61,7 @@ func (p *Parser) insertBuiltInFunctions() {
 		[]Parameter{{&data.DataType{data.DT_Float, nil}, "float", nil}},
 		&data.DataType{data.DT_Int, nil}, true},
 	)
-	p.insertFunction("roundata.DToInt", &FunctionSymbol{-1,
+	p.insertFunction("roundToInt", &FunctionSymbol{-1,
 		[]Parameter{{&data.DataType{data.DT_Float, nil}, "float", nil}},
 		&data.DataType{data.DT_Int, nil}, true},
 	)

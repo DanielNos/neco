@@ -213,7 +213,19 @@ func (dt *DataType) Signature() string {
 	if dt.Type <= DT_None {
 		return dt.Type.String()
 	} else if dt.Type == DT_Enum {
-		return "enum:" + dt.SubType.(string)
+		return "enum" + dt.SubType.(string)
+	} else if dt.Type == DT_Object {
+		return dt.SubType.(string)
+	} else {
+		return dt.Type.String() + "<" + dt.SubType.(*DataType).String() + ">"
+	}
+}
+
+func (dt *DataType) FunctionCompareSignature() string {
+	if dt.Type <= DT_None {
+		return dt.Type.String()
+	} else if dt.Type == DT_Enum {
+		return "enum"
 	} else if dt.Type == DT_Object {
 		return dt.SubType.(string)
 	} else {
