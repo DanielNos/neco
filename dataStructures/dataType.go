@@ -145,6 +145,7 @@ func (dt *DataType) Copy() *DataType {
 	return &DataType{dt.Type, dt.SubType.(*DataType).Copy()}
 }
 
+// Tries to match an incomplete type to another. If they are compatible, it copies missing sub-types from the other type.
 func (dt *DataType) TryCompleteFrom(from *DataType) {
 	// Data type can't be completed
 	if dt.GetDepth() > from.GetDepth() {
@@ -209,6 +210,7 @@ func (dt *DataType) String() string {
 	}
 }
 
+// Creates a readable string representing the type.
 func (dt *DataType) Signature() string {
 	if dt.Type <= DT_None {
 		return dt.Type.String()
@@ -221,6 +223,7 @@ func (dt *DataType) Signature() string {
 	}
 }
 
+// For function matching. Doesn't contain enum names.
 func (dt *DataType) FunctionCompareSignature() string {
 	if dt.Type <= DT_None {
 		return dt.Type.String()

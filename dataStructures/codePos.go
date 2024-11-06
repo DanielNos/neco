@@ -10,6 +10,7 @@ type CodePos struct {
 	EndChar   uint
 }
 
+// Combines two CodePositions.
 func (cp CodePos) Combine(codePos *CodePos) *CodePos {
 	if cp.File != codePos.File {
 		panic("Combine used on code positions with different files.")
