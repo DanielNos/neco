@@ -90,6 +90,7 @@ const (
 	IT_CreateList
 	IT_AppendToList
 	IT_IndexList
+	IT_RemoveListElement
 
 	IT_IndexString
 
@@ -193,9 +194,10 @@ var InstructionTypeToString = map[byte]string{
 
 	IT_AddField: "field_add",
 
-	IT_CreateList:   "list_new",
-	IT_AppendToList: "list_append",
-	IT_IndexList:    "list_index",
+	IT_CreateList:        "list_new",
+	IT_AppendToList:      "list_append",
+	IT_IndexList:         "list_index",
+	IT_RemoveListElement: "list_remove",
 
 	IT_IndexString: "str_index",
 

@@ -76,6 +76,8 @@ func NewVirtualMachine(filePath string) *VirtualMachine {
 }
 
 var currentObject object
+var currentInt64 int64
+var currentSlice []any
 
 type object struct {
 	identifier *string
@@ -440,6 +442,17 @@ func (vm *VirtualMachine) executeInstruction() {
 		}
 
 		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
+
+	case IT_RemoveListElement:
+		vm.stack.size--
+		currentInt64 = vm.stack.items[vm.stack.size].(int64)
+		currentSlice = vm.stack.items[vm.stack.size-1].([]any)
+
+		if currentInt64 >= int64(len(currentSlice)) {
+			vm.panic("List index out of range: index: " + fmt.Sprintf("%d", currentInt64) + ", list size: " + fmt.Sprintf("%d.", len(currentSlice)))
+		}
+
+		vm.stack.items[vm.stack.size-1] = append(currentSlice[:currentInt64], currentSlice[currentInt64+1:]...)
 
 	// String operations
 	case IT_IndexString:

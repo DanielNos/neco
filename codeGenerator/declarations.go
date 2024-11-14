@@ -57,7 +57,7 @@ func (cg *CodeGenerator) generateDeletion(target *parser.Node) {
 			if inNode.Left.Value.(*parser.VariableNode).DataType.Type == data.DT_Set {
 				cg.addInstruction(VM.IT_RemoveSetElement)
 			} else {
-				// TODO: Remove list element
+				cg.addInstruction(VM.IT_RemoveListElement)
 			}
 
 			// Generate set load
