@@ -193,7 +193,7 @@ func visualize(node *Node, indent string, isLast bool) {
 		visualizeList(listNode.Nodes, indent, true)
 
 	case NT_ListValue:
-		fmt.Println("ListIndex")
+		fmt.Println("ListValue")
 		listValue := node.Value.(*TypedBinaryNode)
 
 		visualize(listValue.Left, indent, false)

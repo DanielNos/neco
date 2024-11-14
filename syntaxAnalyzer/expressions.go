@@ -20,7 +20,7 @@ func (sn *SyntaxAnalyzer) analyzeExpression() {
 	if sn.peek().TokenType == lexer.TT_EndOfCommand {
 		sn.consume()
 	}
-	if sn.peek().TokenType == lexer.TT_DL_BraceOpen || sn.peek().TokenType == lexer.TT_DL_Colon {
+	if sn.peek().TokenType == lexer.TT_DL_Colon {
 		return
 	}
 
