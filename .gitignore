@@ -9,6 +9,8 @@
 !*.sum
 !*.toml
 !*/
+!*.gitignore
+!*.md
 !Makefile
 
 # Debugging scripts
