@@ -75,9 +75,12 @@ func NewVirtualMachine(filePath string) *VirtualMachine {
 	return virtualMachine
 }
 
-var currentObject object
-var currentInt64 int64
-var currentSlice []any
+var (
+	currentObject object
+	currentInt64  int64
+	currentSlice  []any
+	currentBool   bool
+)
 
 type object struct {
 	identifier *string
@@ -442,6 +445,18 @@ func (vm *VirtualMachine) executeInstruction() {
 		}
 
 		vm.stack.items[vm.stack.size-1] = vm.stack.items[vm.stack.size-1].([]any)[vm.stack.items[vm.stack.size].(int64)]
+
+	case IT_ListContains:
+		vm.stack.size--
+
+		currentBool = false
+		for _, item := range vm.stack.items[vm.stack.size-1].([]any) {
+			if item == vm.stack.items[vm.stack.size] {
+				currentBool = true
+				break
+			}
+		}
+		vm.stack.items[vm.stack.size-1] = currentBool
 
 	case IT_RemoveListElement:
 		vm.stack.size--

@@ -187,7 +187,12 @@ func (cg *CodeGenerator) generateExpression(node *parser.Node) {
 		binaryNode := node.Value.(*parser.TypedBinaryNode)
 		cg.generateExpression(binaryNode.Right)
 		cg.generateExpression(binaryNode.Left)
-		cg.addInstruction(VM.IT_SetContains)
+
+		if binaryNode.Right.GetNodeDataType().Type == data.DT_Set {
+			cg.addInstruction(VM.IT_SetContains)
+		} else {
+			cg.addInstruction(VM.IT_ListContains)
+		}
 
 	// Unwrap option
 	case parser.NT_Unwrap:

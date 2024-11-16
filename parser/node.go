@@ -294,6 +294,17 @@ func (nt NodeType) IsLogicOperator() bool {
 	return nt == NT_And || nt == NT_Or
 }
 
+func (n *Node) GetNodeDataType() *data.DataType {
+	if n.NodeType == NT_Variable {
+		return n.Value.(*VariableNode).DataType
+	}
+	if n.NodeType == NT_Literal {
+		return &data.DataType{n.Value.(*LiteralNode).PrimitiveType, nil}
+	}
+
+	return nil
+}
+
 var operatorNodePrecedence = map[NodeType]int{
 	NT_Or:  1,
 	NT_And: 2,

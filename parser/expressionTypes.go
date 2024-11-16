@@ -88,8 +88,8 @@ func (p *Parser) deriveOperatorType(expression *Node) *data.DataType {
 	// In operator has to be used on set with correct type
 	if expression.NodeType == NT_In {
 		// Right type isn't a set
-		if rightType.Type != data.DT_Set {
-			p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set.")
+		if rightType.Type != data.DT_Set && rightType.Type != data.DT_List {
+			p.newError(GetExpressionPosition(binaryNode.Right), "Right side of operator \"in\" has to be a set or a list.")
 			// Left type isn't set's sub-type
 		} else if !rightType.SubType.(*data.DataType).CanBeAssigned(leftType) {
 			p.newErrorNoMessage()

@@ -9,7 +9,7 @@ fun matchStatements() {
         matchNumber(number)
     }
 
-    forEach (str char in "abeceda") {
+    forEach (str char in "abcdefg") {
         matchString(char)
     }
 

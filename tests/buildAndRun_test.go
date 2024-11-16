@@ -94,11 +94,11 @@ func TestMatchStatements(t *testing.T) {
 Not known number: 0
 A
 B or C
-?
 B or C
-?
 D
-A
+?
+?
+?
 true
 `
 	if string(output) != correctOutput {
