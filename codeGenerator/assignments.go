@@ -5,6 +5,21 @@ import (
 	VM "github.com/DanielNos/neco/virtualMachine"
 )
 
+func (cg *CodeGenerator) storeTop(to *parser.Node, pop bool) {
+	instruction := VM.IT_Store
+	if pop {
+		instruction = VM.IT_StoreAndPop
+	}
+
+	if to.NodeType == parser.NT_Variable {
+		cg.addInstruction(instruction, cg.findVariableIdentifier(to.Value.(*parser.VariableNode).Identifier))
+	} else if to.NodeType == parser.NT_ListValue {
+		listAssignNode := to.Value.(*parser.TypedBinaryNode)
+		cg.generateExpression(listAssignNode.Right)
+		cg.addInstruction(VM.IT_SetListAtAToB, cg.findVariableIdentifier(listAssignNode.Left.Value.(*parser.VariableNode).Identifier))
+	}
+}
+
 func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
 	// Check if all assigned to statements are variables
 	if cg.optimize {
@@ -22,9 +37,9 @@ func (cg *CodeGenerator) generateAssignment(assignNode *parser.AssignNode) {
 
 			for i, assignedTo := range assignNode.AssignedTo {
 				if i == len(assignNode.AssignedTo)-1 {
-					cg.addInstruction(VM.IT_StoreAndPop, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+					cg.storeTop(assignedTo, true)
 				} else {
-					cg.addInstruction(VM.IT_Store, cg.findVariableIdentifier(assignedTo.Value.(*parser.VariableNode).Identifier))
+					cg.storeTop(assignedTo, false)
 				}
 			}
 			return

@@ -26,7 +26,7 @@ const (
 	IT_DeclareObject
 	IT_DeclareOption
 
-	IT_SetListAtAToB // A, B <- TOP
+	IT_SetListAtAToB // B, A <- TOP
 
 	IT_LoadConst
 	IT_LoadConstToList
@@ -92,6 +92,7 @@ const (
 	IT_IndexList
 	IT_ListContains
 	IT_RemoveListElement
+	IT_SetListAt
 
 	IT_IndexString
 
