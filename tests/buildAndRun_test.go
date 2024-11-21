@@ -223,3 +223,32 @@ func TestEnums(t *testing.T) {
 		os.Remove("neco")
 	})
 }
+
+func TestLists(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+
+	output := buildAndRun(t, "lists")
+
+	correctOutput := `[1, 2, 3, 4]
+[1, 2, 3, 4, 5]
+3
+[1, 2, 4, 5]
+[1, 2, 5]
+[1, 2, 5, 0, 0]
+[0, 0, 1, 2, 5]
+0
+[6, 2, 5, 0, 0]
+`
+	if string(output) != correctOutput {
+		t.Fatalf("Output of lists:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
+	}
+
+	t.Cleanup(func() {
+		os.Remove("neco")
+	})
+}

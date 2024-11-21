@@ -1,0 +1,26 @@
+fun entry() {
+    var nums = list<int>[1, 2, 3, 4]
+    printLine(str(nums))
+    
+    nums += [5]
+    printLine(str(nums))
+    
+    printLine(str(nums[2]))
+    
+    delete nums[2]
+    printLine(str(nums))
+
+    delete nums[2]
+    printLine(str(nums))
+    
+    list<int> nums2 = [0, 0]
+    
+    var concat = nums + nums2
+    printLine(str(concat))
+    
+    printLine(str(nums2 + nums))
+    printLine(str(concat[4]))
+    
+    concat[0] += concat[2]
+    printLine(str(concat))
+}
