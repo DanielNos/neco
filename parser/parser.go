@@ -174,13 +174,13 @@ func (p *Parser) parseModule() *Node {
 	// Insert built-in functions
 	p.insertBuiltInFunctions()
 
-	// Collect enums, structs and function headers
+	// Collect global variables, enums, structs and function headers
 	p.collectGlobals()
 
 	// Parse module
 	scopeNode := p.parseScope(false, false)
 
-	// Create node
+	// Create module node
 	var moduleNode any = &ModuleNode{modulePath, moduleName, scopeNode.(*ScopeNode)}
 	module := &Node{p.peek().Position, NT_Module, moduleNode}
 
