@@ -6,3 +6,5 @@ fun helloWorld() {
     print(" ")
     world()
 }
+
+const int NUM2 = 64

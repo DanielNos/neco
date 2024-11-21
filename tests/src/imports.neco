@@ -2,4 +2,5 @@ import helloWorld
 
 fun entry() {
     helloWorld()
+    printLine(str(NUM1) + " " + str(NUM2))
 }

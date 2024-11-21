@@ -1,3 +1,5 @@
+int NUM1 = 123
+
 fun hello() {
     print("Hello")
 }

@@ -188,7 +188,7 @@ func TestImports(t *testing.T) {
 
 	output := buildAndRun(t, "imports")
 
-	correctOutput := "Hello World!\n"
+	correctOutput := "Hello World!\n123 64\n"
 	if string(output) != correctOutput {
 		t.Fatalf("Output of imports:\n\"%s\"\nwanted:\n\"%s\"", string(output), correctOutput)
 	}
