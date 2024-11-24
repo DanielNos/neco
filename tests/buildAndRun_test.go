@@ -6,6 +6,15 @@ import (
 	"testing"
 )
 
+func buildNeCo(t *testing.T) {
+	cmd := exec.Command("go", "build", "-o", "neco", "..")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Failed to build neco: " + err.Error())
+	}
+}
+
 func buildAndRun(t *testing.T, fileName string) []byte {
 	cmd := exec.Command("../neco", "build", fileName+".neco")
 	cmd.Dir = "./src"
@@ -26,12 +35,7 @@ func buildAndRun(t *testing.T, fileName string) []byte {
 }
 
 func TestEscapeSequences(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "escapeSequences")
 	correctOutput := []byte("\b\aTest\n\tEscape\n\rSequences\n\"\\\v\f\"")
@@ -44,12 +48,7 @@ func TestEscapeSequences(t *testing.T) {
 }
 
 func TestLoops(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "loops")
 
@@ -76,12 +75,7 @@ Cats: 😺 😸 😻 😽 😼
 }
 
 func TestMatchStatements(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "matchStatements")
 
@@ -107,12 +101,7 @@ true
 }
 
 func TestRecursion(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "recursion")
 
@@ -131,12 +120,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 }
 
 func TestScopes(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "scopes")
 
@@ -153,12 +137,7 @@ B
 }
 
 func TestStructs(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "structs")
 
@@ -179,12 +158,7 @@ Pet{"Fluffy", Person{"Dan", 181}}
 }
 
 func TestImports(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "imports")
 
@@ -199,12 +173,7 @@ func TestImports(t *testing.T) {
 }
 
 func TestEnums(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "enums")
 
@@ -225,12 +194,7 @@ func TestEnums(t *testing.T) {
 }
 
 func TestLists(t *testing.T) {
-	cmd := exec.Command("go", "build", "-o", "neco", "..")
-	err := cmd.Run()
-
-	if err != nil {
-		t.Fatalf("Failed to build neco: " + err.Error())
-	}
+	buildNeCo(t)
 
 	output := buildAndRun(t, "lists")
 
